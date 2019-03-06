@@ -26,8 +26,9 @@ public class Receiver {
 	}
 
 	/**
-	 * This method calls receives packets until it receives a
-	 * packet with "end" payload.
+	 * This method calls receives packets until it receives a packet with "end"
+	 * payload.
+	 * 
 	 * @throws IOException
 	 */
 	public void run() throws IOException {
@@ -37,11 +38,10 @@ public class Receiver {
 		while (true) {
 			DatagramPacket packet = new DatagramPacket(buf, buf.length);
 			socket.receive(packet);
-			String received = new String(
-		              packet.getData(), 0, packet.getLength());
+			String received = new String(packet.getData(), 0, packet.getLength());
 			String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
-			System.out.println("["+timeStamp+"]Data received:" + received);
-			
+			System.out.println("[" + timeStamp + "]Data received:" + received);
+
 			if ("end".equals(packet.getData())) {
 				break;
 			}

@@ -1,5 +1,6 @@
 
-import java.security.*;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * @author daniel
@@ -9,7 +10,6 @@ public class Blob {
 	private String data;
 	private String checksum;
 
-	
 	public Blob(String data) throws NoSuchAlgorithmException {
 		this.data = data;
 		this.checksum = CalculateChecksum(data);
