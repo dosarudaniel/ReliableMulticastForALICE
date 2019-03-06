@@ -3,6 +3,8 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.security.NoSuchAlgorithmException;
+import java.util.Date;
+import java.text.SimpleDateFormat;
 import java.util.TimerTask;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -36,7 +38,9 @@ public class Sender extends TimerTask {
 
 		try {
 			sendMulticast(blob);
-			System.out.println("Data sent:" + blob.getData());
+			
+			String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
+			System.out.println("["+timeStamp+"] Data sent:" + blob.getData());
 		} catch (NoSuchAlgorithmException | IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

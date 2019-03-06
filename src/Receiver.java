@@ -2,6 +2,8 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * @author daniel
@@ -37,7 +39,8 @@ public class Receiver {
 			socket.receive(packet);
 			String received = new String(
 		              packet.getData(), 0, packet.getLength());
-			System.out.println("Data received:" + received);
+			String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
+			System.out.println("["+timeStamp+"]Data received:" + received);
 			
 			if ("end".equals(packet.getData())) {
 				break;
