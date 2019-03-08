@@ -16,7 +16,7 @@ import java.util.Date;
  *
  */
 public class Receiver {
-	final static int BUF_SIZE = 64000;
+	final static int BUF_SIZE = 65536;
 	protected MulticastSocket socket = null;
 	protected byte[] buf = new byte[BUF_SIZE];
 	private String ip_address;
