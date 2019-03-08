@@ -1,63 +1,77 @@
-
+import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 
 /**
- * @author daniel
+ * Blob class
+ *
+ * @author dosarudaniel@gmail.com
+ * @since 2019-03-07
  *
  */
-public class Blob {
-	private String data;
-	private String checksum;
+public class Blob implements Serializable {
+	/**
+	 *
+	 */
+	private static final long serialVersionUID = 1L;
+	static final int CHECKSUM_SIZE = 16;
+	private String payload;
+	private byte[] checksum;
 
-	public Blob(String data) throws NoSuchAlgorithmException {
-		this.data = data;
-		this.checksum = CalculateChecksum(data);
+	/**
+	 * Parameterized constructor - creates a Blob object and it Calculates its
+	 * checksum
+	 *
+	 * @param payload
+	 * @throws NoSuchAlgorithmException
+	 * @throws UnsupportedEncodingException
+	 */
+	public Blob(String payload) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+		this.payload = payload;
+		this.checksum = CalculateChecksum(payload);
 	}
 
 	/**
-	 * @return
+	 * Returns the payload and checks if the checksum is correct. Prints an error if
+	 * the object is corrupt
+	 *
+	 * @return String - The payload of a Blob object
 	 * @throws NoSuchAlgorithmException
+	 * @throws UnsupportedEncodingException
 	 */
-	public String getData() throws NoSuchAlgorithmException {
-		String checksum = CalculateChecksum(data);
-		if (this.checksum.equals(checksum) == false) {
+	public String getPayload() throws NoSuchAlgorithmException, UnsupportedEncodingException {
+		byte[] checksum1 = CalculateChecksum(this.payload);
+		if (Arrays.toString(this.checksum).equals(Arrays.toString(checksum1)) == false) {
 			System.err.println("Checksum failed!");
 		}
-		return data;
+		return this.payload;
 	}
 
 	/**
+	 * Calculates the checksum for a certain string data
+	 *
 	 * @param data
+	 * @return byte[] -  the checksum
 	 * @throws NoSuchAlgorithmException
+	 * @throws UnsupportedEncodingException
 	 */
-	public void setData(String data) throws NoSuchAlgorithmException {
-		this.data = data;
-		this.checksum = CalculateChecksum(data);
-	}
-
-	/**
-	 * @param data
-	 * @return
-	 * @throws NoSuchAlgorithmException
-	 */
-	public String CalculateChecksum(String data) throws NoSuchAlgorithmException {
+	public static byte[] CalculateChecksum(String data) throws NoSuchAlgorithmException, UnsupportedEncodingException {
 		return sha1(data);
 	}
 
 	/**
+	 * Calculates the sha1 code for a string
+	 *
 	 * @param data
-	 * @return
+	 * @return byte[] The SHA1 hash for the payload data
 	 * @throws NoSuchAlgorithmException
+	 * @throws UnsupportedEncodingException
 	 */
-	static String sha1(String data) throws NoSuchAlgorithmException {
+	static byte[] sha1(String data) throws UnsupportedEncodingException, NoSuchAlgorithmException {
 		MessageDigest mDigest = MessageDigest.getInstance("SHA1");
-		byte[] result = mDigest.digest(data.getBytes());
-		StringBuffer sb = new StringBuffer();
-		for (int i = 0; i < result.length; i++) {
-			sb.append(Integer.toString((result[i] & 0xff) + 0x100, 16).substring(1));
-		}
-
-		return sb.toString();
+		mDigest.update(data.getBytes("utf8"));
+		return mDigest.digest();
 	}
 }

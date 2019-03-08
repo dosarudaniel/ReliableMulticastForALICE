@@ -1,21 +1,30 @@
+
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 
 /**
- * @author daniel
+ * @author dosarudaniel@gmail.com
+ * @since 2019-03-07
  *
  */
 public class Receiver {
+	final static int BUF_SIZE = 64000;
 	protected MulticastSocket socket = null;
-	protected byte[] buf = new byte[256];
+	protected byte[] buf = new byte[BUF_SIZE];
 	private String ip_address;
 	private int portNumber;
 
 	/**
+	 * Parameterized constructor
+	 *
 	 * @param ip_address
 	 * @param portNumber
 	 */
@@ -28,25 +37,47 @@ public class Receiver {
 	/**
 	 * This method calls receives packets until it receives a packet with "end"
 	 * payload.
-	 * 
+	 *
 	 * @throws IOException
+	 * @throws ClassNotFoundException
+	 * @throws NoSuchAlgorithmException
 	 */
-	public void run() throws IOException {
-		socket = new MulticastSocket(portNumber);
-		InetAddress group = InetAddress.getByName(ip_address);
-		socket.joinGroup(group);
+	public void work() throws IOException, ClassNotFoundException, NoSuchAlgorithmException {
+		this.socket = new MulticastSocket(this.portNumber);
+		InetAddress group = InetAddress.getByName(this.ip_address);
+		this.socket.joinGroup(group);
 		while (true) {
-			DatagramPacket packet = new DatagramPacket(buf, buf.length);
-			socket.receive(packet);
-			String received = new String(packet.getData(), 0, packet.getLength());
+			// Receive object
+			DatagramPacket packet = new DatagramPacket(this.buf, this.buf.length);
+			this.socket.receive(packet);
+			// deserialize
+			Blob blob = (Blob) deserialize(this.buf);
+			// Print timestamp and content
 			String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
-			System.out.println("[" + timeStamp + "]Data received:" + received);
-
-			if ("end".equals(packet.getData())) {
+			System.out.println("[" + timeStamp + "]Data received:" + blob.getPayload());
+			if ("end".equals(blob.getPayload())) {
 				break;
 			}
+
 		}
-		socket.leaveGroup(group);
-		socket.close();
+
+		this.socket.leaveGroup(group);
+		this.socket.close();
+
+	}
+
+	/**
+	 * This function deserializes objects
+	 *
+	 * @param data
+	 * @return Object - The deserialized object
+	 * @throws IOException
+	 * @throws ClassNotFoundException
+	 */
+	public static Object deserialize(byte[] data) throws IOException, ClassNotFoundException {
+		ByteArrayInputStream in = new ByteArrayInputStream(data);
+		ObjectInputStream is = new ObjectInputStream(in);
+
+		return is.readObject();
 	}
 }
