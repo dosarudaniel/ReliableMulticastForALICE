@@ -9,13 +9,13 @@ The receiver instances also print on the screen the current time and the receive
 
 
 Requirements:
-*javac
-*java 
+ - javac
+ - java 
 
 Compilation:
-make 
+ `make` 
 
-Running:
-make runReceiver # creates a Receiver process
-make runSender   # creates a Sender process
+Running:  
+`make runReceiver` # creates a Receiver process that receives multicast messages from 230.0.0.0 on port 5000   
+`make runSender`   # creates a Sender process that sends multicast messages to 230.0.0.0 using port 5000   
 
