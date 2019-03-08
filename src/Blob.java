@@ -40,11 +40,12 @@ public class Blob implements Serializable {
 	 * @return String - The payload of a Blob object
 	 * @throws NoSuchAlgorithmException
 	 * @throws UnsupportedEncodingException
+	 * @throws Exception
 	 */
-	public String getPayload() throws NoSuchAlgorithmException, UnsupportedEncodingException {
+	public String getPayload() throws NoSuchAlgorithmException, UnsupportedEncodingException, Exception {
 		byte[] checksum1 = CalculateChecksum(this.payload);
-		if (Arrays.toString(this.checksum).equals(Arrays.toString(checksum1)) == false) {
-			System.err.println("Checksum failed!");
+		if (!Arrays.equals(this.checksum, checksum1)) {
+			throw new Exception("Checksum failed!");
 		}
 		return this.payload;
 	}

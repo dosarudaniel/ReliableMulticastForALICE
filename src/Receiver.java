@@ -41,8 +41,9 @@ public class Receiver {
 	 * @throws IOException
 	 * @throws ClassNotFoundException
 	 * @throws NoSuchAlgorithmException
+	 * @throws Exception
 	 */
-	public void work() throws IOException, ClassNotFoundException, NoSuchAlgorithmException {
+	public void work() throws IOException, ClassNotFoundException, NoSuchAlgorithmException, Exception {
 		this.socket = new MulticastSocket(this.portNumber);
 		InetAddress group = InetAddress.getByName(this.ip_address);
 		this.socket.joinGroup(group);

@@ -70,7 +70,7 @@ public class Sender extends TimerTask {
 	/**
 	 * Sends multicast message with a serialized version of an object of type Blob
 	 *
-	 * @param blob
+	 * @param blob - Object to send
 	 * @throws IOException
 	 * @throws NoSuchAlgorithmException
 	 */
@@ -86,7 +86,7 @@ public class Sender extends TimerTask {
 	/**
 	 * Generates a random content string
 	 *
-	 * @param len
+	 * @param len - Length of the randomString
 	 * @return String - A random content string of length len
 	 */
 	static String randomString(int len) {
@@ -102,16 +102,19 @@ public class Sender extends TimerTask {
 	/**
 	 * Serializes a serializable Object
 	 *
-	 * @param obj
+	 * @param obj - Object to be serialized
 	 * @return byte[] the serialized version of the object
 	 * @throws IOException
 	 */
 	public static byte[] serialize(Object obj) throws IOException {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		ObjectOutputStream os = new ObjectOutputStream(out);
-		os.flush();
-		os.writeObject(obj);
-		byte[] b = out.toByteArray();
-		return b;
+
+		try (ObjectOutputStream os = new ObjectOutputStream(out)){
+			os.writeObject(obj);
+			os.flush();
+			byte[] b = out.toByteArray();
+			return b;
+		}
+
 	}
 }
