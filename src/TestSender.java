@@ -18,6 +18,6 @@ public class TestSender {
 		Timer timer = new Timer();
 		// java TestSender <IP> <PORT_NUMBER>
 		// Ex: java TestSender 230.0.0.0 5000
-		timer.schedule(new Sender(args[0], Integer.parseInt(args[1])), 0, TIME_INTERVAL_SECONDS * 1000);
+		timer.schedule(new Sender(args[0], Integer.parseInt(args[1])), 0, TIME_INTERVAL_SECONDS * 1000L);
 	}
 }
