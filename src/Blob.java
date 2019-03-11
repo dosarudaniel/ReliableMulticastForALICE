@@ -30,7 +30,7 @@ public class Blob implements Serializable {
 	 */
 	public Blob(String payload) throws NoSuchAlgorithmException, UnsupportedEncodingException {
 		this.payload = payload;
-		this.checksum = CalculateChecksum(payload);
+		this.checksum = calculateChecksum(payload);
 	}
 
 	/**
@@ -43,7 +43,7 @@ public class Blob implements Serializable {
 	 * @throws Exception
 	 */
 	public String getPayload() throws NoSuchAlgorithmException, UnsupportedEncodingException, Exception {
-		byte[] checksum1 = CalculateChecksum(this.payload);
+		byte[] checksum1 = calculateChecksum(this.payload);
 		if (!Arrays.equals(this.checksum, checksum1)) {
 			throw new Exception("Checksum failed!");
 		}
@@ -58,19 +58,7 @@ public class Blob implements Serializable {
 	 * @throws NoSuchAlgorithmException
 	 * @throws UnsupportedEncodingException
 	 */
-	public static byte[] CalculateChecksum(String data) throws NoSuchAlgorithmException, UnsupportedEncodingException {
-		return sha1(data);
-	}
-
-	/**
-	 * Calculates the sha1 code for a string
-	 *
-	 * @param data
-	 * @return byte[] The SHA1 hash for the payload data
-	 * @throws NoSuchAlgorithmException
-	 * @throws UnsupportedEncodingException
-	 */
-	static byte[] sha1(String data) throws UnsupportedEncodingException, NoSuchAlgorithmException {
+	public static byte[] calculateChecksum(String data) throws NoSuchAlgorithmException, UnsupportedEncodingException {
 		MessageDigest mDigest = MessageDigest.getInstance("SHA1");
 		mDigest.update(data.getBytes("utf8"));
 		return mDigest.digest();
