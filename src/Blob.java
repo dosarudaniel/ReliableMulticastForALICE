@@ -21,7 +21,7 @@ public class Blob implements Serializable {
 	private byte[] checksum;
 
 	/**
-	 * Parameterized constructor - creates a Blob object and it Calculates its
+	 * Parameterized constructor - creates a Blob object and it calculates its
 	 * checksum
 	 *
 	 * @param payload
@@ -51,7 +51,7 @@ public class Blob implements Serializable {
 	}
 
 	/**
-	 * Calculates the checksum for a certain string data
+	 * Calculates the sha1 checksum for a certain string data
 	 *
 	 * @param data
 	 * @return byte[] -  the checksum
