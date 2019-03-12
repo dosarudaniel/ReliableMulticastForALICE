@@ -43,27 +43,25 @@ public class Receiver {
 	 * @throws Exception
 	 */
 	public void work() throws IOException, ClassNotFoundException, NoSuchAlgorithmException {
-		this.socket = new MulticastSocket(this.portNumber);
-		InetAddress group = InetAddress.getByName(this.ip_address);
-		this.socket.joinGroup(group);
-		while (true) {
-			// Receive object
-			DatagramPacket packet = new DatagramPacket(this.buf, this.buf.length);
-			this.socket.receive(packet);
-			// deserialize
-			Blob blob = (Blob) deserialize(this.buf);
-			// Print timestamp and content
-			String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
-			System.out.println("[" + timeStamp + "]Data received:" + blob.getPayload());
-			if ("end".equals(blob.getPayload())) {
-				break;
+		try(this.socket = new MulticastSocket(this.portNumber)){
+			InetAddress group = InetAddress.getByName(this.ip_address);
+			this.socket.joinGroup(group);
+			while (true) {
+				// Receive object
+				DatagramPacket packet = new DatagramPacket(this.buf, this.buf.length);
+				this.socket.receive(packet);
+				// deserialize
+				Blob blob = (Blob) deserialize(this.buf);
+				// Print timestamp and content
+				String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
+				System.out.println("[" + timeStamp + "]Data received:" + blob.getPayload());
+				if ("end".equals(blob.getPayload())) {
+					break;
+				}
+	
 			}
-
+			this.socket.leaveGroup(group);
 		}
-
-		this.socket.leaveGroup(group);
-		this.socket.close();
-
 	}
 
 	/**
