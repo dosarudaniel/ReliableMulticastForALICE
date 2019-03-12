@@ -16,7 +16,6 @@ import java.util.Date;
  */
 public class Receiver {
 	final static int BUF_SIZE = 65536;
-	protected MulticastSocket socket = null;
 	protected byte[] buf = new byte[BUF_SIZE];
 	private String ip_address;
 	private int portNumber;
@@ -43,13 +42,13 @@ public class Receiver {
 	 * @throws Exception
 	 */
 	public void work() throws IOException, ClassNotFoundException, NoSuchAlgorithmException {
-		try(this.socket = new MulticastSocket(this.portNumber)){
+		try(MulticastSocket socket = new MulticastSocket(this.portNumber)){
 			InetAddress group = InetAddress.getByName(this.ip_address);
-			this.socket.joinGroup(group);
+			socket.joinGroup(group);
 			while (true) {
 				// Receive object
 				DatagramPacket packet = new DatagramPacket(this.buf, this.buf.length);
-				this.socket.receive(packet);
+				socket.receive(packet);
 				// deserialize
 				Blob blob = (Blob) deserialize(this.buf);
 				// Print timestamp and content
@@ -60,7 +59,7 @@ public class Receiver {
 				}
 	
 			}
-			this.socket.leaveGroup(group);
+			socket.leaveGroup(group);
 		}
 	}
 
