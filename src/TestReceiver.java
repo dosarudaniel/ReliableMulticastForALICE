@@ -13,7 +13,6 @@ public class TestReceiver {
 	 * @throws IOException
 	 * @throws ClassNotFoundException
 	 * @throws NoSuchAlgorithmException
-	 * @throws Exception
 	 */
 	public static void main(String[] args) throws IOException, ClassNotFoundException, NoSuchAlgorithmException {
 		// java TestReceiver <IP> <PORT_NUMBER>

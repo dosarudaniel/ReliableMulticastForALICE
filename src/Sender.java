@@ -2,7 +2,6 @@
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -48,18 +47,10 @@ public class Sender extends TimerTask {
 		int randomNumber = ThreadLocalRandom.current().nextInt(MIN_LEN, MAX_LEN);
 		Blob blob = null;
 		String payload = randomString(randomNumber);
+
 		try {
 			blob = new Blob(payload);
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-
-		try {
 			sendMulticast(blob);
-
 			String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
 			System.out.println("[" + timeStamp + "] Data sent:" + payload);
 		} catch (NoSuchAlgorithmException | IOException e) {
@@ -75,12 +66,12 @@ public class Sender extends TimerTask {
 	 * @throws NoSuchAlgorithmException
 	 */
 	public void sendMulticast(Blob blob) throws IOException, NoSuchAlgorithmException {
-		DatagramSocket socket = new DatagramSocket();
-		InetAddress group = InetAddress.getByName(this.ip_address);
-		byte[] buf = serialize(blob);
-		DatagramPacket packet = new DatagramPacket(buf, buf.length, group, this.portNumber);
-		socket.send(packet);
-		socket.close();
+		try (DatagramSocket socket = new DatagramSocket()) {
+			InetAddress group = InetAddress.getByName(this.ip_address);
+			byte[] buf = serialize(blob);
+			DatagramPacket packet = new DatagramPacket(buf, buf.length, group, this.portNumber);
+			socket.send(packet);
+		}
 	}
 
 	/**
@@ -107,14 +98,12 @@ public class Sender extends TimerTask {
 	 * @throws IOException
 	 */
 	public static byte[] serialize(Object obj) throws IOException {
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-
-		try (ObjectOutputStream os = new ObjectOutputStream(out)){
+		try (ByteArrayOutputStream out = new ByteArrayOutputStream();
+				ObjectOutputStream os = new ObjectOutputStream(out)) {
 			os.writeObject(obj);
 			os.flush();
 			byte[] b = out.toByteArray();
 			return b;
 		}
-
 	}
 }

@@ -75,9 +75,9 @@ public class Receiver {
 	 * @throws ClassNotFoundException
 	 */
 	public static Object deserialize(byte[] data) throws IOException, ClassNotFoundException {
-		ByteArrayInputStream in = new ByteArrayInputStream(data);
-		ObjectInputStream is = new ObjectInputStream(in);
-
-		return is.readObject();
+		try (ByteArrayInputStream in = new ByteArrayInputStream(data);
+				ObjectInputStream is = new ObjectInputStream(in)) {
+			return is.readObject();
+		}
 	}
 }
