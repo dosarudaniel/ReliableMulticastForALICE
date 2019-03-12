@@ -7,7 +7,6 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
 
 /**
@@ -43,7 +42,7 @@ public class Receiver {
 	 * @throws NoSuchAlgorithmException
 	 * @throws Exception
 	 */
-	public void work() throws IOException, ClassNotFoundException, NoSuchAlgorithmException, Exception {
+	public void work() throws IOException, ClassNotFoundException, NoSuchAlgorithmException {
 		this.socket = new MulticastSocket(this.portNumber);
 		InetAddress group = InetAddress.getByName(this.ip_address);
 		this.socket.joinGroup(group);

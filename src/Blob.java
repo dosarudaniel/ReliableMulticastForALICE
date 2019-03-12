@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
@@ -42,10 +43,10 @@ public class Blob implements Serializable {
 	 * @throws UnsupportedEncodingException
 	 * @throws Exception
 	 */
-	public String getPayload() throws NoSuchAlgorithmException, UnsupportedEncodingException, Exception {
+	public String getPayload() throws NoSuchAlgorithmException, UnsupportedEncodingException, IOException {
 		byte[] checksum1 = calculateChecksum(this.payload);
 		if (!Arrays.equals(this.checksum, checksum1)) {
-			throw new Exception("Checksum failed!");
+			throw new IOException("Checksum failed!");
 		}
 		return this.payload;
 	}
@@ -54,7 +55,7 @@ public class Blob implements Serializable {
 	 * Calculates the sha1 checksum for a certain string data
 	 *
 	 * @param data
-	 * @return byte[] -  the checksum
+	 * @return byte[] - the checksum
 	 * @throws NoSuchAlgorithmException
 	 * @throws UnsupportedEncodingException
 	 */

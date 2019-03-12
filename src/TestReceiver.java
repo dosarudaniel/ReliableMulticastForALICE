@@ -15,7 +15,7 @@ public class TestReceiver {
 	 * @throws NoSuchAlgorithmException
 	 * @throws Exception
 	 */
-	public static void main(String[] args) throws IOException, ClassNotFoundException, NoSuchAlgorithmException, Exception {
+	public static void main(String[] args) throws IOException, ClassNotFoundException, NoSuchAlgorithmException {
 		// java TestReceiver <IP> <PORT_NUMBER>
 		// Ex: java TestReceiver 230.0.0.0 5000
 		Receiver receiver = new Receiver(args[0], Integer.parseInt(args[1]));
