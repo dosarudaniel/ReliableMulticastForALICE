@@ -1,4 +1,11 @@
 #!/bin/bash
+function usage {
+    echo "usage: $0 <MULTICAST_IP_ADDRESS> <PORT_NUMBER>"
+    exit 1
+}
 
-# How to run it: ./runSender.sh 230.0.0.0 5000
-java -cp . test.com.github.dosarudaniel.gsoc.TestSender $1 $2
+if [[ $# -ne 2 ]]; then
+  usage
+else
+  java -cp . test.com.github.dosarudaniel.gsoc.TestSender $1 $2
+fi
