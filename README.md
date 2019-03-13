@@ -15,6 +15,9 @@ Requirements:
 Compilation:
  `make`
 
+Documentation:
+  `make doc`  
+
 Running:  
 `make runReceiver` # creates a Receiver process that receives multicast messages from 230.0.0.0 on port 5000   
 `make runSender`   # creates a Sender process that sends multicast messages to 230.0.0.0 using port 5000
@@ -24,4 +27,3 @@ Running using bash scripts:
 2. Change directory `cd bin/`
 3. Run on the sender machine `./runSender.sh <MULTICAST_IP_ADDRESS> <PORT_NUMBER>`  
    Run on the receiver machine `./runReceiver.sh <MULTICAST_IP_ADDRESS> <PORT_NUMBER>`
-
