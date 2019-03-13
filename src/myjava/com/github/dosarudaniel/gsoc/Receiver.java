@@ -16,6 +16,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
+ * Receiver class waits for DatagramPacket from the Sender and prints the
+ * timestamp and the content of the packet is the checksum is correct
+ *
  * @author dosarudaniel@gmail.com
  * @since 2019-03-07
  *

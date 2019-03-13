@@ -9,6 +9,7 @@ import java.util.Timer;
 import myjava.com.github.dosarudaniel.gsoc.Sender;
 
 /**
+ * Test the Sender unit 
  * @author dosarudaniel@gmail.com
  * @since 2019-03-07
  *

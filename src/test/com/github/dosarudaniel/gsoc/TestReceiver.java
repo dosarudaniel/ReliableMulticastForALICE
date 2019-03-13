@@ -10,12 +10,14 @@ import java.security.NoSuchAlgorithmException;
 import myjava.com.github.dosarudaniel.gsoc.Receiver;
 
 /**
+ * Test the Receiver unit
  * @author dosarudaniel@gmail.com
  * @since 2019-03-07
  *
  */
 public class TestReceiver {
 	/**
+	 * Creates a Receiver unit and calls the work method in order to receive multicast messages  
 	 * @param args
 	 * @throws IOException
 	 * @throws ClassNotFoundException

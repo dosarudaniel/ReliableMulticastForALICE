@@ -18,6 +18,8 @@ import java.util.TimerTask;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
+ * Sender unit which generates and sends new objects at fixed time intervals (10s)
+ * and at the same time print the current time and message content on the screen
  * @author dosarudaniel@gmail.com
  * @since 2019-03-07
  *

@@ -12,7 +12,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 /**
- * Blob class
+ * Blob class - the structure of the object sent via multicast messages
  *
  * @author dosarudaniel@gmail.com
  * @since 2019-03-07
