@@ -4,6 +4,8 @@ PORT_NUMBER=5000
 JFLAGS = -g
 JC = javac
 J = java
+JD = javadoc
+DOC = documentation
 
 
 build:
@@ -15,6 +17,11 @@ runSender:build
 runReceiver:build
 	$(J) -cp bin test.com.github.dosarudaniel.gsoc.TestReceiver $(IP) $(PORT_NUMBER)
 
+doc:
+	$(JD) src/test/com/github/dosarudaniel/gsoc/* \
+		src/myjava/com/github/dosarudaniel/gsoc/* -d $(DOC)
+
 clean:
+	rm -rf $(DOC)
 	rm -rf bin/test
 	rm -rf bin/myjava
