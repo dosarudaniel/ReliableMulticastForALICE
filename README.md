@@ -12,10 +12,10 @@ Requirements:
  - javac (version 10.0.2, Ubuntu18.04: sudo apt install default-jdk)  
  - java (version 10.0.2 Ubuntu18.04: sudo apt install default-jre)  
 
-Compilation:
+Compilation:  
  `make`
 
-Documentation:
+Documentation:  
   `make doc`  
 
 Running:  
