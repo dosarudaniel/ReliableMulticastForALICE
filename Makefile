@@ -5,6 +5,7 @@ JFLAGS = -g
 JC = javac
 J = java
 
+
 build:
 	cd ./src ; find . -name \*.java | xargs $(JC) $(JFLAGS) -d ../bin
 
@@ -15,5 +16,5 @@ runReceiver:build
 	$(J) -cp bin test.com.github.dosarudaniel.gsoc.TestReceiver $(IP) $(PORT_NUMBER)
 
 clean:
-	rm bin/test/com/github/dosarudaniel/gsoc/*.class
-	rm bin/myjava/com/github/dosarudaniel/gsoc/*.class
+	rm -rf bin/test
+	rm -rf bin/myjava
