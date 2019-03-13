@@ -9,8 +9,8 @@ The receiver instances also print on the screen the current time and the receive
 
 
 Requirements:
- - javac 10.0.2
- - openjdk 10.0.2
+ - javac 10.0.2 (Ubuntu18.04: sudo apt install default-jdk)  
+ - java (Ubuntu18.04: sudo apt install default-jre)  
 
 Compilation:
  `make`
