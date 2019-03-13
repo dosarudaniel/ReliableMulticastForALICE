@@ -1,3 +1,7 @@
+/**
+ * test.com.github.dosarudaniel.gsoc provides the classes necessary to test the
+ * Sender and Receiver from the myjava.com.github.dosarudaniel.gsoc package
+ */
 package test.com.github.dosarudaniel.gsoc;
 
 import java.io.IOException;

@@ -1,3 +1,8 @@
+/**
+ * myjava.com.github.dosarudaniel.gsoc provides the classes necessary to send/
+ * receive multicast messages which contains Blob object with random length,
+ * random content payload.
+ */
 package myjava.com.github.dosarudaniel.gsoc;
 
 import java.io.ByteArrayInputStream;
@@ -34,8 +39,7 @@ public class Receiver {
 	}
 
 	/**
-	 * This method calls receives packets until it receives a packet with "end"
-	 * payload.
+	 * Receive multicast packets
 	 *
 	 * @throws IOException
 	 * @throws ClassNotFoundException
@@ -58,16 +62,16 @@ public class Receiver {
 				if ("end".equals(blob.getPayload())) {
 					break;
 				}
-	
+
 			}
 			socket.leaveGroup(group);
 		}
 	}
 
 	/**
-	 * This function deserializes objects
+	 * Deserializes objects received through DatagramPackets
 	 *
-	 * @param data
+	 * @param data - The serialized object
 	 * @return Object - The deserialized object
 	 * @throws IOException
 	 * @throws ClassNotFoundException

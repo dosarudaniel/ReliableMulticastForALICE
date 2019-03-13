@@ -1,3 +1,8 @@
+/**
+ * myjava.com.github.dosarudaniel.gsoc provides the classes necessary to send/
+ * receive multicast messages which contains Blob object with random length,
+ * random content payload.
+ */
 package myjava.com.github.dosarudaniel.gsoc;
 
 import java.io.ByteArrayOutputStream;
