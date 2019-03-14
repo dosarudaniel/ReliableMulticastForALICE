@@ -17,8 +17,9 @@ import myjava.com.github.dosarudaniel.gsoc.Receiver;
  */
 public class TestReceiver {
 	/**
-	 * Creates a Receiver unit and calls the work method in order to receive multicast messages  
-	 * @param args
+	 * Creates a Receiver unit and calls the work method in order to receive multicast messages
+	 * if the message with content "end" is received, the receiver stops.
+	 * @param args multicastIpAddress and portNumber 
 	 * @throws IOException
 	 * @throws ClassNotFoundException
 	 * @throws NoSuchAlgorithmException

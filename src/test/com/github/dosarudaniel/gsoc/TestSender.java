@@ -9,7 +9,8 @@ import java.util.Timer;
 import myjava.com.github.dosarudaniel.gsoc.Sender;
 
 /**
- * Test the Sender unit 
+ * Test the Sender unit by scheduling a send multicast action every
+ * TIME_INTERVAL_SECONDS
  * @author dosarudaniel@gmail.com
  * @since 2019-03-07
  *
@@ -20,7 +21,7 @@ public class TestSender {
 	/**
 	 * Schedules a sender to send a multicast message every TIME_INTERVAL_SECONDS
 	 *
-	 * @param args
+	 * @param args multicastIpAddress and portNumber 
 	 */
 	public static void main(String[] args) {
 		Timer timer = new Timer();
