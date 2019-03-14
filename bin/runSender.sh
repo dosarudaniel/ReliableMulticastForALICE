@@ -1,4 +1,5 @@
 #!/bin/bash
+
 function usage {
     echo "usage: $0 <MULTICAST_IP_ADDRESS> <PORT_NUMBER>"
     exit 1
