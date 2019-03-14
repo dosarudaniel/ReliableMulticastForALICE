@@ -43,6 +43,12 @@ public class Receiver {
 
 	/**
 	 * Receive multicast packets
+	 * Opens a multicast socket and it sets that socket to a multicast group.
+	 * Receives continuously DatagramPackets through the multicast DatagramSocket
+	 * Every DatagramPacket is deserialized and by calling the getPayload method
+	 * every message's checksum is verified.
+	 * The receiver prints the current timestamp and the content of the message
+	 * if the message with the content "end" is received, the Receiver unit stops.
 	 *
 	 * @throws IOException
 	 * @throws ClassNotFoundException

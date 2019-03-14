@@ -67,7 +67,8 @@ public class Sender extends TimerTask {
 	}
 
 	/**
-	 * Sends multicast message with a serialized version of an object of type Blob
+	 * Sends multicast message that contains the serialized version of an object
+	 * of type Blob
 	 *
 	 * @param blob - Object to send
 	 * @throws IOException
@@ -83,7 +84,7 @@ public class Sender extends TimerTask {
 	}
 
 	/**
-	 * Generates a random content string
+	 * Generates a random content string of length len
 	 *
 	 * @param len - Length of the randomString
 	 * @return String - A random content string of length len

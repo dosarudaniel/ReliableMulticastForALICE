@@ -28,10 +28,10 @@ public class Blob implements Serializable {
 	private byte[] checksum;
 
 	/**
-	 * Parameterized constructor - creates a Blob object and it calculates its
-	 * checksum
+	 * Parameterized constructor - creates a Blob object that contains a payload
+	 * and a checksum. The checksum is the sha1 of the payload.
 	 *
-	 * @param payload
+	 * @param payload - The data string
 	 * @throws NoSuchAlgorithmException
 	 * @throws UnsupportedEncodingException
 	 */
@@ -41,8 +41,7 @@ public class Blob implements Serializable {
 	}
 
 	/**
-	 * Returns the payload and checks if the checksum is correct. Prints an error if
-	 * the object is corrupt
+	 * Returns the payload and checks if the checksum is correct.
 	 *
 	 * @return String - The payload of a Blob object
 	 * @throws NoSuchAlgorithmException
