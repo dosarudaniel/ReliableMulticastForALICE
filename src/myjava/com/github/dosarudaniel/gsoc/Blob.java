@@ -23,7 +23,7 @@ public class Blob implements Serializable {
 	 *
 	 */
 	private static final long serialVersionUID = 1L;
-	static final int CHECKSUM_SIZE = 16;
+	private static final int CHECKSUM_SIZE = 16;
 	private String payload;
 	private byte[] checksum;
 

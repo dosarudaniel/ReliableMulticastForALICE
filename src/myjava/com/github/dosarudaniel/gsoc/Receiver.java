@@ -24,8 +24,8 @@ import java.util.Date;
  *
  */
 public class Receiver {
-	final static int BUF_SIZE = 65536;
-	protected byte[] buf = new byte[BUF_SIZE];
+	private final static int BUF_SIZE = 65536;
+	private byte[] buf = new byte[BUF_SIZE];
 	private String ip_address;
 	private int portNumber;
 
