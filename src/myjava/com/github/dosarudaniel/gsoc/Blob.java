@@ -11,6 +11,7 @@ import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.UUID;
 
 /**
  * Blob class - the structure of the object sent via multicast messages
@@ -30,6 +31,7 @@ public class Blob implements Serializable {
 	private int fragmentOffset;
 	private String key;
 	private int pachetType; // metadata or data
+	private UUID objectUUID;
 	private String payload;
 	private byte[] checksum;
 
@@ -106,5 +108,13 @@ public class Blob implements Serializable {
 
 	public void setPachetType(int pachetType) {
 		this.pachetType = pachetType;
+	}
+
+	public UUID getObjectUUID() {
+		return objectUUID;
+	}
+
+	public void setObjectUUID(UUID objectUUID) {
+		this.objectUUID = objectUUID;
 	}
 }
