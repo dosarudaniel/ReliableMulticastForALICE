@@ -4,6 +4,7 @@
  * random content payload.
  */
 package myjava.com.github.dosarudaniel.gsoc;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
@@ -33,8 +34,8 @@ public class Blob implements Serializable {
 	private byte[] checksum;
 
 	/**
-	 * Parameterized constructor - creates a Blob object that contains a payload
-	 * and a checksum. The checksum is the sha1 of the payload.
+	 * Parameterized constructor - creates a Blob object that contains a payload and
+	 * a checksum. The checksum is the sha1 of the payload.
 	 *
 	 * @param payload - The data string
 	 * @throws NoSuchAlgorithmException
@@ -51,7 +52,7 @@ public class Blob implements Serializable {
 	 * @return String - The payload of a Blob object
 	 * @throws NoSuchAlgorithmException
 	 * @throws UnsupportedEncodingException
-	 * @throws IOException - if checksum failed
+	 * @throws IOException                  - if checksum failed
 	 */
 	public String getPayload() throws NoSuchAlgorithmException, UnsupportedEncodingException, IOException {
 		byte[] checksum1 = calculateChecksum(this.payload);
@@ -73,5 +74,37 @@ public class Blob implements Serializable {
 		MessageDigest mDigest = MessageDigest.getInstance("SHA1");
 		mDigest.update(data.getBytes("utf8"));
 		return mDigest.digest();
+	}
+
+	public int getFragmentIdentification() {
+		return fragmentIdentification;
+	}
+
+	public void setFragmentIdentification(int fragmentIdentification) {
+		this.fragmentIdentification = fragmentIdentification;
+	}
+
+	public int getFragmentOffset() {
+		return fragmentOffset;
+	}
+
+	public void setFragmentOffset(int fragmentOffset) {
+		this.fragmentOffset = fragmentOffset;
+	}
+
+	public String getKey() {
+		return key;
+	}
+
+	public void setKey(String key) {
+		this.key = key;
+	}
+
+	public int getPachetType() {
+		return pachetType;
+	}
+
+	public void setPachetType(int pachetType) {
+		this.pachetType = pachetType;
 	}
 }
