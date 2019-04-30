@@ -29,10 +29,13 @@ public class Blob implements Serializable {
 
 	private int fragmentOffset;
 	private String key;
-	private int pachetType; // metadata or data
 	private UUID objectUUID;
 	private String payload;
 	private byte[] checksum;
+
+	enum pachetType {
+		METADATA, DATA
+	}
 
 	/**
 	 * Parameterized constructor - creates a Blob object that contains a payload and
