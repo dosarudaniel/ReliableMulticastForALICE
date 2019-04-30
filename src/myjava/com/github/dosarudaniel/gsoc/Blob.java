@@ -27,7 +27,6 @@ public class Blob implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private static final int CHECKSUM_SIZE = 16;
 
-	private int fragmentIdentification;
 	private int fragmentOffset;
 	private String key;
 	private int pachetType; // metadata or data
