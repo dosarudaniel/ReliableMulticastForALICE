@@ -15,6 +15,12 @@ public class FragmentedBlob extends Blob {
 		super(payload);
 	}
 
+	public FragmentedBlob(byte[] payload, int fragmentOffset, PACHET_TYPE pachetType, String key)
+			throws NoSuchAlgorithmException, UnsupportedEncodingException {
+		super(payload, pachetType, key);
+		this.fragmentOffset = fragmentOffset;
+	}
+
 	public int getFragmentOffset() {
 		return this.fragmentOffset;
 	}
