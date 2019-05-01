@@ -8,6 +8,7 @@ package myjava.com.github.dosarudaniel.gsoc;
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -20,22 +21,21 @@ import java.util.UUID;
  * @since 2019-03-07
  *
  */
+
 public class Blob implements Serializable {
-	/**
-	 *
-	 */
+	public enum PACHET_TYPE {
+		METADATA, DATA;
+	}
+
 	private static final long serialVersionUID = 1L;
 	private static final int CHECKSUM_SIZE = 16;
 
 	private int fragmentOffset;
 	private String key;
 	private UUID objectUUID;
-	private String payload;
+	private PACHET_TYPE pachetType;
+	private byte[] payload;
 	private byte[] checksum;
-
-	enum pachetType {
-		METADATA, DATA
-	}
 
 	/**
 	 * Parameterized constructor - creates a Blob object that contains a payload and
@@ -46,8 +46,8 @@ public class Blob implements Serializable {
 	 * @throws UnsupportedEncodingException
 	 */
 	public Blob(String payload) throws NoSuchAlgorithmException, UnsupportedEncodingException {
-		this.payload = payload;
-		this.checksum = calculateChecksum(payload);
+		this.payload = payload.getBytes(Charset.forName("UTF-8"));
+		this.checksum = calculateChecksum(this.payload);
 	}
 
 	/**
@@ -58,7 +58,7 @@ public class Blob implements Serializable {
 	 * @throws UnsupportedEncodingException
 	 * @throws IOException                  - if checksum failed
 	 */
-	public String getPayload() throws NoSuchAlgorithmException, UnsupportedEncodingException, IOException {
+	public byte[] getPayload() throws NoSuchAlgorithmException, UnsupportedEncodingException, IOException {
 		byte[] checksum1 = calculateChecksum(this.payload);
 		if (!Arrays.equals(this.checksum, checksum1)) {
 			throw new IOException("Checksum failed!");
@@ -74,22 +74,14 @@ public class Blob implements Serializable {
 	 * @throws NoSuchAlgorithmException
 	 * @throws UnsupportedEncodingException
 	 */
-	public static byte[] calculateChecksum(String data) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+	public static byte[] calculateChecksum(byte[] data) throws NoSuchAlgorithmException, UnsupportedEncodingException {
 		MessageDigest mDigest = MessageDigest.getInstance("SHA1");
-		mDigest.update(data.getBytes("utf8"));
+		mDigest.update(data);
 		return mDigest.digest();
 	}
 
-	public int getFragmentIdentification() {
-		return fragmentIdentification;
-	}
-
-	public void setFragmentIdentification(int fragmentIdentification) {
-		this.fragmentIdentification = fragmentIdentification;
-	}
-
 	public int getFragmentOffset() {
-		return fragmentOffset;
+		return this.fragmentOffset;
 	}
 
 	public void setFragmentOffset(int fragmentOffset) {
@@ -97,23 +89,23 @@ public class Blob implements Serializable {
 	}
 
 	public String getKey() {
-		return key;
+		return this.key;
 	}
 
 	public void setKey(String key) {
 		this.key = key;
 	}
 
-	public int getPachetType() {
-		return pachetType;
+	public PACHET_TYPE getPachetType() {
+		return this.pachetType;
 	}
 
-	public void setPachetType(int pachetType) {
+	public void setPachetType(PACHET_TYPE pachetType) {
 		this.pachetType = pachetType;
 	}
 
 	public UUID getObjectUUID() {
-		return objectUUID;
+		return this.objectUUID;
 	}
 
 	public void setObjectUUID(UUID objectUUID) {
