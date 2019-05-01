@@ -11,6 +11,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.UUID;
 
@@ -50,6 +51,14 @@ public class Blob implements Serializable {
 		this.payloadChecksum = calculateChecksum(this.payload);
 	}
 
+	public Blob(byte[] payload, PACHET_TYPE pachetType, String key)
+			throws NoSuchAlgorithmException, UnsupportedEncodingException {
+		this.payload = payload;
+		this.payloadChecksum = calculateChecksum(this.payload);
+		this.pachetType = pachetType;
+		this.key = key;
+	}
+
 	/**
 	 * Returns the payload and checks if the checksum is correct.
 	 *
@@ -87,11 +96,50 @@ public class Blob implements Serializable {
 //		this.fragmentOffset = fragmentOffset;
 //	}
 
+	/**
+	 * Assemble a Blob by adding one FragmentedBlob to it
+	 *
+	 * @param fragmentedBlob
+	 * @return void
+	 * @throws NoSuchAlgorithmException
+	 * @throws UnsupportedEncodingException
+	 * @throws IOException
+	 */
 	public void addFragmentedBlob(FragmentedBlob fragmentedBlob)
 			throws NoSuchAlgorithmException, UnsupportedEncodingException, IOException {
 		byte[] fragmentedPayload = fragmentedBlob.getPayload();
 		int fragmentOffset = fragmentedBlob.getFragmentOffset();
 		System.arraycopy(fragmentedPayload, 0, this.payload, fragmentOffset, fragmentedPayload.length);
+	}
+
+	/**
+	 * Fragments a Blob into multiple FragmentedBlobs
+	 *
+	 * @param maxPayloadSize
+	 * @return ArrayList<FragmentedBlob>
+	 * @throws NoSuchAlgorithmException
+	 * @throws UnsupportedEncodingException
+	 */
+	public ArrayList<FragmentedBlob> fragmentBlob(int maxPayloadSize)
+			throws NoSuchAlgorithmException, UnsupportedEncodingException {
+		ArrayList<FragmentedBlob> blobFragments = new ArrayList<>();
+		int numberOfFragments = this.payload.length / maxPayloadSize;
+		int lastFragmentPayloadLength = this.payload.length % maxPayloadSize;
+
+		for (int i = 0; i < numberOfFragments; i++) {
+			byte[] fragmentedPayload = null;
+			if (i == numberOfFragments - 1) {
+				System.arraycopy(this.payload, maxPayloadSize * i, fragmentedPayload, 0, lastFragmentPayloadLength);
+			} else {
+				System.arraycopy(this.payload, maxPayloadSize * i, fragmentedPayload, 0, maxPayloadSize);
+			}
+
+			FragmentedBlob fragmentedBlob = new FragmentedBlob(fragmentedPayload, maxPayloadSize * i, this.pachetType,
+					this.key);
+			blobFragments.add(fragmentedBlob);
+		}
+
+		return blobFragments;
 	}
 
 	public String getKey() {
