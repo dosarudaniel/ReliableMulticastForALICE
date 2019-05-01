@@ -35,7 +35,7 @@ public class Blob implements Serializable {
 	private UUID objectUUID;
 	private PACHET_TYPE pachetType;
 	private byte[] payload;
-	private byte[] checksum;
+	private byte[] payloadChecksum;
 
 	/**
 	 * Parameterized constructor - creates a Blob object that contains a payload and
@@ -47,7 +47,7 @@ public class Blob implements Serializable {
 	 */
 	public Blob(String payload) throws NoSuchAlgorithmException, UnsupportedEncodingException {
 		this.payload = payload.getBytes(Charset.forName("UTF-8"));
-		this.checksum = calculateChecksum(this.payload);
+		this.payloadChecksum = calculateChecksum(this.payload);
 	}
 
 	/**
@@ -60,7 +60,7 @@ public class Blob implements Serializable {
 	 */
 	public byte[] getPayload() throws NoSuchAlgorithmException, UnsupportedEncodingException, IOException {
 		byte[] checksum1 = calculateChecksum(this.payload);
-		if (!Arrays.equals(this.checksum, checksum1)) {
+		if (!Arrays.equals(this.payloadChecksum, checksum1)) {
 			throw new IOException("Checksum failed!");
 		}
 		return this.payload;
@@ -70,7 +70,7 @@ public class Blob implements Serializable {
 	 * Calculates the sha1 checksum for a certain string data
 	 *
 	 * @param data used to generate checksum
-	 * @return Checksum
+	 * @return payloadChecksum
 	 * @throws NoSuchAlgorithmException
 	 * @throws UnsupportedEncodingException
 	 */
