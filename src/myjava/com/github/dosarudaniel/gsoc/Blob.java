@@ -30,7 +30,7 @@ public class Blob implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private static final int CHECKSUM_SIZE = 16;
 
-	private int fragmentOffset;
+	// private int fragmentOffset;
 	private String key;
 	private UUID objectUUID;
 	private PACHET_TYPE pachetType;
@@ -59,8 +59,7 @@ public class Blob implements Serializable {
 	 * @throws IOException                  - if checksum failed
 	 */
 	public byte[] getPayload() throws NoSuchAlgorithmException, UnsupportedEncodingException, IOException {
-		byte[] checksum1 = calculateChecksum(this.payload);
-		if (!Arrays.equals(this.payloadChecksum, checksum1)) {
+		if (!Arrays.equals(this.payloadChecksum, calculateChecksum(this.payload))) {
 			throw new IOException("Checksum failed!");
 		}
 		return this.payload;
@@ -80,12 +79,19 @@ public class Blob implements Serializable {
 		return mDigest.digest();
 	}
 
-	public int getFragmentOffset() {
-		return this.fragmentOffset;
-	}
+//	public int getFragmentOffset() {
+//		return this.fragmentOffset;
+//	}
+//
+//	public void setFragmentOffset(int fragmentOffset) {
+//		this.fragmentOffset = fragmentOffset;
+//	}
 
-	public void setFragmentOffset(int fragmentOffset) {
-		this.fragmentOffset = fragmentOffset;
+	public void addFragmentedBlob(FragmentedBlob fragmentedBlob)
+			throws NoSuchAlgorithmException, UnsupportedEncodingException, IOException {
+		byte[] fragmentedPayload = fragmentedBlob.getPayload();
+		int fragmentOffset = fragmentedBlob.getFragmentOffset();
+		System.arraycopy(fragmentedPayload, 0, this.payload, fragmentOffset, fragmentedPayload.length);
 	}
 
 	public String getKey() {
