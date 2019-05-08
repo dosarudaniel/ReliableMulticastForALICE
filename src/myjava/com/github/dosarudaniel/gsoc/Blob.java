@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.UUID;
 
+import myjava.com.github.dosarudaniel.gsoc.Blob.PACHET_TYPE;
+
 /**
  * Blob class - the structure of the object sent via multicast messages
  *
@@ -26,15 +28,13 @@ public class Blob {
 	public enum PACHET_TYPE {
 		METADATA, DATA;
 	}
-
-	private static final int CHECKSUM_SIZE = 16;
-
-	// private int fragmentOffset;
+	ArrayList<FragmentedBlob> blobFragments;
 	private String key;
 	private UUID objectUUID;
 	private PACHET_TYPE pachetType;
-	private byte[] payload;
 	private byte[] payloadChecksum;
+	private byte[] payload;
+
 
 	/**
 	 * Parameterized constructor - creates a Blob object that contains a payload and
@@ -80,34 +80,8 @@ public class Blob {
 		return true;
 	}
 
-	/**
-	 * Returns the payload and checks if the checksum is correct.
-	 *
-	 * @return String - The payload of a Blob object
-	 * @throws NoSuchAlgorithmException
-	 * @throws UnsupportedEncodingException
-	 * @throws IOException                  - if checksum failed
-	 */
-	public byte[] getPayload() throws NoSuchAlgorithmException, UnsupportedEncodingException, IOException {
-		if (!Arrays.equals(this.payloadChecksum, calculateChecksum(this.payload))) {
-			throw new IOException("Checksum failed!");
-		}
-		return this.payload;
-	}
 
-	/**
-	 * Calculates the sha1 checksum for a certain string data
-	 *
-	 * @param data used to generate checksum
-	 * @return payloadChecksum
-	 * @throws NoSuchAlgorithmException
-	 * @throws UnsupportedEncodingException
-	 */
-	public static byte[] calculateChecksum(byte[] data) throws NoSuchAlgorithmException, UnsupportedEncodingException {
-		MessageDigest mDigest = MessageDigest.getInstance("SHA1");
-		mDigest.update(data);
-		return mDigest.digest();
-	}
+
 
 //	public int getFragmentOffset() {
 //		return this.fragmentOffset;
@@ -185,5 +159,11 @@ public class Blob {
 
 	public void setObjectUUID(UUID objectUUID) {
 		this.objectUUID = objectUUID;
+	}
+	
+	public static byte[] calculateChecksum(byte[] data) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+		MessageDigest mDigest = MessageDigest.getInstance("SHA1");
+		mDigest.update(data);
+		return mDigest.digest();
 	}
 }
