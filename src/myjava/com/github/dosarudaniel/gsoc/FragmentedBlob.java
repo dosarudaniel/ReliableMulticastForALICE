@@ -49,10 +49,11 @@ public class FragmentedBlob {
 	
 	public byte[] toBytes() throws IOException {
 		byte[] fragmentOffset_byte = ByteBuffer.allocate(4).putInt(fragmentOffset).array();
-		byte[] key_byte = key.getBytes(Charset.forName("UTF-8"));
 		
 		try (ByteArrayOutputStream out = new ByteArrayOutputStream()){
 			out.write(fragmentOffset_byte);
+			out.write(key.getBytes(Charset.forName("UTF-8")));
+			out.write(pachetType.getBytes());
 			/*
 			 * 
 			 * 
@@ -62,7 +63,6 @@ public class FragmentedBlob {
 				private byte[] payload;
 				private byte[] payloadChecksum;
 	*/
-			out.write(key_byte);
 			
 			byte[] pachet = out.toByteArray();
 			
