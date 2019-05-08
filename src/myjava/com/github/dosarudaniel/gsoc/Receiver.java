@@ -63,6 +63,7 @@ public class Receiver {
 				DatagramPacket packet = new DatagramPacket(this.buf, this.buf.length);
 				socket.receive(packet);
 				// deserialize
+				// FragmentedBlob fragmentedBlob = ByteToFragmentedBlob(packet);
 				Blob blob = (Blob) deserialize(this.buf);
 				// Print timestamp and content
 				String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
