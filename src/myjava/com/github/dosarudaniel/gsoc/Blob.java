@@ -6,7 +6,6 @@
 package myjava.com.github.dosarudaniel.gsoc;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
@@ -23,12 +22,11 @@ import java.util.UUID;
  *
  */
 
-public class Blob implements Serializable {
+public class Blob {
 	public enum PACHET_TYPE {
 		METADATA, DATA;
 	}
 
-	private static final long serialVersionUID = 1L;
 	private static final int CHECKSUM_SIZE = 16;
 
 	// private int fragmentOffset;
