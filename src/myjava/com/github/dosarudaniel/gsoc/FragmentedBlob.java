@@ -21,6 +21,11 @@ public class FragmentedBlob extends Blob {
 		this.fragmentOffset = fragmentOffset;
 	}
 
+	public FragmentedBlob(byte[] serialisedFragmentedBlob) {
+		super(serialisedFragmentedBlob);
+		// TODO
+	}
+
 	public int getFragmentOffset() {
 		return this.fragmentOffset;
 	}

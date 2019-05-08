@@ -59,6 +59,29 @@ public class Blob implements Serializable {
 		this.key = key;
 	}
 
+	public Blob(byte[] serialisedBlob) {
+		// TODO
+	}
+
+	// va fi chemata de serverul UDP, pe masura ce primeste, deserializeaza un
+	// fragment si vede carui Blob ii apartine
+	public void notifyFragment(FragmentedBlob fB) {
+		// TODO
+	}
+
+	// TODO
+//	public void send(InetAddress target, int port){
+//
+//        for (FragmentedBlob fb: toate fragmentele){
+//            sendMulticast(fb.toBytes(), target, port);
+//        }
+//    }
+
+	public boolean isComplete() {
+		// TODO
+		return true;
+	}
+
 	/**
 	 * Returns the payload and checks if the checksum is correct.
 	 *
