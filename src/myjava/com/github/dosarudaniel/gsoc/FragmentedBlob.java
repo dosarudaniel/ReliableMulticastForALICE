@@ -10,24 +10,29 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.UUID;
 
-import myjava.com.github.dosarudaniel.gsoc.Blob.PACHET_TYPE;
+import myjava.com.github.dosarudaniel.gsoc.Blob.PACKET_TYPE;
 
 public class FragmentedBlob {
 	private static final int CHECKSUM_SIZE = 16;
+
 	private int fragmentOffset;
 	private String key;
-	private UUID objectUUID;
-	private PACHET_TYPE pachetType;
+	private UUID objectUuid;
+	private PACKET_TYPE packetType;
 	private byte[] payloadChecksum;
 	private byte[] payload;
 
-	public FragmentedBlob(String payload) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+	public FragmentedBlob(String payload) {
 	}
 
-	public FragmentedBlob(byte[] payload, int fragmentOffset, PACHET_TYPE pachetType, String key)
+	public FragmentedBlob(byte[] payload, int fragmentOffset, PACKET_TYPE packetType, String key, UUID objectUuid)
 			throws NoSuchAlgorithmException, UnsupportedEncodingException {
-
 		this.fragmentOffset = fragmentOffset;
+		this.key = key;
+		this.objectUuid = objectUuid;
+		this.packetType = packetType;
+		this.payloadChecksum = calculateChecksum(payload);
+		this.payload = payload;
 	}
 
 	public FragmentedBlob(byte[] serialisedFragmentedBlob) {
@@ -49,8 +54,8 @@ public class FragmentedBlob {
 		byte[] fragmentOffset_byte = ByteBuffer.allocate(4).putInt(fragmentOffset).array();
 		// 0 -> METADATA
 		// 1 -> DATA
-		byte pachetType_byte = (byte) (this.pachetType == PACHET_TYPE.METADATA ? 0 : 1);
-		byte[] pachetType_byte_array = new byte[1];
+		byte pachetType_byte = (byte) (this.packetType == PACKET_TYPE.METADATA ? 0 : 1);
+		byte[] packetType_byte_array = new byte[1];
 
 		try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 			// 1. fragment Offset
@@ -58,10 +63,10 @@ public class FragmentedBlob {
 			// 2. key
 			out.write(key.getBytes(Charset.forName("UTF-8")));
 
-			pachetType_byte_array[0] = pachetType_byte;
-			out.write(pachetType_byte_array);
+			packetType_byte_array[0] = pachetType_byte;
+			out.write(packetType_byte_array);
 
-			out.write(UUIDUtils.getBytes(this.objectUUID));
+			out.write(UUIDUtils.getBytes(this.objectUuid));
 
 			out.write(this.payloadChecksum);
 			out.write(this.payload);
@@ -81,19 +86,19 @@ public class FragmentedBlob {
 	}
 
 	public UUID getObjectUUID() {
-		return objectUUID;
+		return objectUuid;
 	}
 
-	public void setObjectUUID(UUID objectUUID) {
-		this.objectUUID = objectUUID;
+	public void setObjectUUID(UUID objectUuid) {
+		this.objectUuid = objectUuid;
 	}
 
-	public PACHET_TYPE getPachetType() {
-		return pachetType;
+	public PACKET_TYPE getPachetType() {
+		return packetType;
 	}
 
-	public void setPachetType(PACHET_TYPE pachetType) {
-		this.pachetType = pachetType;
+	public void setPachetType(PACKET_TYPE pachetType) {
+		this.packetType = pachetType;
 	}
 
 	public byte[] getPayloadChecksum() {

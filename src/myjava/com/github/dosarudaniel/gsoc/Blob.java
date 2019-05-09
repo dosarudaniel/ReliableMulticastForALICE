@@ -11,10 +11,7 @@ import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.UUID;
-
-import myjava.com.github.dosarudaniel.gsoc.Blob.PACHET_TYPE;
 
 /**
  * Blob class - the structure of the object sent via multicast messages
@@ -25,16 +22,16 @@ import myjava.com.github.dosarudaniel.gsoc.Blob.PACHET_TYPE;
  */
 
 public class Blob {
-	public enum PACHET_TYPE {
+	public enum PACKET_TYPE {
 		METADATA, DATA;
 	}
+
 	ArrayList<FragmentedBlob> blobFragments;
 	private String key;
 	private UUID objectUUID;
-	private PACHET_TYPE pachetType;
+	private PACKET_TYPE packetType;
 	private byte[] payloadChecksum;
 	private byte[] payload;
-
 
 	/**
 	 * Parameterized constructor - creates a Blob object that contains a payload and
@@ -49,7 +46,7 @@ public class Blob {
 		this.payloadChecksum = calculateChecksum(this.payload);
 	}
 
-	public Blob(byte[] payload, PACHET_TYPE pachetType, String key)
+	public Blob(byte[] payload, PACKET_TYPE pachetType, String key)
 			throws NoSuchAlgorithmException, UnsupportedEncodingException {
 		this.payload = payload;
 		this.payloadChecksum = calculateChecksum(this.payload);
@@ -79,9 +76,6 @@ public class Blob {
 		// TODO
 		return true;
 	}
-
-
-
 
 //	public int getFragmentOffset() {
 //		return this.fragmentOffset;
@@ -129,7 +123,7 @@ public class Blob {
 				System.arraycopy(this.payload, maxPayloadSize * i, fragmentedPayload, 0, maxPayloadSize);
 			}
 
-			FragmentedBlob fragmentedBlob = new FragmentedBlob(fragmentedPayload, maxPayloadSize * i, this.pachetType,
+			FragmentedBlob fragmentedBlob = new FragmentedBlob(fragmentedPayload, maxPayloadSize * i, this.packetType,
 					this.key);
 			blobFragments.add(fragmentedBlob);
 		}
@@ -145,12 +139,12 @@ public class Blob {
 		this.key = key;
 	}
 
-	public PACHET_TYPE getPachetType() {
-		return this.pachetType;
+	public PACKET_TYPE getPachetType() {
+		return this.packetType;
 	}
 
-	public void setPachetType(PACHET_TYPE pachetType) {
-		this.pachetType = pachetType;
+	public void setPachetType(PACKET_TYPE packetType) {
+		this.packetType = packetType;
 	}
 
 	public UUID getObjectUUID() {
@@ -160,7 +154,7 @@ public class Blob {
 	public void setObjectUUID(UUID objectUUID) {
 		this.objectUUID = objectUUID;
 	}
-	
+
 	public static byte[] calculateChecksum(byte[] data) throws NoSuchAlgorithmException, UnsupportedEncodingException {
 		MessageDigest mDigest = MessageDigest.getInstance("SHA1");
 		mDigest.update(data);
