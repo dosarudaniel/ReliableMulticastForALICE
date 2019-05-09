@@ -35,10 +35,23 @@ public class FragmentedBlob {
 		this.payload = payload;
 	}
 
+	/*
+	 * Manual deserialization of a serialisedFragmentedBlob
+	 * 
+	 */
 	public FragmentedBlob(byte[] serialisedFragmentedBlob) {
-		// deserializare manuala
-		// TODO
+		byte[] fragmentOffset_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob, 0, 4);
+		byte[] key_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob, 4, 6);
+		byte[] packetType_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob, 6, 7);
+		byte[] uuid_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob, 7, 23);
 
+		ByteBuffer wrapped = ByteBuffer.wrap(fragmentOffset_byte_array);
+		this.fragmentOffset = wrapped.getInt();
+		this.key = new String(key_byte_array);
+		this.objectUuid = UUIDUtils.getUuid(uuid_byte_array);
+		this.packetType = (packetType_byte_array[0] == 0 ? PACKET_TYPE.METADATA : PACKET_TYPE.DATA);
+		this.payloadChecksum = Arrays.copyOfRange(serialisedFragmentedBlob, 24, 40);
+		this.payload = Arrays.copyOfRange(serialisedFragmentedBlob, 40, serialisedFragmentedBlob.length);
 	}
 
 	public int getFragmentOffset() {
@@ -49,26 +62,27 @@ public class FragmentedBlob {
 		this.fragmentOffset = fragmentOffset;
 	}
 
-	// serializare manuala
+	// manual serialization
 	public byte[] toBytes() throws IOException {
-		byte[] fragmentOffset_byte = ByteBuffer.allocate(4).putInt(fragmentOffset).array();
+		byte[] fragmentOffset_byte_array = ByteBuffer.allocate(4).putInt(fragmentOffset).array();
 		// 0 -> METADATA
 		// 1 -> DATA
 		byte pachetType_byte = (byte) (this.packetType == PACKET_TYPE.METADATA ? 0 : 1);
 		byte[] packetType_byte_array = new byte[1];
+		packetType_byte_array[0] = pachetType_byte;
 
 		try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-			// 1. fragment Offset
-			out.write(fragmentOffset_byte);
-			// 2. key
+			// 1. 4 bytes, fragment Offset
+			out.write(fragmentOffset_byte_array);
+			// 2. 2 bytes, key
 			out.write(key.getBytes(Charset.forName("UTF-8")));
-
-			packetType_byte_array[0] = pachetType_byte;
+			// 3. 1 byte, packet type or flags - to be decided
 			out.write(packetType_byte_array);
-
+			// 4. 16 bytes, uuid
 			out.write(UUIDUtils.getBytes(this.objectUuid));
-
+			// 5. 16 bytes, payload checksum
 			out.write(this.payloadChecksum);
+			// 6. unknown number of bytes - the real data to be transported
 			out.write(this.payload);
 
 			byte[] pachet = out.toByteArray();
