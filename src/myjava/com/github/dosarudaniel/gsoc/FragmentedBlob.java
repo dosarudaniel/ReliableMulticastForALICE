@@ -33,6 +33,7 @@ public class FragmentedBlob {
 	public FragmentedBlob(byte[] serialisedFragmentedBlob) {
 		// deserializare manuala
 		// TODO
+
 	}
 
 	public int getFragmentOffset() {
@@ -46,6 +47,10 @@ public class FragmentedBlob {
 	// serializare manuala
 	public byte[] toBytes() throws IOException {
 		byte[] fragmentOffset_byte = ByteBuffer.allocate(4).putInt(fragmentOffset).array();
+		// 0 -> METADATA
+		// 1 -> DATA
+		byte pachetType_byte = (byte) (this.pachetType == PACHET_TYPE.METADATA ? 0 : 1);
+		byte[] pachetType_byte_array = new byte[1];
 
 		try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 			// 1. fragment Offset
@@ -53,22 +58,16 @@ public class FragmentedBlob {
 			// 2. key
 			out.write(key.getBytes(Charset.forName("UTF-8")));
 
-			byte pachetType_byte = (byte) (this.pachetType == PACHET_TYPE.METADATA ? 0 : 1);
-			byte[] pachetType_byte_array = new byte[1];
 			pachetType_byte_array[0] = pachetType_byte;
 			out.write(pachetType_byte_array);
 
 			out.write(UUIDUtils.getBytes(this.objectUUID));
 
-			/*
-			 * 
-			 * 
-			 * private String key; private UUID objectUUID; private PACHET_TYPE pachetType;
-			 * private byte[] payload; private byte[] payloadChecksum;
-			 */
+			out.write(this.payloadChecksum);
+			out.write(this.payload);
 
 			byte[] pachet = out.toByteArray();
-
+			System.out.println(Arrays.toString(pachet));
 			return pachet;
 		}
 	}
