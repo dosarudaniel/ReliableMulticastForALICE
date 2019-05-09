@@ -67,7 +67,7 @@ public class Receiver {
 				Blob blob = (Blob) deserialize(this.buf);
 				// Print timestamp and content
 				String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
-				String payload = new String(blob.getPayload(), "UTF-8");
+				String payload = "";// new String(blob.getPayload(), "UTF-8");
 				System.out.println("[" + timeStamp + "]Data received:" + payload);
 				if ("end".equals(payload)) {
 					break;
