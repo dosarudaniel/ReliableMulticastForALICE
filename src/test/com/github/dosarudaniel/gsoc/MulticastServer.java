@@ -31,6 +31,9 @@ public class MulticastServer {
 				key, uuid);
 		fBlob.toBytes();
 
+		System.out.println(fBlob);
+		System.out.println(new FragmentedBlob(fBlob.toBytes()));
+
 		// while (true) {
 //			FragmentedBlob fragmentedBlob = ByteToFragmentedBlob(pachet);
 
