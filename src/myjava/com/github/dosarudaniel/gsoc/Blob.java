@@ -13,6 +13,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.UUID;
 
+import myjava.com.github.dosarudaniel.gsoc.Blob.PACKET_TYPE;
+
 /**
  * Blob class - the structure of the object sent via multicast messages
  *
@@ -28,7 +30,7 @@ public class Blob {
 
 	ArrayList<FragmentedBlob> blobFragments;
 	private String key;
-	private UUID objectUUID;
+	private UUID objectUuid;
 	private PACKET_TYPE packetType;
 	private byte[] payloadChecksum;
 	private byte[] payload;
@@ -46,11 +48,11 @@ public class Blob {
 		this.payloadChecksum = calculateChecksum(this.payload);
 	}
 
-	public Blob(byte[] payload, PACKET_TYPE pachetType, String key)
+	public Blob(byte[] payload, PACKET_TYPE packetType, String key)
 			throws NoSuchAlgorithmException, UnsupportedEncodingException {
 		this.payload = payload;
 		this.payloadChecksum = calculateChecksum(this.payload);
-		this.pachetType = pachetType;
+		this.packetType = packetType;
 		this.key = key;
 	}
 
@@ -122,9 +124,9 @@ public class Blob {
 			} else {
 				System.arraycopy(this.payload, maxPayloadSize * i, fragmentedPayload, 0, maxPayloadSize);
 			}
-
+			
 			FragmentedBlob fragmentedBlob = new FragmentedBlob(fragmentedPayload, maxPayloadSize * i, this.packetType,
-					this.key);
+					this.key, this.objectUuid);
 			blobFragments.add(fragmentedBlob);
 		}
 
@@ -147,12 +149,12 @@ public class Blob {
 		this.packetType = packetType;
 	}
 
-	public UUID getObjectUUID() {
-		return this.objectUUID;
+	public UUID getObjectUuid() {
+		return this.objectUuid;
 	}
 
-	public void setObjectUUID(UUID objectUUID) {
-		this.objectUUID = objectUUID;
+	public void setObjectUuid(UUID objectUuid) {
+		this.objectUuid = objectUuid;
 	}
 
 	public static byte[] calculateChecksum(byte[] data) throws NoSuchAlgorithmException, UnsupportedEncodingException {
