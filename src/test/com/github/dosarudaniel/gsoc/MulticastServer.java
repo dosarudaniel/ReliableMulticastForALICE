@@ -16,7 +16,7 @@ import myjava.com.github.dosarudaniel.gsoc.FragmentedBlob;
 public class MulticastServer {
 	static final int MIN_LEN = 50;
 	static final int MAX_LEN = 130;
-	static final String AB = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+	static final String AB = "34";
 
 	Map<UUID, Blob> inFlight = new HashMap<>(); // uuid <-> Blob fragmentat, zonă de tranzitie până la primirea completă
 												// a tuturor fragmentelor
