@@ -85,9 +85,9 @@ public class FragmentedBlob {
 			// 6. unknown number of bytes - the real data to be transported
 			out.write(this.payload);
 
-			byte[] pachet = out.toByteArray();
-			System.out.println(Arrays.toString(pachet));
-			return pachet;
+//			byte[] pachet = out.toByteArray();
+//			System.out.println(Arrays.toString(pachet));
+			return out.toByteArray();
 		}
 	}
 
@@ -154,5 +154,23 @@ public class FragmentedBlob {
 		MessageDigest mDigest = MessageDigest.getInstance("SHA1");
 		mDigest.update(data);
 		return mDigest.digest();
+	}
+
+	@Override
+	public String toString() {
+		String output = "";
+		if (this.packetType == PACKET_TYPE.METADATA) {
+			output += "Metadata ";
+		} else {
+			output += "Data ";
+		}
+		output += "fragmentedBlob with \n";
+		output += "fragmentOffset = " + Integer.toString(this.fragmentOffset) + "\n";
+		output += "key = " + this.key + "\n";
+		output += "uuid = " + this.objectUuid.toString() + "\n";
+		output += "payloadChecksum = " + new String(this.payloadChecksum) + "\n";
+		output += "payload = " + new String(this.payload) + "\n";
+
+		return output;
 	}
 }
