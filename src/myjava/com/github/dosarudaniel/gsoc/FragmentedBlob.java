@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.UUID;
@@ -22,7 +21,9 @@ public class FragmentedBlob {
 	private byte[] payloadChecksum;
 	private byte[] payload;
 
-	public FragmentedBlob(String payload) {
+	public FragmentedBlob(String payload) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+		this.payload = payload.getBytes(Charset.forName("UTF-8"));
+		this.payloadChecksum = Blob.calculateChecksum(this.payload);
 	}
 
 	public FragmentedBlob(byte[] payload, int fragmentOffset, PACKET_TYPE packetType, String key, UUID objectUuid)
@@ -31,7 +32,7 @@ public class FragmentedBlob {
 		this.key = key;
 		this.objectUuid = objectUuid;
 		this.packetType = packetType;
-		this.payloadChecksum = calculateChecksum(payload);
+		this.payloadChecksum = Blob.calculateChecksum(payload);
 		this.payload = payload;
 	}
 
@@ -85,14 +86,12 @@ public class FragmentedBlob {
 			// 6. unknown number of bytes - the real data to be transported
 			out.write(this.payload);
 
-//			byte[] pachet = out.toByteArray();
-//			System.out.println(Arrays.toString(pachet));
 			return out.toByteArray();
 		}
 	}
 
 	public String getKey() {
-		return key;
+		return this.key;
 	}
 
 	public void setKey(String key) {
@@ -100,7 +99,7 @@ public class FragmentedBlob {
 	}
 
 	public UUID getObjectUUID() {
-		return objectUuid;
+		return this.objectUuid;
 	}
 
 	public void setObjectUUID(UUID objectUuid) {
@@ -108,7 +107,7 @@ public class FragmentedBlob {
 	}
 
 	public PACKET_TYPE getPachetType() {
-		return packetType;
+		return this.packetType;
 	}
 
 	public void setPachetType(PACKET_TYPE pachetType) {
@@ -116,7 +115,7 @@ public class FragmentedBlob {
 	}
 
 	public byte[] getPayloadChecksum() {
-		return payloadChecksum;
+		return this.payloadChecksum;
 	}
 
 	public void setPayloadChecksum(byte[] payloadChecksum) {
@@ -132,7 +131,7 @@ public class FragmentedBlob {
 	 * @throws IOException                  - if checksum failed
 	 */
 	public byte[] getPayload() throws NoSuchAlgorithmException, UnsupportedEncodingException, IOException {
-		if (!Arrays.equals(this.payloadChecksum, calculateChecksum(this.payload))) {
+		if (!Arrays.equals(this.payloadChecksum, Blob.calculateChecksum(this.payload))) {
 			throw new IOException("Checksum failed!");
 		}
 		return this.payload;
@@ -140,20 +139,6 @@ public class FragmentedBlob {
 
 	public void setPayload(byte[] payload) {
 		this.payload = payload;
-	}
-
-	/**
-	 * Calculates the sha1 checksum for a certain string data
-	 *
-	 * @param data used to generate checksum
-	 * @return payloadChecksum
-	 * @throws NoSuchAlgorithmException
-	 * @throws UnsupportedEncodingException
-	 */
-	public static byte[] calculateChecksum(byte[] data) throws NoSuchAlgorithmException, UnsupportedEncodingException {
-		MessageDigest mDigest = MessageDigest.getInstance("SHA1");
-		mDigest.update(data);
-		return mDigest.digest();
 	}
 
 	@Override
