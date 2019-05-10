@@ -12,7 +12,6 @@ import java.util.UUID;
 import myjava.com.github.dosarudaniel.gsoc.Blob.PACKET_TYPE;
 
 public class FragmentedBlob {
-	private static final int CHECKSUM_SIZE = 16;
 
 	private int fragmentOffset;
 	private String key;
@@ -65,7 +64,7 @@ public class FragmentedBlob {
 
 	// manual serialization
 	public byte[] toBytes() throws IOException {
-		byte[] fragmentOffset_byte_array = ByteBuffer.allocate(4).putInt(fragmentOffset).array();
+		byte[] fragmentOffset_byte_array = ByteBuffer.allocate(4).putInt(this.fragmentOffset).array();
 		// 0 -> METADATA
 		// 1 -> DATA
 		byte pachetType_byte = (byte) (this.packetType == PACKET_TYPE.METADATA ? 0 : 1);
@@ -76,7 +75,7 @@ public class FragmentedBlob {
 			// 1. 4 bytes, fragment Offset
 			out.write(fragmentOffset_byte_array);
 			// 2. 2 bytes, key
-			out.write(key.getBytes(Charset.forName("UTF-8")));
+			out.write(this.key.getBytes(Charset.forName("UTF-8")));
 			// 3. 1 byte, packet type or flags - to be decided
 			out.write(packetType_byte_array);
 			// 4. 16 bytes, uuid
