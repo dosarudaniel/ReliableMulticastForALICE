@@ -26,7 +26,9 @@ public class Blob {
 		METADATA, DATA;
 	}
 
-	ArrayList<FragmentedBlob> blobFragments;
+	// to be decided if this is necessary
+	ArrayList<FragmentedBlob> blobFragmentsArrayList;
+
 	private String key;
 	private UUID objectUuid;
 	private PACKET_TYPE packetType;
@@ -60,11 +62,12 @@ public class Blob {
 
 	// va fi chemata de serverul UDP, pe masura ce primeste, deserializeaza un
 	// fragment si vede carui Blob ii apartine
-	public void notifyFragment(FragmentedBlob fB) {
-		// TODO
+	public void notifyFragment(FragmentedBlob fragmentedBlob)
+			throws NoSuchAlgorithmException, UnsupportedEncodingException, IOException {
+		addFragmentedBlob(fragmentedBlob);
 	}
 
-	// TODO
+// TODO
 //	public void send(InetAddress target, int port){
 //
 //        for (FragmentedBlob fb: toate fragmentele){
@@ -76,14 +79,6 @@ public class Blob {
 		// TODO
 		return true;
 	}
-
-//	public int getFragmentOffset() {
-//		return this.fragmentOffset;
-//	}
-//
-//	public void setFragmentOffset(int fragmentOffset) {
-//		this.fragmentOffset = fragmentOffset;
-//	}
 
 	/**
 	 * Assemble a Blob by adding one FragmentedBlob to it
