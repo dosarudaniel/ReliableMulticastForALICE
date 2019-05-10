@@ -56,10 +56,6 @@ public class Blob {
 		this.key = key;
 	}
 
-	public Blob(byte[] serialisedBlob) {
-		// TODO
-	}
-
 	// va fi chemata de serverul UDP, pe masura ce primeste, deserializeaza un
 	// fragment si vede carui Blob ii apartine
 	public void notifyFragment(FragmentedBlob fragmentedBlob)
