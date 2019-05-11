@@ -92,7 +92,7 @@ public class Blob {
 	}
 
 	public boolean isComplete() {
-
+		// TODO
 		return true;
 	}
 
