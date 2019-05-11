@@ -7,6 +7,9 @@ package myjava.com.github.dosarudaniel.gsoc;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -63,16 +66,33 @@ public class Blob {
 		addFragmentedBlob(fragmentedBlob);
 	}
 
-// TODO
-//	public void send(InetAddress target, int port){
-//
-//        for (FragmentedBlob fb: toate fragmentele){
-//            sendMulticast(fb.toBytes(), target, port);
-//        }
-//    }
+	/**
+	 * Sends multicast message that contains the serialized version of a
+	 * fragmentedBlob
+	 *
+	 * @param packet          - serialized fragmented Blob to send
+	 * @param destinationIp   - Destination IP address (multicast)
+	 * @param destinationPort - Destination port number
+	 * @throws IOException
+	 * @throws NoSuchAlgorithmException
+	 */
+	public static void sendMulticast(byte[] packet, String destinationIp, int destinationPort)
+			throws IOException, NoSuchAlgorithmException {
+		try (DatagramSocket socket = new DatagramSocket()) {
+			InetAddress group = InetAddress.getByName(destinationIp);
+			DatagramPacket datagramPacket = new DatagramPacket(packet, packet.length, group, destinationPort);
+			socket.send(datagramPacket);
+		}
+	}
+
+	public void send(String targetIp, int port) throws NoSuchAlgorithmException, IOException {
+		for (FragmentedBlob fragmentedBlob : this.blobFragmentsArrayList) {
+			sendMulticast(fragmentedBlob.toBytes(), targetIp, port);
+		}
+	}
 
 	public boolean isComplete() {
-		// TODO
+
 		return true;
 	}
 
