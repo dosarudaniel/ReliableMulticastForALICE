@@ -24,7 +24,7 @@ public class FragmentedBlob {
 
 	public FragmentedBlob(String payload) throws NoSuchAlgorithmException, UnsupportedEncodingException {
 		this.payload = payload.getBytes(Charset.forName("UTF-8"));
-		this.payloadChecksum = ChecksumUtils.calculateChecksum(this.payload);
+		this.payloadChecksum = Utils.calculateChecksum(this.payload);
 	}
 
 	public FragmentedBlob(byte[] payload, int fragmentOffset, PACKET_TYPE packetType, String key, UUID objectUuid)
@@ -33,7 +33,7 @@ public class FragmentedBlob {
 		this.key = key;
 		this.uuid = uuid;
 		this.packetType = packetType;
-		this.payloadChecksum = ChecksumUtils.calculateChecksum(payload);
+		this.payloadChecksum = Utils.calculateChecksum(payload);
 		this.payload = payload;
 	}
 
@@ -43,17 +43,19 @@ public class FragmentedBlob {
 	 */
 	public FragmentedBlob(byte[] serialisedFragmentedBlob) {
 		byte[] fragmentOffset_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob, 0, 4);
-		byte[] key_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob, 4, 6);
-		byte[] packetType_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob, 6, 7);
-		byte[] uuid_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob, 7, 23);
+		byte[] packetType_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob, 4, 5);
+		byte[] uuid_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob, 5, 19);
+		byte[] blobPayloadLength_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob, 19, 23);
+		byte[] key_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob, 19, 23);
 
 		ByteBuffer wrapped = ByteBuffer.wrap(fragmentOffset_byte_array);
 		this.fragmentOffset = wrapped.getInt();
 		this.key = new String(key_byte_array);
-		this.uuid = UUIDUtils.getUuid(uuid_byte_array);
+		this.uuid = Utils.getUuid(uuid_byte_array);
 		this.packetType = (packetType_byte_array[0] == 0 ? PACKET_TYPE.METADATA : PACKET_TYPE.DATA);
 		this.payloadChecksum = Arrays.copyOfRange(serialisedFragmentedBlob, 24, 40);
 		this.payload = Arrays.copyOfRange(serialisedFragmentedBlob, 40, serialisedFragmentedBlob.length);
+		this.packetChecksum = Arrays.copyOfRange(serialisedFragmentedBlob, 24, 40);
 	}
 
 	public int getFragmentOffset() {
@@ -65,8 +67,9 @@ public class FragmentedBlob {
 	}
 
 	// manual serialization
-	public byte[] toBytes() throws IOException {
+	public byte[] toBytes() throws IOException, NoSuchAlgorithmException {
 		byte[] fragmentOffset_byte_array = ByteBuffer.allocate(4).putInt(this.fragmentOffset).array();
+		byte[] blobPayloadLength_byte_array = ByteBuffer.allocate(4).putInt(this.blobPayloadLength).array();
 		// 0 -> METADATA
 		// 1 -> DATA
 		byte pachetType_byte = (byte) (this.packetType == PACKET_TYPE.METADATA ? 0 : 1);
@@ -76,16 +79,27 @@ public class FragmentedBlob {
 		try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 			// 1. 4 bytes, fragment Offset
 			out.write(fragmentOffset_byte_array);
-			// 2. 2 bytes, key
-			out.write(this.key.getBytes(Charset.forName("UTF-8")));
-			// 3. 1 byte, packet type or flags - to be decided
+
+			// 2. 1 byte, packet type or flags - to be decided
 			out.write(packetType_byte_array);
-			// 4. 16 bytes, uuid
-			out.write(UUIDUtils.getBytes(this.uuid));
+
+			// 3. 16 bytes, uuid
+			out.write(Utils.getBytes(this.uuid));
+
+			// 4. 4 bytes, blob payload Length
+			out.write(blobPayloadLength_byte_array);
+
+			// 5. ? bytes, key
+			out.write(this.key.getBytes(Charset.forName("UTF-8")));
+
 			// 5. 16 bytes, payload checksum
 			out.write(this.payloadChecksum);
+
 			// 6. unknown number of bytes - the real data to be transported
 			out.write(this.payload);
+
+			// 7. 16 bytes, packet checksum
+			out.write(Utils.calculateChecksum(out.toByteArray()));
 
 			return out.toByteArray();
 		}
@@ -132,7 +146,7 @@ public class FragmentedBlob {
 	 * @throws IOException                  - if checksum failed
 	 */
 	public byte[] getPayload() throws NoSuchAlgorithmException, UnsupportedEncodingException, IOException {
-		if (!Arrays.equals(this.payloadChecksum, ChecksumUtils.calculateChecksum(this.payload))) {
+		if (!Arrays.equals(this.payloadChecksum, Utils.calculateChecksum(this.payload))) {
 			throw new IOException("Checksum failed!");
 		}
 		return this.payload;
@@ -156,6 +170,7 @@ public class FragmentedBlob {
 		output += "uuid = " + this.uuid.toString() + "\n";
 		output += "payloadChecksum = " + new String(this.payloadChecksum) + "\n";
 		output += "payload = " + new String(this.payload) + "\n";
+		output += "packetChecksum = " + new String(this.packetChecksum) + "\n";
 
 		return output;
 	}

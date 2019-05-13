@@ -50,13 +50,12 @@ public class Blob {
 	 */
 	public Blob(String payload) throws NoSuchAlgorithmException, UnsupportedEncodingException {
 		this.payload = payload.getBytes(Charset.forName("UTF-8"));
-		this.payloadChecksum = ChecksumUtils.calculateChecksum(this.payload);
+		this.payloadChecksum = Utils.calculateChecksum(this.payload);
 	}
 
-	public Blob(byte[] payload, PACKET_TYPE packetType, String key)
-			throws NoSuchAlgorithmException, UnsupportedEncodingException {
+	public Blob(byte[] payload, PACKET_TYPE packetType, String key) throws NoSuchAlgorithmException {
 		this.payload = payload;
-		this.payloadChecksum = ChecksumUtils.calculateChecksum(this.payload);
+		this.payloadChecksum = Utils.calculateChecksum(this.payload);
 		this.packetType = packetType;
 		this.key = key;
 	}

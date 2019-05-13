@@ -1,9 +1,18 @@
 package myjava.com.github.dosarudaniel.gsoc;
 
 import java.nio.ByteBuffer;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
 
-public class UUIDUtils {
+public class Utils {
+
+	public static byte[] calculateChecksum(byte[] data) throws NoSuchAlgorithmException {
+		MessageDigest mDigest = MessageDigest.getInstance("SHA1");
+		mDigest.update(data);
+		return mDigest.digest();
+	}
+
 	public static UUID getUuid(byte[] bytes) {
 		ByteBuffer bb = ByteBuffer.wrap(bytes);
 		long firstLong = bb.getLong();
