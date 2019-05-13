@@ -11,7 +11,6 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.nio.charset.Charset;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.UUID;
@@ -51,13 +50,13 @@ public class Blob {
 	 */
 	public Blob(String payload) throws NoSuchAlgorithmException, UnsupportedEncodingException {
 		this.payload = payload.getBytes(Charset.forName("UTF-8"));
-		this.payloadChecksum = calculateChecksum(this.payload);
+		this.payloadChecksum = ChecksumUtils.calculateChecksum(this.payload);
 	}
 
 	public Blob(byte[] payload, PACKET_TYPE packetType, String key)
 			throws NoSuchAlgorithmException, UnsupportedEncodingException {
 		this.payload = payload;
-		this.payloadChecksum = calculateChecksum(this.payload);
+		this.payloadChecksum = ChecksumUtils.calculateChecksum(this.payload);
 		this.packetType = packetType;
 		this.key = key;
 	}
@@ -167,11 +166,5 @@ public class Blob {
 
 	public void setUuid(UUID uuid) {
 		this.uuid = uuid;
-	}
-
-	public static byte[] calculateChecksum(byte[] data) throws NoSuchAlgorithmException, UnsupportedEncodingException {
-		MessageDigest mDigest = MessageDigest.getInstance("SHA1");
-		mDigest.update(data);
-		return mDigest.digest();
 	}
 }

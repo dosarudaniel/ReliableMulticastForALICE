@@ -16,7 +16,7 @@ public class FragmentedBlob {
 	private int fragmentOffset;
 	private PACKET_TYPE packetType;
 	private UUID uuid;
-	private int payloadLength;
+	private int blobPayloadLength; // Total length of the Blob's payload
 	private String key;
 	private byte[] payloadChecksum;
 	private byte[] payload;
@@ -24,7 +24,7 @@ public class FragmentedBlob {
 
 	public FragmentedBlob(String payload) throws NoSuchAlgorithmException, UnsupportedEncodingException {
 		this.payload = payload.getBytes(Charset.forName("UTF-8"));
-		this.payloadChecksum = Blob.calculateChecksum(this.payload);
+		this.payloadChecksum = ChecksumUtils.calculateChecksum(this.payload);
 	}
 
 	public FragmentedBlob(byte[] payload, int fragmentOffset, PACKET_TYPE packetType, String key, UUID objectUuid)
@@ -33,7 +33,7 @@ public class FragmentedBlob {
 		this.key = key;
 		this.uuid = uuid;
 		this.packetType = packetType;
-		this.payloadChecksum = Blob.calculateChecksum(payload);
+		this.payloadChecksum = ChecksumUtils.calculateChecksum(payload);
 		this.payload = payload;
 	}
 
@@ -132,7 +132,7 @@ public class FragmentedBlob {
 	 * @throws IOException                  - if checksum failed
 	 */
 	public byte[] getPayload() throws NoSuchAlgorithmException, UnsupportedEncodingException, IOException {
-		if (!Arrays.equals(this.payloadChecksum, Blob.calculateChecksum(this.payload))) {
+		if (!Arrays.equals(this.payloadChecksum, ChecksumUtils.calculateChecksum(this.payload))) {
 			throw new IOException("Checksum failed!");
 		}
 		return this.payload;
