@@ -31,7 +31,7 @@ public class FragmentedBlob {
 			throws NoSuchAlgorithmException, UnsupportedEncodingException {
 		this.fragmentOffset = fragmentOffset;
 		this.key = key;
-		this.objectUuid = objectUuid;
+		this.uuid = uuid;
 		this.packetType = packetType;
 		this.payloadChecksum = Blob.calculateChecksum(payload);
 		this.payload = payload;
@@ -50,7 +50,7 @@ public class FragmentedBlob {
 		ByteBuffer wrapped = ByteBuffer.wrap(fragmentOffset_byte_array);
 		this.fragmentOffset = wrapped.getInt();
 		this.key = new String(key_byte_array);
-		this.objectUuid = UUIDUtils.getUuid(uuid_byte_array);
+		this.uuid = UUIDUtils.getUuid(uuid_byte_array);
 		this.packetType = (packetType_byte_array[0] == 0 ? PACKET_TYPE.METADATA : PACKET_TYPE.DATA);
 		this.payloadChecksum = Arrays.copyOfRange(serialisedFragmentedBlob, 24, 40);
 		this.payload = Arrays.copyOfRange(serialisedFragmentedBlob, 40, serialisedFragmentedBlob.length);
@@ -81,7 +81,7 @@ public class FragmentedBlob {
 			// 3. 1 byte, packet type or flags - to be decided
 			out.write(packetType_byte_array);
 			// 4. 16 bytes, uuid
-			out.write(UUIDUtils.getBytes(this.objectUuid));
+			out.write(UUIDUtils.getBytes(this.uuid));
 			// 5. 16 bytes, payload checksum
 			out.write(this.payloadChecksum);
 			// 6. unknown number of bytes - the real data to be transported
@@ -99,12 +99,12 @@ public class FragmentedBlob {
 		this.key = key;
 	}
 
-	public UUID getObjectUUID() {
-		return this.objectUuid;
+	public UUID getUuid() {
+		return this.uuid;
 	}
 
-	public void setObjectUUID(UUID objectUuid) {
-		this.objectUuid = objectUuid;
+	public void setUuid(UUID uuid) {
+		this.uuid = uuid;
 	}
 
 	public PACKET_TYPE getPachetType() {
@@ -153,7 +153,7 @@ public class FragmentedBlob {
 		output += "fragmentedBlob with \n";
 		output += "fragmentOffset = " + Integer.toString(this.fragmentOffset) + "\n";
 		output += "key = " + this.key + "\n";
-		output += "uuid = " + this.objectUuid.toString() + "\n";
+		output += "uuid = " + this.uuid.toString() + "\n";
 		output += "payloadChecksum = " + new String(this.payloadChecksum) + "\n";
 		output += "payload = " + new String(this.payload) + "\n";
 
