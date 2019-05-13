@@ -5,11 +5,13 @@
  */
 package myjava.com.github.dosarudaniel.gsoc;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -87,8 +89,46 @@ public class Blob {
 	}
 
 	public void send(String targetIp, int port) throws NoSuchAlgorithmException, IOException {
-		for (FragmentedBlob fragmentedBlob : this.blobFragmentsArrayList) {
-			sendFragmentMulticast(fragmentedBlob.toBytes(), targetIp, port);
+		byte[] packetBlob = this.toBytes();
+		byte[] packetHeader = new byte[Utils.FRAGMENTED_BLOB_HEADER_LENGHT];
+
+//		for (FragmentedBlob fragmentedBlob : this.blobFragmentsArrayList) {
+//			sendFragmentMulticast(fragmentedBlob.toBytes(), targetIp, port);
+//		}
+	}
+
+	// manual serialization
+	public byte[] toBytes() throws IOException, NoSuchAlgorithmException {
+		byte[] blobPayloadLength_byte_array = ByteBuffer.allocate(4).putInt(this.payloadLength).array();
+		// 0 -> METADATA
+		// 1 -> DATA
+		byte pachetType_byte = (byte) (this.packetType == PACKET_TYPE.METADATA ? 0 : 1);
+		byte[] packetType_byte_array = new byte[1];
+		packetType_byte_array[0] = pachetType_byte;
+
+		try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+			// 1. 1 byte, packet type or flags - to be decided
+			out.write(packetType_byte_array);
+
+			// 2. 16 bytes, uuid
+			out.write(Utils.getBytes(this.uuid));
+
+			// 3. 4 bytes, blob payload Length
+			out.write(blobPayloadLength_byte_array);
+
+			// 4. ? bytes, key
+			out.write(this.key.getBytes(Charset.forName("UTF-8")));
+
+			// 5. 16 bytes, payload checksum
+			out.write(this.payloadChecksum);
+
+			// 6. unknown number of bytes - the real data to be transported
+			out.write(this.payload);
+
+			// 7. 16 bytes, packet checksum
+			out.write(Utils.calculateChecksum(out.toByteArray()));
+
+			return out.toByteArray();
 		}
 	}
 

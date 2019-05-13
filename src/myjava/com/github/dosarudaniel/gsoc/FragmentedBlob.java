@@ -92,13 +92,13 @@ public class FragmentedBlob {
 			// 5. ? bytes, key
 			out.write(this.key.getBytes(Charset.forName("UTF-8")));
 
-			// 5. 16 bytes, payload checksum
+			// 6. 16 bytes, payload checksum
 			out.write(this.payloadChecksum);
 
-			// 6. unknown number of bytes - the real data to be transported
+			// 7. unknown number of bytes - the real data to be transported
 			out.write(this.payload);
 
-			// 7. 16 bytes, packet checksum
+			// 8. 16 bytes, packet checksum
 			out.write(Utils.calculateChecksum(out.toByteArray()));
 
 			return out.toByteArray();
