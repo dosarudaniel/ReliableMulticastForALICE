@@ -7,6 +7,7 @@ import java.util.UUID;
 
 public class Utils {
 	public final static int FRAGMENTED_BLOB_HEADER_LENGHT = 43;
+	public final static int PACKET_MAX_SIZE = 65536;
 
 	public static byte[] calculateChecksum(byte[] data) throws NoSuchAlgorithmException {
 		MessageDigest mDigest = MessageDigest.getInstance("SHA1");
