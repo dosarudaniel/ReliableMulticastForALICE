@@ -14,11 +14,13 @@ import myjava.com.github.dosarudaniel.gsoc.Blob.PACKET_TYPE;
 public class FragmentedBlob {
 
 	private int fragmentOffset;
-	private String key;
-	private UUID objectUuid;
 	private PACKET_TYPE packetType;
+	private UUID uuid;
+	private int payloadLength;
+	private String key;
 	private byte[] payloadChecksum;
 	private byte[] payload;
+	private byte[] packetChecksum;
 
 	public FragmentedBlob(String payload) throws NoSuchAlgorithmException, UnsupportedEncodingException {
 		this.payload = payload.getBytes(Charset.forName("UTF-8"));

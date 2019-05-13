@@ -31,12 +31,15 @@ public class Blob {
 
 	// to be decided if this is necessary
 	ArrayList<FragmentedBlob> blobFragmentsArrayList;
+	ArrayList<byte[]> blobByteRange;
 
-	private String key;
-	private UUID objectUuid;
 	private PACKET_TYPE packetType;
+	private UUID uuid;
+	private int payloadLength;
+	private String key;
 	private byte[] payloadChecksum;
 	private byte[] payload;
+	private byte[] packetChecksum;
 
 	/**
 	 * Parameterized constructor - creates a Blob object that contains a payload and
@@ -76,7 +79,7 @@ public class Blob {
 	 * @throws IOException
 	 * @throws NoSuchAlgorithmException
 	 */
-	public static void sendMulticast(byte[] packet, String destinationIp, int destinationPort)
+	public static void sendFragmentMulticast(byte[] packet, String destinationIp, int destinationPort)
 			throws IOException, NoSuchAlgorithmException {
 		try (DatagramSocket socket = new DatagramSocket()) {
 			InetAddress group = InetAddress.getByName(destinationIp);
@@ -87,7 +90,7 @@ public class Blob {
 
 	public void send(String targetIp, int port) throws NoSuchAlgorithmException, IOException {
 		for (FragmentedBlob fragmentedBlob : this.blobFragmentsArrayList) {
-			sendMulticast(fragmentedBlob.toBytes(), targetIp, port);
+			sendFragmentMulticast(fragmentedBlob.toBytes(), targetIp, port);
 		}
 	}
 
@@ -135,7 +138,7 @@ public class Blob {
 			}
 
 			FragmentedBlob fragmentedBlob = new FragmentedBlob(fragmentedPayload, maxPayloadSize * i, this.packetType,
-					this.key, this.objectUuid);
+					this.key, this.uuid);
 			blobFragments.add(fragmentedBlob);
 		}
 
@@ -158,12 +161,12 @@ public class Blob {
 		this.packetType = packetType;
 	}
 
-	public UUID getObjectUuid() {
-		return this.objectUuid;
+	public UUID getUuid() {
+		return this.uuid;
 	}
 
-	public void setObjectUuid(UUID objectUuid) {
-		this.objectUuid = objectUuid;
+	public void setUuid(UUID uuid) {
+		this.uuid = uuid;
 	}
 
 	public static byte[] calculateChecksum(byte[] data) throws NoSuchAlgorithmException, UnsupportedEncodingException {
