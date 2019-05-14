@@ -60,7 +60,7 @@ public class MulticastServer {
 //				}
 
 			}
-			socket.leaveGroup(group);
+			//socket.leaveGroup(group);
 		}
 
 		// while (true) {
