@@ -37,8 +37,9 @@ public class Blob {
 	private PACKET_TYPE packetType;
 	private UUID uuid;
 	private int payloadLength;
-	private String key;
 	private byte[] payloadChecksum;
+	private short keyLength;
+	private String key;
 	private byte[] payload;
 	private byte[] packetChecksum;
 
@@ -60,6 +61,7 @@ public class Blob {
 		this.payloadChecksum = Utils.calculateChecksum(this.payload);
 		this.packetType = packetType;
 		this.key = key;
+		this.keyLength = (short) key.length();
 	}
 
 	// va fi chemata de serverul UDP, pe masura ce primeste, deserializeaza un

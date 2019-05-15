@@ -17,7 +17,7 @@ public class FragmentedBlob {
 	private UUID uuid;
 	private int blobPayloadLength; // Total length of the Blob's payload
 	private byte[] payloadChecksum;
-	private int keyLength;
+	private short keyLength;
 	private String key;
 	private byte[] payload;
 	private byte[] packetChecksum;
@@ -30,7 +30,7 @@ public class FragmentedBlob {
 	public FragmentedBlob(byte[] payload, int fragmentOffset, PACKET_TYPE packetType, String key, UUID objectUuid)
 			throws NoSuchAlgorithmException, UnsupportedEncodingException {
 		this.fragmentOffset = fragmentOffset;
-		this.keyLength = key.length();
+		this.keyLength = (short) key.length();
 		this.key = key;
 		this.uuid = uuid;
 		this.packetType = packetType;
@@ -38,21 +38,47 @@ public class FragmentedBlob {
 		this.payload = payload;
 	}
 
+	
+//	// Field size (in bytes)
+//	public final static int SIZE_OF_FRAGMENT_OFFSET = 4;
+//	public final static int SIZE_OF_PACKET_TYPE = 1;
+//	public final static int SIZE_OF_UUID = 16;
+//	public final static int SIZE_OF_BLOB_PAYLOAD_LENGTH = 4;
+//	public final static int SIZE_OF_PAYLOAD_CHECKSUM = 16;
+//	public final static int SIZE_OF_KEY_LENGTH = 2;
+//	public final static int SIZE_OF_PACKET_CHECKSUM = 16;
+//	// public final static int SIZE_OF_KEY = ???;
+//	// public final static int SIZE_OF_PAYLOAD = ???;
+//	
+//	// Start indexes of the fields in the serialized byte[] 
+//	public final static int FRAGMENT_OFFSET_START_INDEX  = 0;
+//	public final static int PACKET_TYPE_START_INDEX = FRAGMENT_OFFSET_START_INDEX + SIZE_OF_FRAGMENT_OFFSET;
+//	public final static int UUID_START_INDEX = PACKET_TYPE_START_INDEX + SIZE_OF_PACKET_TYPE;
+//	public final static int BLOB_PAYLOAD_LENGTH_START_INDEX = UUID_START_INDEX + SIZE_OF_UUID;
+//	public final static int PAYLOAD_CHECKSUM_START_INDEX = BLOB_PAYLOAD_LENGTH_START_INDEX + SIZE_OF_BLOB_PAYLOAD_LENGTH;
+//	public final static int KEY_LENGTH_START_INDEX = PAYLOAD_CHECKSUM_START_INDEX + SIZE_OF_PAYLOAD_CHECKSUM;
+//	public final static int KEY_START_INDEX = KEY_LENGTH_START_INDEX + SIZE_OF_KEY_LENGTH;
+//	
 	/*
 	 * Manual deserialization of a serialisedFragmentedBlob
 	 * 
 	 */
 	public FragmentedBlob(byte[] serialisedFragmentedBlob) {
-		byte[] fragmentOffset_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob, 0, 4);
-		byte[] packetType_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob, 4, 5);
-		byte[] uuid_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob, 5, 19);
-		byte[] blobPayloadLength_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob, 19, 23);
-		byte[] key_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob, 19, 23);
+		byte[] fragmentOffset_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob, 
+				Utils.FRAGMENT_OFFSET_START_INDEX, Utils.PACKET_TYPE_START_INDEX - 1);
+		byte[] packetType_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob, 
+				Utils.PACKET_TYPE_START_INDEX, Utils.UUID_START_INDEX - 1);
+		byte[] uuid_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob, 
+				Utils.UUID_START_INDEX, Utils.BLOB_PAYLOAD_LENGTH_START_INDEX - 1);
+		byte[] blobPayloadLength_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob, 
+				Utils.BLOB_PAYLOAD_LENGTH_START_INDEX, Utils.PAYLOAD_CHECKSUM_START_INDEX - 1);
 
+		// TODO:
 		ByteBuffer wrapped = ByteBuffer.wrap(fragmentOffset_byte_array);
 		this.fragmentOffset = wrapped.getInt();
-		this.key = new String(key_byte_array);
+		//this.key = new String(key_byte_array);
 		this.uuid = Utils.getUuid(uuid_byte_array);
+		
 		this.packetType = (packetType_byte_array[0] == 0 ? PACKET_TYPE.METADATA : PACKET_TYPE.DATA);
 		this.payloadChecksum = Arrays.copyOfRange(serialisedFragmentedBlob, 24, 40);
 		this.payload = Arrays.copyOfRange(serialisedFragmentedBlob, 40, serialisedFragmentedBlob.length);
