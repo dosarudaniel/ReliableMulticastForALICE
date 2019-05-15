@@ -9,6 +9,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class Utils {
 	public final static int FRAGMENTED_BLOB_HEADER_LENGHT = 43;
 	public final static int PACKET_MAX_SIZE = 65536;
+	public final static String CHARSET = "UTF-8";
 	
 	static final String AB = "0123456789abcdefghijklmnopqrstuvwxyz";
 

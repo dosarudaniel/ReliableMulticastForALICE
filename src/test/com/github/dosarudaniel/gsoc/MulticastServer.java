@@ -34,7 +34,7 @@ public class MulticastServer {
 		String payload = Utils.generateRandomString(ThreadLocalRandom.current().nextInt(MIN_LEN, MAX_LEN));
 		String key = "te";
 		UUID uuid = UUID.randomUUID();
-		FragmentedBlob fBlob = new FragmentedBlob(payload.getBytes(Charset.forName("UTF-8")), 257, PACKET_TYPE.DATA,
+		FragmentedBlob fBlob = new FragmentedBlob(payload.getBytes(Charset.forName(Utils.CHARSET)), 257, PACKET_TYPE.DATA,
 				key, uuid);
 		fBlob.toBytes();
 

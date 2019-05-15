@@ -51,7 +51,7 @@ public class Blob {
 	 * @throws UnsupportedEncodingException
 	 */
 	public Blob(String payload) throws NoSuchAlgorithmException, UnsupportedEncodingException {
-		this.payload = payload.getBytes(Charset.forName("UTF-8"));
+		this.payload = payload.getBytes(Charset.forName(Utils.CHARSET));
 		this.payloadChecksum = Utils.calculateChecksum(this.payload);
 	}
 

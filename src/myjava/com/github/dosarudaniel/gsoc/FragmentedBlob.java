@@ -12,24 +12,25 @@ import java.util.UUID;
 import myjava.com.github.dosarudaniel.gsoc.Blob.PACKET_TYPE;
 
 public class FragmentedBlob {
-
 	private int fragmentOffset;
 	private PACKET_TYPE packetType;
 	private UUID uuid;
 	private int blobPayloadLength; // Total length of the Blob's payload
-	private String key;
 	private byte[] payloadChecksum;
+	private int keyLength;
+	private String key;
 	private byte[] payload;
 	private byte[] packetChecksum;
 
 	public FragmentedBlob(String payload) throws NoSuchAlgorithmException, UnsupportedEncodingException {
-		this.payload = payload.getBytes(Charset.forName("UTF-8"));
+		this.payload = payload.getBytes(Charset.forName(Utils.CHARSET));
 		this.payloadChecksum = Utils.calculateChecksum(this.payload);
 	}
 
 	public FragmentedBlob(byte[] payload, int fragmentOffset, PACKET_TYPE packetType, String key, UUID objectUuid)
 			throws NoSuchAlgorithmException, UnsupportedEncodingException {
 		this.fragmentOffset = fragmentOffset;
+		this.keyLength = key.length();
 		this.key = key;
 		this.uuid = uuid;
 		this.packetType = packetType;
@@ -69,12 +70,15 @@ public class FragmentedBlob {
 	// manual serialization
 	public byte[] toBytes() throws IOException, NoSuchAlgorithmException {
 		byte[] fragmentOffset_byte_array = ByteBuffer.allocate(4).putInt(this.fragmentOffset).array();
-		byte[] blobPayloadLength_byte_array = ByteBuffer.allocate(4).putInt(this.blobPayloadLength).array();
+
 		// 0 -> METADATA
 		// 1 -> DATA
 		byte pachetType_byte = (byte) (this.packetType == PACKET_TYPE.METADATA ? 0 : 1);
 		byte[] packetType_byte_array = new byte[1];
 		packetType_byte_array[0] = pachetType_byte;
+
+		byte[] blobPayloadLength_byte_array = ByteBuffer.allocate(4).putInt(this.blobPayloadLength).array();
+		byte[] keyLength_byte_array = ByteBuffer.allocate(4).putInt(this.keyLength).array();
 
 		try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 			// 1. 4 bytes, fragment Offset
@@ -89,16 +93,19 @@ public class FragmentedBlob {
 			// 4. 4 bytes, blob payload Length
 			out.write(blobPayloadLength_byte_array);
 
-			// 5. ? bytes, key
-			out.write(this.key.getBytes(Charset.forName("UTF-8")));
-
-			// 6. 16 bytes, payload checksum
+			// 5. 16 bytes, payload checksum
 			out.write(this.payloadChecksum);
 
-			// 7. unknown number of bytes - the real data to be transported
+			// 6. 4 bytes, keyLength
+			out.write(keyLength_byte_array);
+
+			// 7. keyLength bytes, key
+			out.write(this.key.getBytes(Charset.forName(Utils.CHARSET)));
+
+			// 8. unknown number of bytes - the payload to be transported
 			out.write(this.payload);
 
-			// 8. 16 bytes, packet checksum
+			// 9. 16 bytes, packet checksum
 			out.write(Utils.calculateChecksum(out.toByteArray()));
 
 			return out.toByteArray();
