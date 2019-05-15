@@ -28,15 +28,17 @@ public class FragmentedBlob {
 		this.payloadChecksum = Utils.calculateChecksum(this.payload);
 	}
 
-	public FragmentedBlob(byte[] payload, int fragmentOffset, PACKET_TYPE packetType, String key, UUID uuid)
-			throws NoSuchAlgorithmException {
+	public FragmentedBlob(int fragmentOffset, PACKET_TYPE packetType, UUID uuid, int blobPayloadLength, byte[] payload,
+			String key) throws NoSuchAlgorithmException {
 		this.fragmentOffset = fragmentOffset;
+		this.packetType = packetType;
+		this.uuid = uuid;
+		this.blobPayloadLength = blobPayloadLength;
+		this.payloadChecksum = Utils.calculateChecksum(payload);
 		this.keyLength = (short) key.length();
 		this.key = key;
-		this.uuid = uuid;
-		this.packetType = packetType;
-		this.payloadChecksum = Utils.calculateChecksum(payload);
 		this.payload = payload;
+		// this.packetChecksum = Utils.calculateChecksum(smth);?
 	}
 
 //	// Field size (in bytes)
