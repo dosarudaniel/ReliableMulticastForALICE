@@ -28,8 +28,8 @@ public class FragmentedBlob {
 		this.payloadChecksum = Utils.calculateChecksum(this.payload);
 	}
 
-	public FragmentedBlob(int fragmentOffset, PACKET_TYPE packetType, UUID uuid, int blobPayloadLength, byte[] payload,
-			String key) throws NoSuchAlgorithmException {
+	public FragmentedBlob(int fragmentOffset, PACKET_TYPE packetType, UUID uuid, int blobPayloadLength, String key,
+			byte[] payload) throws NoSuchAlgorithmException {
 		this.fragmentOffset = fragmentOffset;
 		this.packetType = packetType;
 		this.uuid = uuid;
@@ -120,14 +120,6 @@ public class FragmentedBlob {
 		}
 	}
 
-	public int getFragmentOffset() {
-		return this.fragmentOffset;
-	}
-
-	public void setFragmentOffset(int fragmentOffset) {
-		this.fragmentOffset = fragmentOffset;
-	}
-
 	// manual serialization
 	public byte[] toBytes() throws IOException, NoSuchAlgorithmException {
 		byte[] fragmentOffset_byte_array = ByteBuffer.allocate(4).putInt(this.fragmentOffset).array();
@@ -139,7 +131,7 @@ public class FragmentedBlob {
 		packetType_byte_array[0] = pachetType_byte;
 
 		byte[] blobPayloadLength_byte_array = ByteBuffer.allocate(4).putInt(this.blobPayloadLength).array();
-		byte[] keyLength_byte_array = ByteBuffer.allocate(4).putInt(this.keyLength).array();
+		byte[] keyLength_byte_array = ByteBuffer.allocate(2).putInt(this.keyLength).array();
 
 		try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 			// 1. 4 bytes, fragment Offset
@@ -157,13 +149,13 @@ public class FragmentedBlob {
 			// 5. 16 bytes, payload checksum
 			out.write(this.payloadChecksum);
 
-			// 6. 4 bytes, keyLength
+			// 6. 2 bytes, keyLength
 			out.write(keyLength_byte_array);
 
 			// 7. keyLength bytes, key
 			out.write(this.key.getBytes(Charset.forName(Utils.CHARSET)));
 
-			// 8. unknown number of bytes - the payload to be transported
+			// 8. this.payload.length number of bytes - the payload to be transported
 			out.write(this.payload);
 
 			// 9. 16 bytes, packet checksum
@@ -171,6 +163,14 @@ public class FragmentedBlob {
 
 			return out.toByteArray();
 		}
+	}
+
+	public int getFragmentOffset() {
+		return this.fragmentOffset;
+	}
+
+	public void setFragmentOffset(int fragmentOffset) {
+		this.fragmentOffset = fragmentOffset;
 	}
 
 	public String getKey() {
