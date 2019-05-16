@@ -36,14 +36,14 @@ public class Blob {
 	ArrayList<FragmentedBlob> blobFragmentsArrayList;
 	ArrayList<byte[]> blobByteRange;
 
-	private PACKET_TYPE packetType;
 	private UUID uuid;
-	private int payloadLength;
-	private byte[] payloadChecksum;
-	private short keyLength;
+	// private int payloadLength;  // <-- payload.length
+	// private int metadataLength; // <-- metadata.legth
+	private byte[] payloadAndMetadataChecksum;
+	// private short keyLength; //<- key.length()
 	private String key;
+	private byte[] metadata;
 	private byte[] payload;
-	private byte[] packetChecksum;
 
 	/**
 	 * Parameterized constructor - creates a Blob object that contains a payload and
@@ -55,15 +55,13 @@ public class Blob {
 	 */
 	public Blob(String payload) throws NoSuchAlgorithmException, UnsupportedEncodingException {
 		this.payload = payload.getBytes(Charset.forName(Utils.CHARSET));
-		this.payloadChecksum = Utils.calculateChecksum(this.payload);
+		this.payloadAndMetadataChecksum = Utils.calculateChecksum(this.payload);
 	}
 
 	public Blob(byte[] payload, PACKET_TYPE packetType, String key) throws NoSuchAlgorithmException {
 		this.payload = payload;
-		this.payloadChecksum = Utils.calculateChecksum(this.payload);
-		this.packetType = packetType;
+		this.payloadAndMetadataChecksum = Utils.calculateChecksum(this.payload);
 		this.key = key;
-		this.keyLength = (short) key.length();
 	}
 
 	// va fi chemata de serverul UDP, pe masura ce primeste, deserializeaza un
@@ -103,28 +101,23 @@ public class Blob {
 
 	// manual serialization
 	public byte[] toBytes() throws IOException, NoSuchAlgorithmException {
-		byte[] blobPayloadLength_byte_array = ByteBuffer.allocate(4).putInt(this.payloadLength).array();
-		// 0 -> METADATA
-		// 1 -> DATA
-		byte pachetType_byte = (byte) (this.packetType == PACKET_TYPE.METADATA ? 0 : 1);
-		byte[] packetType_byte_array = new byte[1];
-		packetType_byte_array[0] = pachetType_byte;
+		byte[] blobPayloadLength_byte_array = ByteBuffer.allocate(4).putInt(payload.length).array();
+		byte[] keyLength_byte_array = ByteBuffer.allocate(2).putShort((short)key.length()).array();// putShort(this.key).array();
 
 		try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-			// 1. 1 byte, packet type or flags - to be decided
-			out.write(packetType_byte_array);
-
-			// 2. 16 bytes, uuid
+			// 1. 16 bytes, uuid
 			out.write(Utils.getBytes(this.uuid));
 
 			// 3. 4 bytes, blob payload Length
 			out.write(blobPayloadLength_byte_array);
+			
+			// 5. 16 bytes, payload checksum
+			out.write(this.payloadAndMetadataChecksum);
 
 			// 4. ? bytes, key
 			out.write(this.key.getBytes(Charset.forName("UTF-8")));
 
-			// 5. 16 bytes, payload checksum
-			out.write(this.payloadChecksum);
+			
 
 			// 6. unknown number of bytes - the real data to be transported
 			out.write(this.payload);
@@ -179,7 +172,7 @@ public class Blob {
 				System.arraycopy(this.payload, maxPayloadSize * i, fragmentedPayload, 0, maxPayloadSize);
 			}
 			
-			FragmentedBlob fragmentedBlob = new FragmentedBlob(maxPayloadSize * i, this.packetType, this.uuid,
+			FragmentedBlob fragmentedBlob = new FragmentedBlob(maxPayloadSize * i, PACKET_TYPE.DATA, this.uuid,
 					this.payload.length, this.key, fragmentedPayload);
 
 			blobFragments.add(fragmentedBlob);
@@ -194,14 +187,6 @@ public class Blob {
 
 	public void setKey(String key) {
 		this.key = key;
-	}
-
-	public PACKET_TYPE getPachetType() {
-		return this.packetType;
-	}
-
-	public void setPachetType(PACKET_TYPE packetType) {
-		this.packetType = packetType;
 	}
 
 	public UUID getUuid() {
