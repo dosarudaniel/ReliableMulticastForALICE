@@ -10,6 +10,7 @@ public class Utils {
 	public final static int FRAGMENTED_BLOB_HEADER_LENGHT = 43;
 	public final static int PACKET_MAX_SIZE = 65536;
 	public final static String CHARSET = "UTF-8";
+	static final String AB = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	
 
 	// Fragment Offset:   0 ........ 3
@@ -38,14 +39,15 @@ public class Utils {
 	public final static int PACKET_TYPE_START_INDEX = FRAGMENT_OFFSET_START_INDEX + SIZE_OF_FRAGMENT_OFFSET;
 	public final static int UUID_START_INDEX = PACKET_TYPE_START_INDEX + SIZE_OF_PACKET_TYPE;
 	public final static int BLOB_PAYLOAD_LENGTH_START_INDEX = UUID_START_INDEX + SIZE_OF_UUID;
-	public final static int PAYLOAD_CHECKSUM_START_INDEX = BLOB_PAYLOAD_LENGTH_START_INDEX + SIZE_OF_BLOB_PAYLOAD_LENGTH;
-	public final static int KEY_LENGTH_START_INDEX = PAYLOAD_CHECKSUM_START_INDEX + SIZE_OF_PAYLOAD_CHECKSUM;
-	public final static int KEY_START_INDEX = KEY_LENGTH_START_INDEX + SIZE_OF_KEY_LENGTH;
+
+	public final static int KEY_LENGTH_START_INDEX = BLOB_PAYLOAD_LENGTH_START_INDEX + SIZE_OF_BLOB_PAYLOAD_LENGTH;
+	public final static int PAYLOAD_CHECKSUM_START_INDEX = KEY_LENGTH_START_INDEX + SIZE_OF_KEY_LENGTH;
+	
+	public final static int KEY_START_INDEX = PAYLOAD_CHECKSUM_START_INDEX + SIZE_OF_PAYLOAD_CHECKSUM;
 	// public final static int PAYLOAD_START_INDEX = KEY_START_INDEX + SIZE_OF_KEY (unknown);
 	// public final static int PACKET_CHECKSUM_START_INDEX = PAYLOAD_START_INDEX + SIZE_OF_PAYLOAD (unknown);
 	
 	
-	static final String AB = "0123456789abcdefghijklmnopqrstuvwxyz";
 
 	public static byte[] calculateChecksum(byte[] data) throws NoSuchAlgorithmException {
 		MessageDigest mDigest = MessageDigest.getInstance("SHA1");

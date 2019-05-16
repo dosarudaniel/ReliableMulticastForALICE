@@ -91,8 +91,10 @@ public class Blob {
 	}
 
 	public void send(String targetIp, int port) throws NoSuchAlgorithmException, IOException {
-		byte[] packetBlob = this.toBytes();
-		byte[] packetHeader = new byte[Utils.FRAGMENTED_BLOB_HEADER_LENGHT];
+		//byte[] packetBlob = this.toBytes();
+		// Build the header
+		byte[] commonPacketHeader = new byte[Utils.FRAGMENTED_BLOB_HEADER_LENGHT];
+		
 
 //		for (FragmentedBlob fragmentedBlob : this.blobFragmentsArrayList) {
 //			sendFragmentMulticast(fragmentedBlob.toBytes(), targetIp, port);
