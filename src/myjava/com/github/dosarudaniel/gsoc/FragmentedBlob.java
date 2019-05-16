@@ -17,8 +17,8 @@ public class FragmentedBlob {
 	private PACKET_TYPE packetType;
 	private UUID uuid;
 	private int blobPayloadLength; // Total length of the Blob's payload
-	private byte[] payloadChecksum;
 	//private short keyLength;  // <-- key.length()
+	private byte[] payloadChecksum;
 	private String key;
 	private byte[] payload;
 	private byte[] packetChecksum;
@@ -76,15 +76,15 @@ public class FragmentedBlob {
 		// Get the blob payload length:
 		wrapped = ByteBuffer.wrap(blobPayloadLength_byte_array);
 		this.blobPayloadLength = wrapped.getInt();
-		// Field 5: Payload checksum
-		this.payloadChecksum = Arrays.copyOfRange(serialisedFragmentedBlob, Utils.PAYLOAD_CHECKSUM_START_INDEX,
-				Utils.PAYLOAD_CHECKSUM_START_INDEX + Utils.SIZE_OF_PAYLOAD_CHECKSUM);
-		// Field 6: Key length
+		// Field 5: Key length
 		byte[] keyLength_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob, Utils.KEY_LENGTH_START_INDEX,
 				Utils.KEY_LENGTH_START_INDEX + Utils.SIZE_OF_KEY_LENGTH - 1);
 		// Get the key length:
 		wrapped = ByteBuffer.wrap(keyLength_byte_array);
 		short keyLength = wrapped.getShort();
+		// Field 6: Payload checksum
+		this.payloadChecksum = Arrays.copyOfRange(serialisedFragmentedBlob, Utils.PAYLOAD_CHECKSUM_START_INDEX,
+				Utils.PAYLOAD_CHECKSUM_START_INDEX + Utils.SIZE_OF_PAYLOAD_CHECKSUM);
 		// Field 7: Key
 		byte[] key_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob, Utils.KEY_START_INDEX,
 				Utils.KEY_START_INDEX + keyLength - 1);
@@ -125,11 +125,11 @@ public class FragmentedBlob {
 			// 4. 4 bytes, blob payload Length
 			out.write(blobPayloadLength_byte_array);
 
-			// 5. 16 bytes, payload checksum
-			out.write(this.payloadChecksum);
-
-			// 6. 2 bytes, keyLength
+			// 5. 2 bytes, keyLength
 			out.write(keyLength_byte_array);
+
+			// 6. 16 bytes, payload checksum
+			out.write(this.payloadChecksum);
 
 			// 7. keyLength bytes, key
 			out.write(this.key.getBytes(Charset.forName(Utils.CHARSET)));
