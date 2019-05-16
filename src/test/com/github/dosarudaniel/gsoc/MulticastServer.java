@@ -32,10 +32,13 @@ public class MulticastServer {
 		byte[] buf = new byte[BUF_SIZE];
 
 		String payload = Utils.generateRandomString(ThreadLocalRandom.current().nextInt(MIN_LEN, MAX_LEN));
-		String key = "te";
+		String key = "teowihfe";
 		UUID uuid = UUID.randomUUID();
-		FragmentedBlob fBlob = new FragmentedBlob(payload.getBytes(Charset.forName(Utils.CHARSET)), 257, PACKET_TYPE.DATA,
-				key, uuid);
+		int fragmentOffset = 0;
+		int blobPayloadLength = 1024;
+		FragmentedBlob fBlob = new FragmentedBlob(fragmentOffset, PACKET_TYPE.DATA, uuid,
+						blobPayloadLength, key, payload.getBytes(Charset.forName(Utils.CHARSET)));
+		
 		fBlob.toBytes();
 
 		System.out.println(fBlob);

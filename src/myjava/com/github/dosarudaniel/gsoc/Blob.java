@@ -17,6 +17,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.UUID;
 
+import myjava.com.github.dosarudaniel.gsoc.Blob.PACKET_TYPE;
+
 /**
  * Blob class - the structure of the object sent via multicast messages
  *
@@ -176,9 +178,10 @@ public class Blob {
 			} else {
 				System.arraycopy(this.payload, maxPayloadSize * i, fragmentedPayload, 0, maxPayloadSize);
 			}
+			
+			FragmentedBlob fragmentedBlob = new FragmentedBlob(maxPayloadSize * i, this.packetType, this.uuid,
+					this.payload.length, this.key, fragmentedPayload);
 
-			FragmentedBlob fragmentedBlob = new FragmentedBlob(fragmentedPayload, maxPayloadSize * i, this.packetType,
-					this.key, this.uuid);
 			blobFragments.add(fragmentedBlob);
 		}
 
