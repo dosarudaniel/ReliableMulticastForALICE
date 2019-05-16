@@ -93,7 +93,9 @@ public class Blob {
 	public void send(String targetIp, int port) throws NoSuchAlgorithmException, IOException {
 		//byte[] packetBlob = this.toBytes();
 		// Build the header
-		byte[] commonPacketHeader = new byte[Utils.FRAGMENTED_BLOB_HEADER_LENGHT];
+		// purple color from this presentation: (Packet structure slide - currently nr 3)
+		// https://docs.google.com/presentation/d/1NXMBqXNdzLBOgGuXfYXW8AR1c3fJt8gD8OTJwlwKJk8/edit?usp=sharing
+		byte[] commonHeader = new byte[Utils.FRAGMENTED_BLOB_HEADER_LENGHT];
 		
 
 //		for (FragmentedBlob fragmentedBlob : this.blobFragmentsArrayList) {
