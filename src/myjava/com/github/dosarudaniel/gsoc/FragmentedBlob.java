@@ -18,7 +18,7 @@ public class FragmentedBlob {
 	private UUID uuid;
 	private int blobPayloadLength; // Total length of the Blob's payload
 	private byte[] payloadChecksum;
-	private short keyLength;
+	//private short keyLength;  // <-- key.length()
 	private String key;
 	private byte[] payload;
 	private byte[] packetChecksum;
@@ -35,32 +35,11 @@ public class FragmentedBlob {
 		this.uuid = uuid;
 		this.blobPayloadLength = blobPayloadLength;
 		this.payloadChecksum = Utils.calculateChecksum(payload);
-		this.keyLength = (short) key.length();
 		this.key = key;
 		this.payload = payload;
 		// this.packetChecksum = Utils.calculateChecksum(smth);?
 	}
 
-//	// Field size (in bytes)
-//	public final static int SIZE_OF_FRAGMENT_OFFSET = 4;
-//	public final static int SIZE_OF_PACKET_TYPE = 1;
-//	public final static int SIZE_OF_UUID = 16;
-//	public final static int SIZE_OF_BLOB_PAYLOAD_LENGTH = 4;
-//	public final static int SIZE_OF_PAYLOAD_CHECKSUM = 16;
-//	public final static int SIZE_OF_KEY_LENGTH = 2;
-//	public final static int SIZE_OF_PACKET_CHECKSUM = 16;
-//	// public final static int SIZE_OF_KEY = ???;
-//	// public final static int SIZE_OF_PAYLOAD = ???;
-//	
-//	// Start indexes of the fields in the serialized byte[] 
-//	public final static int FRAGMENT_OFFSET_START_INDEX  = 0;
-//	public final static int PACKET_TYPE_START_INDEX = FRAGMENT_OFFSET_START_INDEX + SIZE_OF_FRAGMENT_OFFSET;
-//	public final static int UUID_START_INDEX = PACKET_TYPE_START_INDEX + SIZE_OF_PACKET_TYPE;
-//	public final static int BLOB_PAYLOAD_LENGTH_START_INDEX = UUID_START_INDEX + SIZE_OF_UUID;
-//	public final static int PAYLOAD_CHECKSUM_START_INDEX = BLOB_PAYLOAD_LENGTH_START_INDEX + SIZE_OF_BLOB_PAYLOAD_LENGTH;
-//	public final static int KEY_LENGTH_START_INDEX = PAYLOAD_CHECKSUM_START_INDEX + SIZE_OF_PAYLOAD_CHECKSUM;
-//	public final static int KEY_START_INDEX = KEY_LENGTH_START_INDEX + SIZE_OF_KEY_LENGTH;
-//	
 	/*
 	 * Manual deserialization of a serialisedFragmentedBlob
 	 * 
@@ -105,13 +84,13 @@ public class FragmentedBlob {
 				Utils.KEY_LENGTH_START_INDEX + Utils.SIZE_OF_KEY_LENGTH - 1);
 		// Get the key length:
 		wrapped = ByteBuffer.wrap(keyLength_byte_array);
-		this.keyLength = wrapped.getShort();
+		short keyLength = wrapped.getShort();
 		// Field 7: Key
 		byte[] key_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob, Utils.KEY_START_INDEX,
-				Utils.KEY_START_INDEX + this.keyLength - 1);
+				Utils.KEY_START_INDEX + keyLength - 1);
 		this.key = new String(key_byte_array, StandardCharsets.UTF_8);
 		// Field 8: Payload
-		this.payload = Arrays.copyOfRange(serialisedFragmentedBlob, Utils.KEY_START_INDEX + this.keyLength,
+		this.payload = Arrays.copyOfRange(serialisedFragmentedBlob, Utils.KEY_START_INDEX + keyLength,
 				serialisedFragmentedBlob.length - Utils.SIZE_OF_PACKET_CHECKSUM);
 
 		// Check payload checksum:
@@ -131,7 +110,7 @@ public class FragmentedBlob {
 		packetType_byte_array[0] = pachetType_byte;
 
 		byte[] blobPayloadLength_byte_array = ByteBuffer.allocate(4).putInt(this.blobPayloadLength).array();
-		byte[] keyLength_byte_array = ByteBuffer.allocate(2).putInt(this.keyLength).array();
+		byte[] keyLength_byte_array = ByteBuffer.allocate(2).putShort((short)this.key.length()).array();
 
 		try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 			// 1. 4 bytes, fragment Offset
