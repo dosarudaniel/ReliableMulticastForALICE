@@ -90,14 +90,18 @@ public class Blob {
 		}
 	}
 
+	/*
+	 * 
+	 * */
 	public void send(String targetIp, int port) throws NoSuchAlgorithmException, IOException {
-		//byte[] packetBlob = this.toBytes();
 		// Build the header
 		// purple color from this presentation: (Packet structure slide - currently nr 3)
 		// https://docs.google.com/presentation/d/1NXMBqXNdzLBOgGuXfYXW8AR1c3fJt8gD8OTJwlwKJk8/edit?usp=sharing
-		byte[] commonHeader = new byte[Utils.FRAGMENTED_BLOB_HEADER_LENGHT];
+		byte[] commonHeader = new byte[Utils.FRAGMENTED_BLOB_HEADER_LENGHT - Utils.SIZE_OF_FRAGMENT_OFFSET - Utils.SIZE_OF_PAYLOAD_CHECKSUM];
 		
-
+		
+		
+		// Alternative:
 //		for (FragmentedBlob fragmentedBlob : this.blobFragmentsArrayList) {
 //			sendFragmentMulticast(fragmentedBlob.toBytes(), targetIp, port);
 //		}
@@ -112,22 +116,29 @@ public class Blob {
 			// 1. 16 bytes, uuid
 			out.write(Utils.getBytes(this.uuid));
 
-			// 3. 4 bytes, blob payload Length
+			// 2. 4 bytes, blob payload Length
 			out.write(blobPayloadLength_byte_array);
 			
-			// 5. 16 bytes, payload checksum
+			// 3. Metadata length
+			
+			// 4. 16 bytes, (payload + metadata) checksum 
 			out.write(this.payloadAndMetadataChecksum);
-
-			// 4. ? bytes, key
+			
+			// 5. key length
+			out.write(keyLength_byte_array);			
+			
+			// 6. ? bytes, key
 			out.write(this.key.getBytes(Charset.forName("UTF-8")));
 
+			// 7. unknown number of bytes - metadata
+			out.write(this.metadata);
 			
-
-			// 6. unknown number of bytes - the real data to be transported
+			// 8. unknown number of bytes - the real data to be transported
 			out.write(this.payload);
 
-			// 7. 16 bytes, packet checksum
-			out.write(Utils.calculateChecksum(out.toByteArray()));
+			// No need for packet checksum since I do not have any fragmentation here ? 
+//			// 9. 16 bytes, packet checksum
+//			out.write(Utils.calculateChecksum(out.toByteArray()));
 
 			return out.toByteArray();
 		}
@@ -165,12 +176,16 @@ public class Blob {
 	public ArrayList<FragmentedBlob> fragmentBlob(int maxPayloadSize)
 			throws NoSuchAlgorithmException, UnsupportedEncodingException {
 		ArrayList<FragmentedBlob> blobFragments = new ArrayList<>();
-		int numberOfFragments = this.payload.length / maxPayloadSize;
+		
+		int numberOfMetadataFragments = this.metadata.length / maxPayloadSize;
+		int numberOfPayloadFragments = this.payload.length / maxPayloadSize;
+		// Idea: fragment this Blob directly into multiple serialized fragmentedBlobs
+		//^TODO^
 		int lastFragmentPayloadLength = this.payload.length % maxPayloadSize;
 
-		for (int i = 0; i < numberOfFragments; i++) {
+		for (int i = 0; i < numberOfMetadataFragments; i++) {
 			byte[] fragmentedPayload = null;
-			if (i == numberOfFragments - 1) {
+			if (i == numberOfMetadataFragments - 1) {
 				System.arraycopy(this.payload, maxPayloadSize * i, fragmentedPayload, 0, lastFragmentPayloadLength);
 			} else {
 				System.arraycopy(this.payload, maxPayloadSize * i, fragmentedPayload, 0, maxPayloadSize);
