@@ -32,7 +32,7 @@ public class Blob {
 
 	// to be decided if this is necessary
 	ArrayList<FragmentedBlob> blobFragmentsArrayList;
-	ArrayList<byte[]> blobByteRange;
+	ArrayList<byte[]> blobByteRange_data;
 	ArrayList<byte[]> blobByteRange_metadata;
 
 	private UUID uuid;
@@ -175,17 +175,31 @@ public class Blob {
 	public void fragmentBlob(int maxPayloadSize) throws NoSuchAlgorithmException, IOException {
 		int numberOfMetadataFragments = this.metadata.length / maxPayloadSize;
 		int numberOfPayloadFragments = this.payload.length / maxPayloadSize;
-
-		for (int i = 0; i < numberOfMetadataFragments; i++) {
-			byte[] fragmentedPayload = null;
-			if (i == numberOfMetadataFragments - 1) {
-				System.arraycopy(this.payload, maxPayloadSize * i, fragmentedPayload, 0, lastFragmentPayloadLength);
-			} else {
-				System.arraycopy(this.payload, maxPayloadSize * i, fragmentedPayload, 0, maxPayloadSize);
-			}
+		int i = 0;
+		byte[] fragmentedPayload;
+		for (i = 0; i < numberOfMetadataFragments; i++) {
+			fragmentedPayload = new byte[maxPayloadSize];
+			System.arraycopy(this.metadata, maxPayloadSize * i, fragmentedPayload, 0, maxPayloadSize);
+			blobByteRange_metadata.add(fragmentedPayload);
 		}
+		// put the remaining bytes from metadata
+		fragmentedPayload = new byte[this.metadata.length - maxPayloadSize*i];
+		System.arraycopy(this.metadata, maxPayloadSize * i, fragmentedPayload, 0, this.metadata.length - maxPayloadSize*i);
+		blobByteRange_metadata.add(fragmentedPayload);
 
-		// Idea: fragment this Blob directly into multiple serialized fragmentedBlobs
+		
+		for (i = 0; i < numberOfPayloadFragments; i++) {
+			fragmentedPayload = new byte[maxPayloadSize];
+			System.arraycopy(this.payload, maxPayloadSize * i, fragmentedPayload, 0, maxPayloadSize);
+			blobByteRange_data.add(fragmentedPayload);
+		}
+		// put the remaining bytes from the payload
+		fragmentedPayload = new byte[this.payload.length - maxPayloadSize*i];
+		System.arraycopy(this.payload, maxPayloadSize * i, fragmentedPayload, 0, this.payload.length - maxPayloadSize*i);
+		blobByteRange_data.add(fragmentedPayload);
+		
+		
+		// Idea: fragment this Blob directly into multiple serialized fragmentedBlobs and put this in a different function
 		// ^TODO^
 //		// int lastFragmentPayloadLength = this.payload.length % maxPayloadSize;
 //		byte[] fragmentOffset_byte_array;// = ByteBuffer.allocate(4).putInt(this.fragmentOffset).array();
