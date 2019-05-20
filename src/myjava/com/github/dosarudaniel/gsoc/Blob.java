@@ -31,9 +31,10 @@ public class Blob {
 	}
 
 	// to be decided if this is necessary
-	ArrayList<FragmentedBlob> blobFragmentsArrayList;
-	ArrayList<byte[]> blobByteRange_data;
-	ArrayList<byte[]> blobByteRange_metadata;
+	private ArrayList<FragmentedBlob> blobFragmentsArrayList;
+	private ArrayList<byte[]> blobByteRange_data;
+	private ArrayList<byte[]> blobByteRange_metadata;
+	private int fragmentSize;
 
 	private UUID uuid;
 	// private int payloadLength; // <-- payload.length
@@ -70,25 +71,6 @@ public class Blob {
 		addFragmentedBlob(fragmentedBlob);
 	}
 
-	/**
-	 * Sends multicast message that contains the serialized version of a
-	 * fragmentedBlob
-	 *
-	 * @param packet          - serialized fragmented Blob to send
-	 * @param destinationIp   - Destination IP address (multicast)
-	 * @param destinationPort - Destination port number
-	 * @throws IOException
-	 * @throws NoSuchAlgorithmException
-	 */
-	public static void sendFragmentMulticast(byte[] packet, String destinationIp, int destinationPort)
-			throws IOException, NoSuchAlgorithmException {
-		try (DatagramSocket socket = new DatagramSocket()) {
-			InetAddress group = InetAddress.getByName(destinationIp);
-			DatagramPacket datagramPacket = new DatagramPacket(packet, packet.length, group, destinationPort);
-			socket.send(datagramPacket);
-		}
-	}
-
 	/*
 	 * 
 	 * */
@@ -97,13 +79,138 @@ public class Blob {
 		// purple color from this presentation: (Packet structure slide - currently nr
 		// 3)
 		// https://docs.google.com/presentation/d/1NXMBqXNdzLBOgGuXfYXW8AR1c3fJt8gD8OTJwlwKJk8/edit?usp=sharing
+		
+		byte[] fragmentOffset_byte_array;// = ByteBuffer.allocate(4).putInt(this.fragmentOffset).array();
+		/*
+		 * 
+		 * fragment metadata
+		 * 
+		 */
 		byte[] commonHeader = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER - Utils.SIZE_OF_FRAGMENT_OFFSET
 				- Utils.SIZE_OF_PAYLOAD_CHECKSUM];
 
-		// Alternative:
-//		for (FragmentedBlob fragmentedBlob : this.blobFragmentsArrayList) {
-//			sendFragmentMulticast(fragmentedBlob.toBytes(), targetIp, port);
-//		}
+		// 0 -> METADATA
+		// 1 -> DATA
+		byte pachetType_byte = (byte) 0; // METADATA
+		byte[] packetType_byte_array = new byte[1];
+		packetType_byte_array[0] = pachetType_byte;
+
+		byte[] blobMetadataLength_byte_array = ByteBuffer.allocate(4).putInt(this.metadata.length).array();
+		byte[] keyLength_byte_array = ByteBuffer.allocate(2).putShort((short) this.key.length()).array();
+
+		try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+			// 2. 1 byte, packet type or flags - to be decided
+			out.write(packetType_byte_array);
+
+			// 3. 16 bytes, uuid
+			out.write(Utils.getBytes(this.uuid));
+
+			// 4. 4 bytes, blob metadata Length
+			out.write(blobMetadataLength_byte_array);
+
+			// 5. 2 bytes, keyLength
+			out.write(keyLength_byte_array);
+
+			commonHeader = out.toByteArray();
+		}
+		
+		
+		for(int i = 0; i <  blobByteRange_metadata.size(); i++) {
+			byte[] payload = blobByteRange_metadata.get(i);
+			byte[] packet = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER +  payload.length];
+			fragmentOffset_byte_array = ByteBuffer.allocate(4).putInt(i*this.fragmentSize).array();
+			// commonHeader
+			
+			try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+				// fragment offsett
+				out.write(fragmentOffset_byte_array);
+
+				// Common header: packet type + uuid + blob metadata Length + keyLength
+				out.write(commonHeader);
+
+				// payload checksum
+				out.write(Utils.calculateChecksum(payload));
+				
+				// the key
+				out.write(this.key.getBytes());
+				
+				// the payload
+				out.write(payload);
+
+				// the packet checksum
+				out.write(Utils.calculateChecksum(out.toByteArray()));
+
+				packet = out.toByteArray();
+			}
+			
+			//send the metadata packet
+			Utils.sendFragmentMulticast(packet, targetIp, port);
+		}
+
+		/*
+		 * 
+		 * fragment data
+		 * 
+		 */
+		commonHeader = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER - Utils.SIZE_OF_FRAGMENT_OFFSET
+				- Utils.SIZE_OF_PAYLOAD_CHECKSUM];
+
+		// 0 -> METADATA
+		// 1 -> DATA
+		pachetType_byte = (byte) 1; // DATA
+		packetType_byte_array = new byte[1];
+		packetType_byte_array[0] = pachetType_byte;
+
+		byte[] blobPayloadLength_byte_array = ByteBuffer.allocate(4).putInt(this.payload.length).array();
+		keyLength_byte_array = ByteBuffer.allocate(2).putShort((short) this.key.length()).array();
+
+		try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+			// 2. 1 byte, packet type or flags - to be decided
+			out.write(packetType_byte_array);
+
+			// 3. 16 bytes, uuid
+			out.write(Utils.getBytes(this.uuid));
+
+			// 4. 4 bytes, blob payload Length
+			out.write(blobPayloadLength_byte_array);
+
+			// 5. 2 bytes, keyLength
+			out.write(keyLength_byte_array);
+
+			commonHeader = out.toByteArray();
+		}
+
+		
+		for(int i = 0; i <  blobByteRange_data.size(); i++) {
+			byte[] payload = blobByteRange_data.get(i);
+			byte[] packet = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER +  payload.length];
+			fragmentOffset_byte_array = ByteBuffer.allocate(4).putInt(i*this.fragmentSize).array();
+			
+			try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+				// fragment offsett
+				out.write(fragmentOffset_byte_array);
+
+				// Common header: packet type + uuid + blob metadata Length + keyLength
+				out.write(commonHeader);
+
+				// payload checksum
+				out.write(Utils.calculateChecksum(payload));
+				
+				// the key
+				out.write(this.key.getBytes());
+				
+				// the payload
+				out.write(payload);
+
+				// the packet checksum
+				out.write(Utils.calculateChecksum(out.toByteArray()));
+
+				packet = out.toByteArray();
+			}
+			
+			//send the metadata packet
+			Utils.sendFragmentMulticast(packet, targetIp, port);
+		}
 	}
 
 	// manual serialization
@@ -173,6 +280,7 @@ public class Blob {
 	 * @throws IOException
 	 */
 	public void fragmentBlob(int maxPayloadSize) throws NoSuchAlgorithmException, IOException {
+		this.fragmentSize = maxPayloadSize;
 		int numberOfMetadataFragments = this.metadata.length / maxPayloadSize;
 		int numberOfPayloadFragments = this.payload.length / maxPayloadSize;
 		int i = 0;
@@ -202,73 +310,6 @@ public class Blob {
 		// Idea: fragment this Blob directly into multiple serialized fragmentedBlobs and put this in a different function
 		// ^TODO^
 //		// int lastFragmentPayloadLength = this.payload.length % maxPayloadSize;
-//		byte[] fragmentOffset_byte_array;// = ByteBuffer.allocate(4).putInt(this.fragmentOffset).array();
-//		/*
-//		 * 
-//		 * fragment metadata
-//		 * 
-//		 */
-//		byte[] commonHeader = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER - Utils.SIZE_OF_FRAGMENT_OFFSET
-//				- Utils.SIZE_OF_PAYLOAD_CHECKSUM];
-//
-//		// 0 -> METADATA
-//		// 1 -> DATA
-//		byte pachetType_byte = (byte) 0; // METADATA
-//		byte[] packetType_byte_array = new byte[1];
-//		packetType_byte_array[0] = pachetType_byte;
-//
-//		byte[] blobMetadataLength_byte_array = ByteBuffer.allocate(4).putInt(this.metadata.length).array();
-//		byte[] keyLength_byte_array = ByteBuffer.allocate(2).putShort((short) this.key.length()).array();
-//
-//		try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-//			// 2. 1 byte, packet type or flags - to be decided
-//			out.write(packetType_byte_array);
-//
-//			// 3. 16 bytes, uuid
-//			out.write(Utils.getBytes(this.uuid));
-//
-//			// 4. 4 bytes, blob metadata Length
-//			out.write(blobMetadataLength_byte_array);
-//
-//			// 5. 2 bytes, keyLength
-//			out.write(keyLength_byte_array);
-//
-//			commonHeader = out.toByteArray();
-//		}
-//
-//
-//		/*
-//		 * 
-//		 * fragment data
-//		 * 
-//		 */
-//		commonHeader = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER - Utils.SIZE_OF_FRAGMENT_OFFSET
-//				- Utils.SIZE_OF_PAYLOAD_CHECKSUM];
-//
-//		// 0 -> METADATA
-//		// 1 -> DATA
-//		pachetType_byte = (byte) 1; // DATA
-//		packetType_byte_array = new byte[1];
-//		packetType_byte_array[0] = pachetType_byte;
-//
-//		byte[] blobPayloadLength_byte_array = ByteBuffer.allocate(4).putInt(this.payload.length).array();
-//		keyLength_byte_array = ByteBuffer.allocate(2).putShort((short) this.key.length()).array();
-//
-//		try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-//			// 2. 1 byte, packet type or flags - to be decided
-//			out.write(packetType_byte_array);
-//
-//			// 3. 16 bytes, uuid
-//			out.write(Utils.getBytes(this.uuid));
-//
-//			// 4. 4 bytes, blob payload Length
-//			out.write(blobPayloadLength_byte_array);
-//
-//			// 5. 2 bytes, keyLength
-//			out.write(keyLength_byte_array);
-//
-//			commonHeader = out.toByteArray();
-//		}
 
 	}
 
