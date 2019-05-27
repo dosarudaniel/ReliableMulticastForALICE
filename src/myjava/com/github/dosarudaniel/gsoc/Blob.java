@@ -8,9 +8,6 @@ package myjava.com.github.dosarudaniel.gsoc;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.security.NoSuchAlgorithmException;
@@ -58,7 +55,7 @@ public class Blob {
 		this.payloadAndMetadataChecksum = Utils.calculateChecksum(this.payload);
 	}
 
-	public Blob(byte[] payload, PACKET_TYPE packetType, String key) throws NoSuchAlgorithmException {
+	public Blob(byte[] payload, String key) throws NoSuchAlgorithmException {
 		this.payload = payload;
 		this.payloadAndMetadataChecksum = Utils.calculateChecksum(this.payload);
 		this.key = key;
@@ -79,7 +76,7 @@ public class Blob {
 		// purple color from this presentation: (Packet structure slide - currently nr
 		// 3)
 		// https://docs.google.com/presentation/d/1NXMBqXNdzLBOgGuXfYXW8AR1c3fJt8gD8OTJwlwKJk8/edit?usp=sharing
-		
+
 		byte[] fragmentOffset_byte_array;// = ByteBuffer.allocate(4).putInt(this.fragmentOffset).array();
 		/*
 		 * 
@@ -113,37 +110,36 @@ public class Blob {
 
 			commonHeader = out.toByteArray();
 		}
-		
-		
-		for(int i = 0; i <  blobByteRange_metadata.size(); i++) {
-			byte[] payload = blobByteRange_metadata.get(i);
-			byte[] packet = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER +  payload.length];
-			fragmentOffset_byte_array = ByteBuffer.allocate(4).putInt(i*this.fragmentSize).array();
+
+		for (int i = 0; i < this.blobByteRange_metadata.size(); i++) {
+			byte[] payload_metadata = this.blobByteRange_metadata.get(i);
+			byte[] packet = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER + payload_metadata.length];
+			fragmentOffset_byte_array = ByteBuffer.allocate(4).putInt(i * this.fragmentSize).array();
 			// commonHeader
-			
+
 			try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-				// fragment offsett
+				// fragment offset
 				out.write(fragmentOffset_byte_array);
 
 				// Common header: packet type + uuid + blob metadata Length + keyLength
 				out.write(commonHeader);
 
 				// payload checksum
-				out.write(Utils.calculateChecksum(payload));
-				
+				out.write(Utils.calculateChecksum(payload_metadata));
+
 				// the key
 				out.write(this.key.getBytes());
-				
-				// the payload
-				out.write(payload);
+
+				// the payload metadata
+				out.write(payload_metadata);
 
 				// the packet checksum
 				out.write(Utils.calculateChecksum(out.toByteArray()));
 
 				packet = out.toByteArray();
 			}
-			
-			//send the metadata packet
+
+			// send the metadata packet
 			Utils.sendFragmentMulticast(packet, targetIp, port);
 		}
 
@@ -180,41 +176,40 @@ public class Blob {
 			commonHeader = out.toByteArray();
 		}
 
-		
-		for(int i = 0; i <  blobByteRange_data.size(); i++) {
-			byte[] payload = blobByteRange_data.get(i);
-			byte[] packet = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER +  payload.length];
-			fragmentOffset_byte_array = ByteBuffer.allocate(4).putInt(i*this.fragmentSize).array();
-			
+		for (int i = 0; i < this.blobByteRange_data.size(); i++) {
+			byte[] payload_data = this.blobByteRange_data.get(i);
+			byte[] packet = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER + payload_data.length];
+			fragmentOffset_byte_array = ByteBuffer.allocate(4).putInt(i * this.fragmentSize).array();
+
 			try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-				// fragment offsett
+				// fragment offset
 				out.write(fragmentOffset_byte_array);
 
 				// Common header: packet type + uuid + blob metadata Length + keyLength
 				out.write(commonHeader);
 
 				// payload checksum
-				out.write(Utils.calculateChecksum(payload));
-				
+				out.write(Utils.calculateChecksum(payload_data));
+
 				// the key
 				out.write(this.key.getBytes());
-				
-				// the payload
-				out.write(payload);
+
+				// the payload data
+				out.write(payload_data);
 
 				// the packet checksum
 				out.write(Utils.calculateChecksum(out.toByteArray()));
 
 				packet = out.toByteArray();
 			}
-			
-			//send the metadata packet
+
+			// send the metadata packet
 			Utils.sendFragmentMulticast(packet, targetIp, port);
 		}
 	}
 
 	// manual serialization
-	public byte[] toBytes() throws IOException, NoSuchAlgorithmException {
+	public byte[] toBytes() throws IOException {
 		byte[] blobPayloadLength_byte_array = ByteBuffer.allocate(4).putInt(payload.length).array();
 		byte[] keyLength_byte_array = ByteBuffer.allocate(2).putShort((short) key.length()).array();// putShort(this.key).array();
 
@@ -291,23 +286,24 @@ public class Blob {
 			blobByteRange_metadata.add(fragmentedPayload);
 		}
 		// put the remaining bytes from metadata
-		fragmentedPayload = new byte[this.metadata.length - maxPayloadSize*i];
-		System.arraycopy(this.metadata, maxPayloadSize * i, fragmentedPayload, 0, this.metadata.length - maxPayloadSize*i);
+		fragmentedPayload = new byte[this.metadata.length - maxPayloadSize * i];
+		System.arraycopy(this.metadata, maxPayloadSize * i, fragmentedPayload, 0,
+				this.metadata.length - maxPayloadSize * i);
 		blobByteRange_metadata.add(fragmentedPayload);
 
-		
 		for (i = 0; i < numberOfPayloadFragments; i++) {
 			fragmentedPayload = new byte[maxPayloadSize];
 			System.arraycopy(this.payload, maxPayloadSize * i, fragmentedPayload, 0, maxPayloadSize);
 			blobByteRange_data.add(fragmentedPayload);
 		}
 		// put the remaining bytes from the payload
-		fragmentedPayload = new byte[this.payload.length - maxPayloadSize*i];
-		System.arraycopy(this.payload, maxPayloadSize * i, fragmentedPayload, 0, this.payload.length - maxPayloadSize*i);
+		fragmentedPayload = new byte[this.payload.length - maxPayloadSize * i];
+		System.arraycopy(this.payload, maxPayloadSize * i, fragmentedPayload, 0,
+				this.payload.length - maxPayloadSize * i);
 		blobByteRange_data.add(fragmentedPayload);
-		
-		
-		// Idea: fragment this Blob directly into multiple serialized fragmentedBlobs and put this in a different function
+
+		// Idea: fragment this Blob directly into multiple serialized fragmentedBlobs
+		// and put this in a different function
 		// ^TODO^
 //		// int lastFragmentPayloadLength = this.payload.length % maxPayloadSize;
 
