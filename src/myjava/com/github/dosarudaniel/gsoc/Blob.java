@@ -23,6 +23,9 @@ import java.util.UUID;
  */
 
 public class Blob {
+	public final static int METADATA_CODE = 0;
+	public final static int DATA_CODE = 1;
+
 	public enum PACKET_TYPE {
 		METADATA, DATA;
 	}
@@ -69,15 +72,12 @@ public class Blob {
 	}
 
 	/*
-	 * Send an entire Blob via multicast messages
+	 * Send an entire Blob via multicast messages fragmentBlob method should be
+	 * called first
+	 * 
 	 */
 	public void send(String targetIp, int port) throws NoSuchAlgorithmException, IOException {
-		// Build the header
-		// purple color from this presentation: (Packet structure slide - currently nr
-		// 3)
-		// https://docs.google.com/presentation/d/1NXMBqXNdzLBOgGuXfYXW8AR1c3fJt8gD8OTJwlwKJk8/edit?usp=sharing
-
-		byte[] fragmentOffset_byte_array;// = ByteBuffer.allocate(4).putInt(this.fragmentOffset).array();
+		byte[] fragmentOffset_byte_array;
 		/*
 		 * 
 		 * fragment metadata
@@ -86,9 +86,7 @@ public class Blob {
 		byte[] commonHeader = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER - Utils.SIZE_OF_FRAGMENT_OFFSET
 				- Utils.SIZE_OF_PAYLOAD_CHECKSUM];
 
-		// 0 -> METADATA
-		// 1 -> DATA
-		byte pachetType_byte = (byte) 0; // METADATA
+		byte pachetType_byte = (byte) METADATA_CODE;
 		byte[] packetType_byte_array = new byte[1];
 		packetType_byte_array[0] = pachetType_byte;
 
@@ -151,9 +149,7 @@ public class Blob {
 		commonHeader = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER - Utils.SIZE_OF_FRAGMENT_OFFSET
 				- Utils.SIZE_OF_PAYLOAD_CHECKSUM];
 
-		// 0 -> METADATA
-		// 1 -> DATA
-		pachetType_byte = (byte) 1; // DATA
+		pachetType_byte = (byte) DATA_CODE;
 		packetType_byte_array = new byte[1];
 		packetType_byte_array[0] = pachetType_byte;
 
@@ -188,13 +184,13 @@ public class Blob {
 				// Common header: packet type + uuid + blob metadata Length + keyLength
 				out.write(commonHeader);
 
-				// payload checksum
+				// payload_data checksum
 				out.write(Utils.calculateChecksum(payload_data));
 
 				// the key
 				out.write(this.key.getBytes());
 
-				// the payload data
+				// the payload_data
 				out.write(payload_data);
 
 				// the packet checksum
@@ -263,7 +259,12 @@ public class Blob {
 			throws NoSuchAlgorithmException, UnsupportedEncodingException, IOException {
 		byte[] fragmentedPayload = fragmentedBlob.getPayload();
 		int fragmentOffset = fragmentedBlob.getFragmentOffset();
-		System.arraycopy(fragmentedPayload, 0, this.payload, fragmentOffset, fragmentedPayload.length);
+
+		if (fragmentedBlob.getPachetType() == PACKET_TYPE.DATA) {
+			System.arraycopy(fragmentedPayload, 0, this.payload, fragmentOffset, fragmentedPayload.length);
+		} else {
+			System.arraycopy(fragmentedPayload, 0, this.metadata, fragmentOffset, fragmentedPayload.length);
+		}
 	}
 
 	/**
