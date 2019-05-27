@@ -4,23 +4,23 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
-import java.nio.charset.Charset;
 import java.security.NoSuchAlgorithmException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
 
 import myjava.com.github.dosarudaniel.gsoc.Blob;
-import myjava.com.github.dosarudaniel.gsoc.Blob.PACKET_TYPE;
 import myjava.com.github.dosarudaniel.gsoc.FragmentedBlob;
+import myjava.com.github.dosarudaniel.gsoc.Sender;
 import myjava.com.github.dosarudaniel.gsoc.Utils;
 
 // TODO, posibil de integrat in Receiver sau Sender
 public class MulticastServer {
 	static final int MIN_LEN = 50;
 	static final int MAX_LEN = 130;
-	
+
 	Map<UUID, Blob> inFlight = new HashMap<>(); // uuid <-> Blob fragmentat, zonă de tranzitie până la primirea completă
 												// a tuturor fragmentelor
 	Map<String, Blob> currentCacheContent = new HashMap<>(); // Blob-uri complete
@@ -28,21 +28,10 @@ public class MulticastServer {
 	public static void main(String[] args) throws NoSuchAlgorithmException, IOException {
 		String ip_address = args[0];
 		int portNumber = Integer.parseInt(args[1]);
-		int BUF_SIZE = 65536;
+		int BUF_SIZE = Sender.MAX_PAYLOAD_SIZE + Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER;
 		byte[] buf = new byte[BUF_SIZE];
 
-		String payload = Utils.generateRandomString(ThreadLocalRandom.current().nextInt(MIN_LEN, MAX_LEN));
-		String key = "teowihfe";
-		UUID uuid = UUID.randomUUID();
-		int fragmentOffset = 0;
-		int blobPayloadLength = 1024;
-		FragmentedBlob fBlob = new FragmentedBlob(fragmentOffset, PACKET_TYPE.DATA, uuid,
-						blobPayloadLength, key, payload.getBytes(Charset.forName(Utils.CHARSET)));
-		
-		fBlob.toBytes();
-
-		System.out.println(fBlob);
-		System.out.println(new FragmentedBlob(fBlob.toBytes()));
+		Blob blobReceived = new Blob();
 
 		try (MulticastSocket socket = new MulticastSocket(portNumber)) {
 			InetAddress group = InetAddress.getByName(ip_address);
@@ -54,6 +43,16 @@ public class MulticastServer {
 
 				FragmentedBlob fragmentedBlob = new FragmentedBlob(buf);
 
+				String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
+				System.out.println("[" + timeStamp + "] Received data fragment : with payload "
+						+ new String(fragmentedBlob.getPayload()));
+				if (blobReceived.getKey().equals("")) {
+					blobReceived.setKey(fragmentedBlob.getKey());
+					blobReceived.setUuid(fragmentedBlob.getUuid());
+				}
+
+				blobReceived.addFragmentedBlob(fragmentedBlob);
+
 				// Print timestamp and content
 //				String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
 //				//String payload = "";// new String(blob.getPayload(), "UTF-8");
@@ -61,22 +60,17 @@ public class MulticastServer {
 //				if ("end".equals(payload)) {
 //					break;
 //				}
+				System.out.println(
+						"[" + timeStamp + "] Received blob : with payload " + new String(blobReceived.getPayload()));
+
+//				if (blobReceived.isComplete()) {
+//					break;
+//				}
 
 			}
-			//socket.leaveGroup(group);
+			// socket.leaveGroup(group);
 		}
 
-		// while (true) {
-//			FragmentedBlob fragmentedBlob = ByteToFragmentedBlob(pachet);
-
-//		    Blob blob = updateInFlight(toFragment(receive());
-//		
-//		    invalidateCache(blob.getKey());
-//		    if (blob.isComplete()){
-//		
-//		        moveToCache(blob);
-//		    }
-		// }
 	}
 
 	// Thread incompleteBlobRecovery = new Thread();
