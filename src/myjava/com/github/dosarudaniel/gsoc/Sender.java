@@ -11,15 +11,19 @@ import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.nio.charset.Charset;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimerTask;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * Sender unit which generates and sends new objects at fixed time intervals (10s)
- * and at the same time print the current time and message content on the screen
+ * Sender unit which generates and sends new objects at fixed time intervals
+ * (10s) and at the same time print the current time and message content on the
+ * screen
+ * 
  * @author dosarudaniel@gmail.com
  * @since 2019-03-07
  *
@@ -31,6 +35,7 @@ public class Sender extends TimerTask {
 	static final String AB = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 	static final int MIN_LEN = 50;
 	static final int MAX_LEN = 130;
+	public static final int MAX_PAYLOAD_SIZE = 10;
 
 	/**
 	 * Parameterized constructor
@@ -57,18 +62,18 @@ public class Sender extends TimerTask {
 		String payload = randomString(randomNumber);
 
 		try {
-			blob = new Blob(payload);
-			sendMulticast(blob);
+			blob = new Blob(payload.getBytes(Charset.forName(Utils.CHARSET)), randomString(4), UUID.randomUUID());
+			blob.send(MAX_PAYLOAD_SIZE, this.ip_address, this.portNumber);
 			String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
-			System.out.println("[" + timeStamp + "] Data sent:" + payload);
+			System.out.println("[" + timeStamp + "] Blob sent:" + payload);
 		} catch (NoSuchAlgorithmException | IOException e) {
 			e.printStackTrace();
 		}
 	}
 
 	/**
-	 * Sends multicast message that contains the serialized version of an object
-	 * of type Blob
+	 * Sends multicast message that contains the serialized version of an object of
+	 * type Blob
 	 *
 	 * @param blob - Object to send
 	 * @throws IOException
