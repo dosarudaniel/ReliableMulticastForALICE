@@ -11,7 +11,9 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.security.NoSuchAlgorithmException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.UUID;
 
 /**
@@ -43,6 +45,7 @@ public class Blob {
 	// private short keyLength; //<- key.length()
 	private String key;
 	private byte[] metadata;
+
 	private byte[] payload;
 
 	/**
@@ -58,10 +61,16 @@ public class Blob {
 		this.payloadAndMetadataChecksum = Utils.calculateChecksum(this.payload);
 	}
 
-	public Blob(byte[] payload, String key) throws NoSuchAlgorithmException {
+	public Blob(byte[] payload, String key, UUID uuid) throws NoSuchAlgorithmException {
 		this.payload = payload;
 		this.payloadAndMetadataChecksum = Utils.calculateChecksum(this.payload);
 		this.key = key;
+		this.uuid = uuid;
+	}
+
+	public Blob() {
+		this.key = "";
+		this.uuid = null;
 	}
 
 	// va fi chemata de serverul UDP, pe masura ce primeste, deserializeaza un
@@ -72,11 +81,12 @@ public class Blob {
 	}
 
 	/*
-	 * Send an entire Blob via multicast messages fragmentBlob method should be
-	 * called first
+	 * Send an entire Blob via multicast messages
 	 * 
 	 */
-	public void send(String targetIp, int port) throws NoSuchAlgorithmException, IOException {
+	public void send(int MAX_PAYLOAD_SIZE, String targetIp, int port) throws NoSuchAlgorithmException, IOException {
+
+		this.fragmentBlob(MAX_PAYLOAD_SIZE);
 		byte[] fragmentOffset_byte_array;
 		/*
 		 * 
@@ -139,6 +149,9 @@ public class Blob {
 
 			// send the metadata packet
 			Utils.sendFragmentMulticast(packet, targetIp, port);
+			String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
+			System.out.println("[" + timeStamp + "] Sending metadata fragment " + Integer.toString(i)
+					+ ": with payload metadata" + payload_metadata);
 		}
 
 		/*
@@ -201,7 +214,47 @@ public class Blob {
 
 			// send the metadata packet
 			Utils.sendFragmentMulticast(packet, targetIp, port);
+			String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
+			System.out.println("[" + timeStamp + "] Sending data fragment " + Integer.toString(i) + ": with payload "
+					+ payload_data);
 		}
+	}
+
+	/**
+	 * Fragments a Blob into multiple FragmentedBlobs
+	 *
+	 * @param maxPayloadSize
+	 * @return ArrayList<FragmentedBlob>
+	 * @throws NoSuchAlgorithmException
+	 * @throws IOException
+	 */
+	public void fragmentBlob(int maxPayloadSize) throws NoSuchAlgorithmException, IOException {
+		this.fragmentSize = maxPayloadSize;
+		int numberOfMetadataFragments = this.metadata.length / maxPayloadSize;
+		int numberOfPayloadFragments = this.payload.length / maxPayloadSize;
+		int i = 0;
+		byte[] fragmentedPayload;
+		for (i = 0; i < numberOfMetadataFragments; i++) {
+			fragmentedPayload = new byte[maxPayloadSize];
+			System.arraycopy(this.metadata, maxPayloadSize * i, fragmentedPayload, 0, maxPayloadSize);
+			this.blobByteRange_metadata.add(fragmentedPayload);
+		}
+		// put the remaining bytes from metadata
+		fragmentedPayload = new byte[this.metadata.length - maxPayloadSize * i];
+		System.arraycopy(this.metadata, maxPayloadSize * i, fragmentedPayload, 0,
+				this.metadata.length - maxPayloadSize * i);
+		this.blobByteRange_metadata.add(fragmentedPayload);
+
+		for (i = 0; i < numberOfPayloadFragments; i++) {
+			fragmentedPayload = new byte[maxPayloadSize];
+			System.arraycopy(this.payload, maxPayloadSize * i, fragmentedPayload, 0, maxPayloadSize);
+			this.blobByteRange_data.add(fragmentedPayload);
+		}
+		// put the remaining bytes from the payload
+		fragmentedPayload = new byte[this.payload.length - maxPayloadSize * i];
+		System.arraycopy(this.payload, maxPayloadSize * i, fragmentedPayload, 0,
+				this.payload.length - maxPayloadSize * i);
+		this.blobByteRange_data.add(fragmentedPayload);
 	}
 
 	// manual serialization
@@ -260,48 +313,21 @@ public class Blob {
 		byte[] fragmentedPayload = fragmentedBlob.getPayload();
 		int fragmentOffset = fragmentedBlob.getFragmentOffset();
 
+		String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
+		System.out.println("[" + timeStamp + "] Adding data fragment : with payload " + new String(fragmentedPayload));
+
 		if (fragmentedBlob.getPachetType() == PACKET_TYPE.DATA) {
+			if (this.payload == null) {
+				this.payload = new byte[fragmentedBlob.getBlobPayloadLength()];
+			}
+
 			System.arraycopy(fragmentedPayload, 0, this.payload, fragmentOffset, fragmentedPayload.length);
 		} else {
+			if (this.metadata == null) {
+				this.metadata = new byte[fragmentedBlob.getBlobPayloadLength()];
+			}
 			System.arraycopy(fragmentedPayload, 0, this.metadata, fragmentOffset, fragmentedPayload.length);
 		}
-	}
-
-	/**
-	 * Fragments a Blob into multiple FragmentedBlobs
-	 *
-	 * @param maxPayloadSize
-	 * @return ArrayList<FragmentedBlob>
-	 * @throws NoSuchAlgorithmException
-	 * @throws IOException
-	 */
-	public void fragmentBlob(int maxPayloadSize) throws NoSuchAlgorithmException, IOException {
-		this.fragmentSize = maxPayloadSize;
-		int numberOfMetadataFragments = this.metadata.length / maxPayloadSize;
-		int numberOfPayloadFragments = this.payload.length / maxPayloadSize;
-		int i = 0;
-		byte[] fragmentedPayload;
-		for (i = 0; i < numberOfMetadataFragments; i++) {
-			fragmentedPayload = new byte[maxPayloadSize];
-			System.arraycopy(this.metadata, maxPayloadSize * i, fragmentedPayload, 0, maxPayloadSize);
-			this.blobByteRange_metadata.add(fragmentedPayload);
-		}
-		// put the remaining bytes from metadata
-		fragmentedPayload = new byte[this.metadata.length - maxPayloadSize * i];
-		System.arraycopy(this.metadata, maxPayloadSize * i, fragmentedPayload, 0,
-				this.metadata.length - maxPayloadSize * i);
-		this.blobByteRange_metadata.add(fragmentedPayload);
-
-		for (i = 0; i < numberOfPayloadFragments; i++) {
-			fragmentedPayload = new byte[maxPayloadSize];
-			System.arraycopy(this.payload, maxPayloadSize * i, fragmentedPayload, 0, maxPayloadSize);
-			this.blobByteRange_data.add(fragmentedPayload);
-		}
-		// put the remaining bytes from the payload
-		fragmentedPayload = new byte[this.payload.length - maxPayloadSize * i];
-		System.arraycopy(this.payload, maxPayloadSize * i, fragmentedPayload, 0,
-				this.payload.length - maxPayloadSize * i);
-		this.blobByteRange_data.add(fragmentedPayload);
 	}
 
 	public String getKey() {
@@ -318,5 +344,21 @@ public class Blob {
 
 	public void setUuid(UUID uuid) {
 		this.uuid = uuid;
+	}
+
+	public byte[] getMetadata() {
+		return this.metadata;
+	}
+
+	public void setMetadata(byte[] metadata) {
+		this.metadata = metadata;
+	}
+
+	public byte[] getPayload() {
+		return this.payload;
+	}
+
+	public void setPayload(byte[] payload) {
+		this.payload = payload;
 	}
 }
