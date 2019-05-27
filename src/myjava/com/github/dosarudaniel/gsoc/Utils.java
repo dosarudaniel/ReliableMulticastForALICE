@@ -40,7 +40,8 @@ public class Utils {
 
 	public final static int SIZE_OF_FRAGMENTED_BLOB_HEADER = SIZE_OF_FRAGMENT_OFFSET + SIZE_OF_PACKET_TYPE
 			+ SIZE_OF_UUID + SIZE_OF_BLOB_PAYLOAD_LENGTH + SIZE_OF_PAYLOAD_CHECKSUM + SIZE_OF_KEY_LENGTH;
-	public final static int SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER = SIZE_OF_FRAGMENTED_BLOB_HEADER + SIZE_OF_PACKET_CHECKSUM;
+	public final static int SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER = SIZE_OF_FRAGMENTED_BLOB_HEADER
+			+ SIZE_OF_PACKET_CHECKSUM;
 
 	// Start indexes of the fields in the serialized byte[]
 	public final static int FRAGMENT_OFFSET_START_INDEX = 0;
@@ -92,7 +93,7 @@ public class Utils {
 
 		return sb.toString();
 	}
-	
+
 	/**
 	 * Sends multicast message that contains the serialized version of a
 	 * fragmentedBlob
