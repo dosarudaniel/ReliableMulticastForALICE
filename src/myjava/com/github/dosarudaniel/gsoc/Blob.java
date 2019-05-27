@@ -69,8 +69,8 @@ public class Blob {
 	}
 
 	/*
-	 * 
-	 * */
+	 * Send an entire Blob via multicast messages
+	 */
 	public void send(String targetIp, int port) throws NoSuchAlgorithmException, IOException {
 		// Build the header
 		// purple color from this presentation: (Packet structure slide - currently nr
@@ -283,30 +283,24 @@ public class Blob {
 		for (i = 0; i < numberOfMetadataFragments; i++) {
 			fragmentedPayload = new byte[maxPayloadSize];
 			System.arraycopy(this.metadata, maxPayloadSize * i, fragmentedPayload, 0, maxPayloadSize);
-			blobByteRange_metadata.add(fragmentedPayload);
+			this.blobByteRange_metadata.add(fragmentedPayload);
 		}
 		// put the remaining bytes from metadata
 		fragmentedPayload = new byte[this.metadata.length - maxPayloadSize * i];
 		System.arraycopy(this.metadata, maxPayloadSize * i, fragmentedPayload, 0,
 				this.metadata.length - maxPayloadSize * i);
-		blobByteRange_metadata.add(fragmentedPayload);
+		this.blobByteRange_metadata.add(fragmentedPayload);
 
 		for (i = 0; i < numberOfPayloadFragments; i++) {
 			fragmentedPayload = new byte[maxPayloadSize];
 			System.arraycopy(this.payload, maxPayloadSize * i, fragmentedPayload, 0, maxPayloadSize);
-			blobByteRange_data.add(fragmentedPayload);
+			this.blobByteRange_data.add(fragmentedPayload);
 		}
 		// put the remaining bytes from the payload
 		fragmentedPayload = new byte[this.payload.length - maxPayloadSize * i];
 		System.arraycopy(this.payload, maxPayloadSize * i, fragmentedPayload, 0,
 				this.payload.length - maxPayloadSize * i);
-		blobByteRange_data.add(fragmentedPayload);
-
-		// Idea: fragment this Blob directly into multiple serialized fragmentedBlobs
-		// and put this in a different function
-		// ^TODO^
-//		// int lastFragmentPayloadLength = this.payload.length % maxPayloadSize;
-
+		this.blobByteRange_data.add(fragmentedPayload);
 	}
 
 	public String getKey() {
