@@ -59,10 +59,12 @@ public class Sender extends TimerTask {
 	public void run() {
 		int randomNumber = ThreadLocalRandom.current().nextInt(MIN_LEN, MAX_LEN);
 		Blob blob = null;
-		String payload = randomString(randomNumber);
+		String metadata = "111111111122222222223333333333";
+		String payload = "aaaaaaaaaabbbbbbbbbbccccccccccdddddddddd";// randomString(randomNumber);
 
 		try {
-			blob = new Blob(payload.getBytes(Charset.forName(Utils.CHARSET)), randomString(4), UUID.randomUUID());
+			blob = new Blob(metadata.getBytes(Charset.forName(Utils.CHARSET)),
+					payload.getBytes(Charset.forName(Utils.CHARSET)), randomString(4), UUID.randomUUID());
 			blob.send(MAX_PAYLOAD_SIZE, this.ip_address, this.portNumber);
 			String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
 			System.out.println("[" + timeStamp + "] Blob sent:" + payload);

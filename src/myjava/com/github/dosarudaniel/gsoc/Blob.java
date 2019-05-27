@@ -61,11 +61,12 @@ public class Blob {
 		this.payloadAndMetadataChecksum = Utils.calculateChecksum(this.payload);
 	}
 
-	public Blob(byte[] payload, String key, UUID uuid) throws NoSuchAlgorithmException {
+	public Blob(byte[] metadata, byte[] payload, String key, UUID uuid) throws NoSuchAlgorithmException {
 		this.payload = payload;
 		this.payloadAndMetadataChecksum = Utils.calculateChecksum(this.payload);
 		this.key = key;
 		this.uuid = uuid;
+		this.metadata = metadata;
 	}
 
 	public Blob() {
@@ -151,7 +152,7 @@ public class Blob {
 			Utils.sendFragmentMulticast(packet, targetIp, port);
 			String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
 			System.out.println("[" + timeStamp + "] Sending metadata fragment " + Integer.toString(i)
-					+ ": with payload metadata" + payload_metadata);
+					+ ": with payload metadata" + new String(payload_metadata));
 		}
 
 		/*
@@ -216,7 +217,7 @@ public class Blob {
 			Utils.sendFragmentMulticast(packet, targetIp, port);
 			String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
 			System.out.println("[" + timeStamp + "] Sending data fragment " + Integer.toString(i) + ": with payload "
-					+ payload_data);
+					+ new String(payload_data));
 		}
 	}
 
@@ -232,6 +233,10 @@ public class Blob {
 		this.fragmentSize = maxPayloadSize;
 		int numberOfMetadataFragments = this.metadata.length / maxPayloadSize;
 		int numberOfPayloadFragments = this.payload.length / maxPayloadSize;
+
+		this.blobByteRange_metadata = new ArrayList<>();
+		this.blobByteRange_data = new ArrayList<>();
+
 		int i = 0;
 		byte[] fragmentedPayload;
 		for (i = 0; i < numberOfMetadataFragments; i++) {

@@ -55,31 +55,33 @@ public class FragmentedBlob {
 			throw new IOException("Packet checksum failed!");
 		}
 
+		System.out.println("serialisedFragmentedBlob:" + new String(serialisedFragmentedBlob));
+
 		// Field 1: Fragment Offset
 		byte[] fragmentOffset_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob,
-				Utils.FRAGMENT_OFFSET_START_INDEX,
-				Utils.FRAGMENT_OFFSET_START_INDEX + Utils.SIZE_OF_FRAGMENT_OFFSET - 1);
+				Utils.FRAGMENT_OFFSET_START_INDEX, Utils.FRAGMENT_OFFSET_START_INDEX + Utils.SIZE_OF_FRAGMENT_OFFSET);
+		System.out.println("fragmentOffset_byte_array:" + new String(fragmentOffset_byte_array));
 		// Get the fragment Offset:
 		ByteBuffer wrapped = ByteBuffer.wrap(fragmentOffset_byte_array);
 		this.fragmentOffset = wrapped.getInt();
 		// Field 2: Packet type
 		byte[] packetType_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob, Utils.PACKET_TYPE_START_INDEX,
-				Utils.PACKET_TYPE_START_INDEX + Utils.SIZE_OF_PACKET_TYPE - 1);
+				Utils.PACKET_TYPE_START_INDEX + Utils.SIZE_OF_PACKET_TYPE);
 		this.packetType = (packetType_byte_array[0] == 0 ? PACKET_TYPE.METADATA : PACKET_TYPE.DATA);
 		// Field 3: UUID
 		byte[] uuid_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob, Utils.UUID_START_INDEX,
-				Utils.UUID_START_INDEX + Utils.SIZE_OF_UUID - 1);
+				Utils.UUID_START_INDEX + Utils.SIZE_OF_UUID);
 		this.uuid = Utils.getUuid(uuid_byte_array);
 		// Field 4: Blob Payload Length
 		byte[] blobPayloadLength_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob,
 				Utils.BLOB_PAYLOAD_LENGTH_START_INDEX,
-				Utils.BLOB_PAYLOAD_LENGTH_START_INDEX + Utils.SIZE_OF_BLOB_PAYLOAD_LENGTH - 1);
+				Utils.BLOB_PAYLOAD_LENGTH_START_INDEX + Utils.SIZE_OF_BLOB_PAYLOAD_LENGTH);
 		// Get the blob payload length:
 		wrapped = ByteBuffer.wrap(blobPayloadLength_byte_array);
 		this.blobPayloadLength = wrapped.getInt();
 		// Field 5: Key length
 		byte[] keyLength_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob, Utils.KEY_LENGTH_START_INDEX,
-				Utils.KEY_LENGTH_START_INDEX + Utils.SIZE_OF_KEY_LENGTH - 1);
+				Utils.KEY_LENGTH_START_INDEX + Utils.SIZE_OF_KEY_LENGTH);
 		// Get the key length:
 		wrapped = ByteBuffer.wrap(keyLength_byte_array);
 		short keyLength = wrapped.getShort();
@@ -88,14 +90,16 @@ public class FragmentedBlob {
 				Utils.PAYLOAD_CHECKSUM_START_INDEX + Utils.SIZE_OF_PAYLOAD_CHECKSUM);
 		// Field 7: Key
 		byte[] key_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob, Utils.KEY_START_INDEX,
-				Utils.KEY_START_INDEX + keyLength - 1);
+				Utils.KEY_START_INDEX + keyLength);
 		this.key = new String(key_byte_array, StandardCharsets.UTF_8);
 		// Field 8: Payload
 		this.payload = Arrays.copyOfRange(serialisedFragmentedBlob, Utils.KEY_START_INDEX + keyLength,
 				serialisedFragmentedBlob.length - Utils.SIZE_OF_PACKET_CHECKSUM);
 
 		// Check payload checksum:
-		if (!Arrays.equals(this.payloadChecksum, Utils.calculateChecksum(payload))) {
+
+		System.out.println(new String(this.payloadChecksum) + " " + new String(Utils.calculateChecksum(this.payload)));
+		if (!Arrays.equals(this.payloadChecksum, Utils.calculateChecksum(this.payload))) {
 			throw new IOException("Payload checksum failed!");
 		}
 	}
