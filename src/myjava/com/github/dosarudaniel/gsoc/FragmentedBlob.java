@@ -17,7 +17,8 @@ public class FragmentedBlob {
 	private PACKET_TYPE packetType;
 	private UUID uuid;
 	private int blobPayloadLength; // Total length of the Blob's payload
-	//private short keyLength;  // <-- key.length()
+
+	// private short keyLength; // <-- key.length()
 	private byte[] payloadChecksum;
 	private String key;
 	private byte[] payload;
@@ -110,7 +111,7 @@ public class FragmentedBlob {
 		packetType_byte_array[0] = pachetType_byte;
 
 		byte[] blobPayloadLength_byte_array = ByteBuffer.allocate(4).putInt(this.blobPayloadLength).array();
-		byte[] keyLength_byte_array = ByteBuffer.allocate(2).putShort((short)this.key.length()).array();
+		byte[] keyLength_byte_array = ByteBuffer.allocate(2).putShort((short) this.key.length()).array();
 
 		try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 			// 1. 4 bytes, fragment Offset
@@ -182,6 +183,14 @@ public class FragmentedBlob {
 
 	public void setPayloadChecksum(byte[] payloadChecksum) {
 		this.payloadChecksum = payloadChecksum;
+	}
+
+	public int getBlobPayloadLength() {
+		return this.blobPayloadLength;
+	}
+
+	public void setBlobPayloadLength(int blobPayloadLength) {
+		this.blobPayloadLength = blobPayloadLength;
 	}
 
 	/**
