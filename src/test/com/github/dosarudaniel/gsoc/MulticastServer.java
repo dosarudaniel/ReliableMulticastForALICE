@@ -12,7 +12,6 @@ import java.util.UUID;
 
 import myjava.com.github.dosarudaniel.gsoc.Blob;
 import myjava.com.github.dosarudaniel.gsoc.FragmentedBlob;
-import myjava.com.github.dosarudaniel.gsoc.Sender;
 import myjava.com.github.dosarudaniel.gsoc.Utils;
 
 // TODO, posibil de integrat in Receiver sau Sender
@@ -27,9 +26,7 @@ public class MulticastServer {
 	public static void main(String[] args) throws NoSuchAlgorithmException, IOException {
 		String ip_address = args[0];
 		int portNumber = Integer.parseInt(args[1]);
-		int key_length = 4;
-		int BUF_SIZE = Sender.MAX_PAYLOAD_SIZE + Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER + key_length;
-		byte[] buf = new byte[BUF_SIZE];
+		byte[] buf = new byte[Utils.PACKET_MAX_SIZE];
 
 		Blob blobReceived = new Blob();
 
@@ -42,7 +39,7 @@ public class MulticastServer {
 				socket.receive(packet);
 
 				System.out.println("packet received, length " + buf.length + "== " + Arrays.toString(buf));
-				FragmentedBlob fragmentedBlob = new FragmentedBlob(buf);
+				FragmentedBlob fragmentedBlob = new FragmentedBlob(buf, packet.getLength());
 
 				// chose the blob to put the fragmentedBlob
 				if (blobReceived.getKey().equals("")) {
