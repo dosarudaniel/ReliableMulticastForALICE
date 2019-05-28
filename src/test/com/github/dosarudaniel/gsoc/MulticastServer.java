@@ -18,7 +18,7 @@ public class MulticastServer {
 	static final int MIN_LEN = 50;
 	static final int MAX_LEN = 130;
 
-	Map<UUID, Blob> inFlight = new HashMap<>(); // uuid <-> Blob fragmentat, zonă de tranzitie până la primirea completă
+	Map<UUID, Blob> inFlight = new HashMap<>(); // uuid <-> Blob fragmentat, zona de tranzitie pana la primirea completa
 												// a tuturor fragmentelor
 	Map<String, Blob> currentCacheContent = new HashMap<>(); // Blob-uri complete
 
