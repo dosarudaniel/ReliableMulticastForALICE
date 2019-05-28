@@ -17,6 +17,9 @@ runSender:build
 runReceiver:build
 	$(J) -cp bin test.com.github.dosarudaniel.gsoc.TestReceiver $(IP) $(PORT_NUMBER)
 
+runMulticastServer:build
+	$(J) -cp bin test.com.github.dosarudaniel.gsoc.MulticastServer $(IP) $(PORT_NUMBER)
+
 doc:
 	$(JD) src/test/com/github/dosarudaniel/gsoc/* \
 		src/myjava/com/github/dosarudaniel/gsoc/* -d $(DOC)
