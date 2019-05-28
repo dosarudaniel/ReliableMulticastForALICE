@@ -39,17 +39,19 @@ public class MulticastServer {
 
 				FragmentedBlob fragmentedBlob = new FragmentedBlob(buf, packet.getLength());
 
-				System.out.println("Received:" + new String(fragmentedBlob.getPayload()));
+//				System.out.println("Received:" + new String(fragmentedBlob.getPayload()));
 
 				// choose the blob to put the fragmentedBlob
 				if (blobReceived.getKey().equals("")) {
 					System.out.println("Received key:" + fragmentedBlob.getKey());
+					System.out.println("Sequence number " + new String(fragmentedBlob.getPayload()).substring(0, 4));
 					blobReceived.setKey(fragmentedBlob.getKey());
 					blobReceived.setUuid(fragmentedBlob.getUuid());
 				}
 
 				blobReceived.addFragmentedBlob(fragmentedBlob);
-				System.out.println(blobReceived.toString());
+
+				// System.out.println(blobReceived.toString());
 
 				// Print timestamp and content
 //				String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
@@ -62,7 +64,7 @@ public class MulticastServer {
 //						+ Arrays.toString(blobReceived.getMetadata()));
 
 //				if (blobReceived.isComplete()) {
-//					break;
+//					blobReceived = new Blob();
 //				}
 
 			}
