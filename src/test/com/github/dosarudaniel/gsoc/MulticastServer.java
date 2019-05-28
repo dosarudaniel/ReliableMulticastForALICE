@@ -5,7 +5,6 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -38,10 +37,11 @@ public class MulticastServer {
 				DatagramPacket packet = new DatagramPacket(buf, buf.length);
 				socket.receive(packet);
 
-				System.out.println("packet received, length " + buf.length + "== " + Arrays.toString(buf));
 				FragmentedBlob fragmentedBlob = new FragmentedBlob(buf, packet.getLength());
 
-				// chose the blob to put the fragmentedBlob
+				System.out.println("Received:" + new String(fragmentedBlob.getPayload()));
+
+				// choose the blob to put the fragmentedBlob
 				if (blobReceived.getKey().equals("")) {
 					blobReceived.setKey(fragmentedBlob.getKey());
 					blobReceived.setUuid(fragmentedBlob.getUuid());
