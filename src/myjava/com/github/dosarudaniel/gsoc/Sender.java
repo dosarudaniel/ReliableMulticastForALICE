@@ -36,6 +36,7 @@ public class Sender extends TimerTask {
 	static final int MIN_LEN = 50;
 	static final int MAX_LEN = 130;
 	public static final int MAX_PAYLOAD_SIZE = 10;
+	public static final int KEY_SIZE = 4;
 
 	/**
 	 * Parameterized constructor
