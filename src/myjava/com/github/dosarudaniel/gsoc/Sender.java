@@ -32,9 +32,14 @@ public class Sender extends TimerTask {
 	private String ip_address;
 	private int portNumber;
 
-	static final String AB = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-	static final int MIN_LEN = 2;
-	static final int MAX_LEN = 30;
+	public static final String AB = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+	public static final int MIN_LEN_KEY = 2;
+	public static final int MAX_LEN_KEY = 10;
+	public static final int MIN_LEN_METADATA = 10;
+	public static final int MAX_LEN_METADATA = 30;
+	public static final int MIN_LEN_DATA = 30;
+	public static final int MAX_LEN_DATA = 70;
+
 	public static final int MAX_PAYLOAD_SIZE = 10;
 
 	/**
@@ -57,15 +62,24 @@ public class Sender extends TimerTask {
 	 */
 	@Override
 	public void run() {
-		int randomNumber = ThreadLocalRandom.current().nextInt(MIN_LEN, MAX_LEN);
-		Blob blob = null;
-		String metadata = "111111111122222222223333333333";
-		String payload = "aaaaaaaaaabbbbbbbbbbccccccccccdddddddddd";// randomString(randomNumber);
+		// generate a random length, random content metadata
+		int randomNumber = ThreadLocalRandom.current().nextInt(MIN_LEN_METADATA, MAX_LEN_METADATA);
+		String metadata = randomString(randomNumber);
+
+		// generate a random length, random content payload
+		randomNumber = ThreadLocalRandom.current().nextInt(MIN_LEN_DATA, MAX_LEN_DATA);
+		String payload = randomString(randomNumber);
+
+		// generate a random length, random content key
+		randomNumber = ThreadLocalRandom.current().nextInt(MIN_LEN_KEY, MAX_LEN_KEY);
+		String key = randomString(randomNumber);
+
+		System.out.println("Blob key = " + key);
+		System.out.println("Blob metadata = " + metadata);
+		System.out.println("Blob payload = " + payload);
 
 		try {
-			String key = randomString(randomNumber);
-			System.out.println("Blob key = " + key);
-			blob = new Blob(metadata.getBytes(Charset.forName(Utils.CHARSET)),
+			Blob blob = new Blob(metadata.getBytes(Charset.forName(Utils.CHARSET)),
 					payload.getBytes(Charset.forName(Utils.CHARSET)), key, UUID.randomUUID());
 			blob.send(MAX_PAYLOAD_SIZE, this.ip_address, this.portNumber);
 			String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
