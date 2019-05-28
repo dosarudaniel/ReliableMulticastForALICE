@@ -263,8 +263,8 @@ public class Blob {
 
 	// manual serialization
 	public byte[] toBytes() throws IOException {
-		byte[] blobPayloadLength_byte_array = ByteBuffer.allocate(4).putInt(payload.length).array();
-		byte[] keyLength_byte_array = ByteBuffer.allocate(2).putShort((short) key.length()).array();// putShort(this.key).array();
+		byte[] blobPayloadLength_byte_array = ByteBuffer.allocate(4).putInt(this.payload.length).array();
+		byte[] keyLength_byte_array = ByteBuffer.allocate(2).putShort((short) this.key.length()).array();// putShort(this.key).array();
 
 		try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 			// 1. 16 bytes, uuid
@@ -364,5 +364,25 @@ public class Blob {
 
 	public void setPayload(byte[] payload) {
 		this.payload = payload;
+	}
+
+	@Override
+	public String toString() {
+		String output = "";
+		output += "Blob with \n";
+		output += "\t key = " + this.key + "\n";
+		output += "\t uuid = " + this.uuid.toString() + "\n";
+		output += "\t metadata = ";
+		if (this.metadata != null) {
+			output += new String(this.metadata);
+		}
+		output += "\n";
+		output += "\t payload = ";
+		if (this.payload != null) {
+			output += new String(this.payload);
+		}
+		output += "\n";
+
+		return output;
 	}
 }
