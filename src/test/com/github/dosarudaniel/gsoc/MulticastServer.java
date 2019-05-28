@@ -49,6 +49,7 @@ public class MulticastServer {
 				}
 
 				blobReceived.addFragmentedBlob(fragmentedBlob);
+				System.out.println(blobReceived.toString());
 
 				// Print timestamp and content
 //				String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
