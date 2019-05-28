@@ -84,8 +84,10 @@ public class Sender extends TimerTask {
 
 		for (int i = 0; i < NUMBER_OF_PACKETS_TO_SENT; i++) {
 			String payload_with_number = Integer.toString(i) + " " + payload;
+			String metadata_with_number = Integer.toString(i) + " " + metadata;
+
 			try {
-				blob = new Blob(metadata.getBytes(Charset.forName(Utils.CHARSET)),
+				blob = new Blob(metadata_with_number.getBytes(Charset.forName(Utils.CHARSET)),
 						payload_with_number.getBytes(Charset.forName(Utils.CHARSET)), key, uuid);
 				blob.send(MAX_PAYLOAD_SIZE, this.ip_address, this.portNumber);
 				String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
