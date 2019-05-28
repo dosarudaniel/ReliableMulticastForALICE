@@ -150,9 +150,7 @@ public class Blob {
 
 			// send the metadata packet
 			Utils.sendFragmentMulticast(packet, targetIp, port);
-			String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
-			System.out.println("[" + timeStamp + "] Sending metadata fragment " + Integer.toString(i)
-					+ ": with payload metadata" + new String(payload_metadata));
+
 		}
 
 		/*
@@ -215,9 +213,7 @@ public class Blob {
 
 			// send the metadata packet
 			Utils.sendFragmentMulticast(packet, targetIp, port);
-			String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
-			System.out.println("[" + timeStamp + "] Sending data fragment " + Integer.toString(i) + ": with payload "
-					+ new String(payload_data));
+
 		}
 	}
 
@@ -245,21 +241,27 @@ public class Blob {
 			this.blobByteRange_metadata.add(fragmentedPayload);
 		}
 		// put the remaining bytes from metadata
-		fragmentedPayload = new byte[this.metadata.length - maxPayloadSize * i];
-		System.arraycopy(this.metadata, maxPayloadSize * i, fragmentedPayload, 0,
-				this.metadata.length - maxPayloadSize * i);
-		this.blobByteRange_metadata.add(fragmentedPayload);
+		if (this.metadata.length - maxPayloadSize * i > 0) {
+			fragmentedPayload = new byte[this.metadata.length - maxPayloadSize * i];
+			System.arraycopy(this.metadata, maxPayloadSize * i, fragmentedPayload, 0,
+					this.metadata.length - maxPayloadSize * i);
+			this.blobByteRange_metadata.add(fragmentedPayload);
+		}
 
 		for (i = 0; i < numberOfPayloadFragments; i++) {
 			fragmentedPayload = new byte[maxPayloadSize];
 			System.arraycopy(this.payload, maxPayloadSize * i, fragmentedPayload, 0, maxPayloadSize);
 			this.blobByteRange_data.add(fragmentedPayload);
 		}
-		// put the remaining bytes from the payload
-		fragmentedPayload = new byte[this.payload.length - maxPayloadSize * i];
-		System.arraycopy(this.payload, maxPayloadSize * i, fragmentedPayload, 0,
-				this.payload.length - maxPayloadSize * i);
-		this.blobByteRange_data.add(fragmentedPayload);
+
+		if (this.payload.length - maxPayloadSize * i > 0) {
+			// put the remaining bytes from the payload
+			fragmentedPayload = new byte[this.payload.length - maxPayloadSize * i];
+			System.arraycopy(this.payload, maxPayloadSize * i, fragmentedPayload, 0,
+					this.payload.length - maxPayloadSize * i);
+			this.blobByteRange_data.add(fragmentedPayload);
+		}
+
 	}
 
 	// manual serialization
