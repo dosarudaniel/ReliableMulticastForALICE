@@ -59,7 +59,7 @@ public class Utils {
 	// SIZE_OF_PAYLOAD (unknown);
 
 	public static byte[] calculateChecksum(byte[] data) throws NoSuchAlgorithmException {
-		MessageDigest mDigest = MessageDigest.getInstance("SHA1");
+		MessageDigest mDigest = MessageDigest.getInstance("MD5");
 		mDigest.update(data);
 		return mDigest.digest();
 	}
