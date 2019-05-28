@@ -86,9 +86,7 @@ public class Blob {
 	 * 
 	 */
 	public void send(int MAX_PAYLOAD_SIZE, String targetIp, int port) throws NoSuchAlgorithmException, IOException {
-
 		this.fragmentBlob(MAX_PAYLOAD_SIZE);
-		byte[] fragmentOffset_byte_array;
 		/*
 		 * 
 		 * fragment metadata
@@ -97,12 +95,11 @@ public class Blob {
 		byte[] commonHeader = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER - Utils.SIZE_OF_FRAGMENT_OFFSET
 				- Utils.SIZE_OF_PAYLOAD_CHECKSUM];
 
-		byte pachetType_byte = (byte) METADATA_CODE;
 		byte[] packetType_byte_array = new byte[1];
-		packetType_byte_array[0] = pachetType_byte;
-
+		packetType_byte_array[0] = (byte) METADATA_CODE;
 		byte[] blobMetadataLength_byte_array = ByteBuffer.allocate(4).putInt(this.metadata.length).array();
 		byte[] keyLength_byte_array = ByteBuffer.allocate(2).putShort((short) this.key.length()).array();
+		byte[] fragmentOffset_byte_array;
 
 		try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 			// 2. 1 byte, packet type or flags - to be decided
@@ -122,7 +119,8 @@ public class Blob {
 
 		for (int i = 0; i < this.blobByteRange_metadata.size(); i++) {
 			byte[] payload_metadata = this.blobByteRange_metadata.get(i);
-			byte[] packet = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER + payload_metadata.length];
+			byte[] packet = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER + payload_metadata.length
+					+ this.key.length()];
 			fragmentOffset_byte_array = ByteBuffer.allocate(4).putInt(i * this.fragmentSize).array();
 			// commonHeader
 
@@ -150,7 +148,6 @@ public class Blob {
 
 			// send the metadata packet
 			Utils.sendFragmentMulticast(packet, targetIp, port);
-
 		}
 
 		/*
@@ -161,9 +158,8 @@ public class Blob {
 		commonHeader = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER - Utils.SIZE_OF_FRAGMENT_OFFSET
 				- Utils.SIZE_OF_PAYLOAD_CHECKSUM];
 
-		pachetType_byte = (byte) DATA_CODE;
 		packetType_byte_array = new byte[1];
-		packetType_byte_array[0] = pachetType_byte;
+		packetType_byte_array[0] = (byte) DATA_CODE;
 
 		byte[] blobPayloadLength_byte_array = ByteBuffer.allocate(4).putInt(this.payload.length).array();
 		keyLength_byte_array = ByteBuffer.allocate(2).putShort((short) this.key.length()).array();
@@ -186,7 +182,8 @@ public class Blob {
 
 		for (int i = 0; i < this.blobByteRange_data.size(); i++) {
 			byte[] payload_data = this.blobByteRange_data.get(i);
-			byte[] packet = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER + payload_data.length];
+			byte[] packet = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER + payload_data.length
+					+ this.key.length()];
 			fragmentOffset_byte_array = ByteBuffer.allocate(4).putInt(i * this.fragmentSize).array();
 
 			try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
