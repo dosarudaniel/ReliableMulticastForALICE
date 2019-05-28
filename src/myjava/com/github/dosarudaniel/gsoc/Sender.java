@@ -33,10 +33,9 @@ public class Sender extends TimerTask {
 	private int portNumber;
 
 	static final String AB = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-	static final int MIN_LEN = 50;
-	static final int MAX_LEN = 130;
+	static final int MIN_LEN = 2;
+	static final int MAX_LEN = 30;
 	public static final int MAX_PAYLOAD_SIZE = 10;
-	public static final int KEY_SIZE = 4;
 
 	/**
 	 * Parameterized constructor
@@ -64,8 +63,10 @@ public class Sender extends TimerTask {
 		String payload = "aaaaaaaaaabbbbbbbbbbccccccccccdddddddddd";// randomString(randomNumber);
 
 		try {
+			String key = randomString(randomNumber);
+			System.out.println("Blob key = " + key);
 			blob = new Blob(metadata.getBytes(Charset.forName(Utils.CHARSET)),
-					payload.getBytes(Charset.forName(Utils.CHARSET)), "abcd", UUID.randomUUID());
+					payload.getBytes(Charset.forName(Utils.CHARSET)), key, UUID.randomUUID());
 			blob.send(MAX_PAYLOAD_SIZE, this.ip_address, this.portNumber);
 			String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
 			System.out.println("[" + timeStamp + "] Blob sent:" + payload);
