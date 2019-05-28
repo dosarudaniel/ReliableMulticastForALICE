@@ -5,8 +5,7 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.security.NoSuchAlgorithmException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -28,7 +27,8 @@ public class MulticastServer {
 	public static void main(String[] args) throws NoSuchAlgorithmException, IOException {
 		String ip_address = args[0];
 		int portNumber = Integer.parseInt(args[1]);
-		int BUF_SIZE = Sender.MAX_PAYLOAD_SIZE + Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER;
+		int key_length = 4;
+		int BUF_SIZE = Sender.MAX_PAYLOAD_SIZE + Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER + key_length;
 		byte[] buf = new byte[BUF_SIZE];
 
 		Blob blobReceived = new Blob();
@@ -41,11 +41,10 @@ public class MulticastServer {
 				DatagramPacket packet = new DatagramPacket(buf, buf.length);
 				socket.receive(packet);
 
+				System.out.println("packet received, length " + buf.length + "== " + Arrays.toString(buf));
 				FragmentedBlob fragmentedBlob = new FragmentedBlob(buf);
 
-				String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
-				System.out.println("[" + timeStamp + "] Received data fragment : with payload "
-						+ new String(fragmentedBlob.getPayload()));
+				// chose the blob to put the fragmentedBlob
 				if (blobReceived.getKey().equals("")) {
 					blobReceived.setKey(fragmentedBlob.getKey());
 					blobReceived.setUuid(fragmentedBlob.getUuid());
@@ -60,8 +59,8 @@ public class MulticastServer {
 //				if ("end".equals(payload)) {
 //					break;
 //				}
-				System.out.println(
-						"[" + timeStamp + "] Received blob : with payload " + new String(blobReceived.getPayload()));
+//				System.out.println("[" + timeStamp + "] Received blob : with payload "
+//						+ Arrays.toString(blobReceived.getMetadata()));
 
 //				if (blobReceived.isComplete()) {
 //					break;
