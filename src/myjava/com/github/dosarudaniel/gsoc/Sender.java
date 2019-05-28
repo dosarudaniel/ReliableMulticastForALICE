@@ -42,6 +42,8 @@ public class Sender extends TimerTask {
 
 	public static final int MAX_PAYLOAD_SIZE = 10;
 
+	public static final int NUMBER_OF_PACKETS_TO_SENT = 2;
+
 	/**
 	 * Parameterized constructor
 	 *
@@ -77,16 +79,22 @@ public class Sender extends TimerTask {
 		System.out.println("Blob key = " + key);
 		System.out.println("Blob metadata = " + metadata);
 		System.out.println("Blob payload = " + payload);
+		UUID uuid = UUID.randomUUID();
+		Blob blob = null;
 
-		try {
-			Blob blob = new Blob(metadata.getBytes(Charset.forName(Utils.CHARSET)),
-					payload.getBytes(Charset.forName(Utils.CHARSET)), key, UUID.randomUUID());
-			blob.send(MAX_PAYLOAD_SIZE, this.ip_address, this.portNumber);
-			String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
-			System.out.println("[" + timeStamp + "] Blob sent:" + payload);
-		} catch (NoSuchAlgorithmException | IOException e) {
-			e.printStackTrace();
+		for (int i = 0; i < NUMBER_OF_PACKETS_TO_SENT; i++) {
+			String payload_with_number = Integer.toString(i) + " " + payload;
+			try {
+				blob = new Blob(metadata.getBytes(Charset.forName(Utils.CHARSET)),
+						payload_with_number.getBytes(Charset.forName(Utils.CHARSET)), key, uuid);
+				blob.send(MAX_PAYLOAD_SIZE, this.ip_address, this.portNumber);
+				String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
+				System.out.println("[" + timeStamp + "] Blob sent:" + payload);
+			} catch (NoSuchAlgorithmException | IOException e) {
+				e.printStackTrace();
+			}
 		}
+
 	}
 
 	/**
