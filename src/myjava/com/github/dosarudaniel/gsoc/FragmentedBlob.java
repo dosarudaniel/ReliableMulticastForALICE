@@ -51,16 +51,14 @@ public class FragmentedBlob {
 				serialisedFragmentedBlob.length - Utils.SIZE_OF_PACKET_CHECKSUM, serialisedFragmentedBlob.length);
 
 		// Check packet checksum:
-		if (!Arrays.equals(this.packetChecksum, Utils.calculateChecksum(serialisedFragmentedBlob))) {
+		if (!Arrays.equals(this.packetChecksum, Utils.calculateChecksum(Arrays.copyOfRange(serialisedFragmentedBlob, 0,
+				serialisedFragmentedBlob.length - Utils.SIZE_OF_PACKET_CHECKSUM)))) {
 			throw new IOException("Packet checksum failed!");
 		}
-
-		System.out.println("serialisedFragmentedBlob:" + new String(serialisedFragmentedBlob));
 
 		// Field 1: Fragment Offset
 		byte[] fragmentOffset_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob,
 				Utils.FRAGMENT_OFFSET_START_INDEX, Utils.FRAGMENT_OFFSET_START_INDEX + Utils.SIZE_OF_FRAGMENT_OFFSET);
-		System.out.println("fragmentOffset_byte_array:" + new String(fragmentOffset_byte_array));
 		// Get the fragment Offset:
 		ByteBuffer wrapped = ByteBuffer.wrap(fragmentOffset_byte_array);
 		this.fragmentOffset = wrapped.getInt();
@@ -97,8 +95,6 @@ public class FragmentedBlob {
 				serialisedFragmentedBlob.length - Utils.SIZE_OF_PACKET_CHECKSUM);
 
 		// Check payload checksum:
-
-		System.out.println(new String(this.payloadChecksum) + " " + new String(Utils.calculateChecksum(this.payload)));
 		if (!Arrays.equals(this.payloadChecksum, Utils.calculateChecksum(this.payload))) {
 			throw new IOException("Payload checksum failed!");
 		}
