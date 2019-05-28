@@ -13,17 +13,9 @@ import java.util.concurrent.ThreadLocalRandom;
 public class Utils {
 	public final static int PACKET_MAX_SIZE = 65536;
 	public final static String CHARSET = "UTF-8";
-	static final String AB = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	public final static String CHECKSUM_TYPE = "MD5";
 
-	// Fragment Offset: 0 ........ 3
-	// Packet Type: 4
-	// UUID: 5 ........ 20
-	// blobPayloadLength: 21 ....... 24
-	// payloadChecksum: 25........ 40
-	// keyLength: 41 ....... 42
-	// key: 43 ....... 43+x-1
-	// payload: 43+x ..... 43+x+y-1
-	// packetChecksum: 43+x+y ... 58+x+y
+	static final String AB = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 	// Field size (in bytes)
 	public final static int SIZE_OF_FRAGMENT_OFFSET = 4;
@@ -31,35 +23,43 @@ public class Utils {
 	public final static int SIZE_OF_UUID = 16;
 	public final static int SIZE_OF_BLOB_PAYLOAD_LENGTH = 4;
 	public final static int SIZE_OF_KEY_LENGTH = 2;
-	public final static int SIZE_OF_PAYLOAD_CHECKSUM = 16;
-
+	public final static int SIZE_OF_PACKET_CHECKSUM = 16; // for MD5
+	public final static int SIZE_OF_PAYLOAD_CHECKSUM = 16; // for MD5
 	// public final static int SIZE_OF_KEY = ???;
 	// public final static int SIZE_OF_PAYLOAD = ???;
+	public final static int SIZE_OF_FRAGMENTED_BLOB_HEADER = // header length in bytes
+			SIZE_OF_FRAGMENT_OFFSET + // 1
+					SIZE_OF_PACKET_TYPE + // 2
+					SIZE_OF_UUID + // 3
+					SIZE_OF_BLOB_PAYLOAD_LENGTH + // 4
+					SIZE_OF_KEY_LENGTH + // 5
+					SIZE_OF_PACKET_CHECKSUM + // 6
+					SIZE_OF_PAYLOAD_CHECKSUM; // 7
 
-	public final static int SIZE_OF_PACKET_CHECKSUM = 16;
-
-	public final static int SIZE_OF_FRAGMENTED_BLOB_HEADER = SIZE_OF_FRAGMENT_OFFSET + SIZE_OF_PACKET_TYPE
-			+ SIZE_OF_UUID + SIZE_OF_BLOB_PAYLOAD_LENGTH + SIZE_OF_PAYLOAD_CHECKSUM + SIZE_OF_KEY_LENGTH;
-	public final static int SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER = SIZE_OF_FRAGMENTED_BLOB_HEADER
-			+ SIZE_OF_PACKET_CHECKSUM;
+	// Fragment Offset:---- 0 ........ 3
+	// Packet Type:-------- 4
+	// UUID:--------------- 5 ........ 20
+	// blobPayloadLength:-- 21 ....... 24
+	// keyLength: --------- 25 ....... 26
+	// packetChecksum: ---- 27 ....... 42
+	// payloadChecksum:---- 43 ....... 58
+	// key: --------------- 59 ....... 59+x-1
+	// payload:------------ 59+x ..... 59+x+y-1
 
 	// Start indexes of the fields in the serialized byte[]
 	public final static int FRAGMENT_OFFSET_START_INDEX = 0;
 	public final static int PACKET_TYPE_START_INDEX = FRAGMENT_OFFSET_START_INDEX + SIZE_OF_FRAGMENT_OFFSET;
 	public final static int UUID_START_INDEX = PACKET_TYPE_START_INDEX + SIZE_OF_PACKET_TYPE;
 	public final static int BLOB_PAYLOAD_LENGTH_START_INDEX = UUID_START_INDEX + SIZE_OF_UUID;
-
 	public final static int KEY_LENGTH_START_INDEX = BLOB_PAYLOAD_LENGTH_START_INDEX + SIZE_OF_BLOB_PAYLOAD_LENGTH;
-	public final static int PAYLOAD_CHECKSUM_START_INDEX = KEY_LENGTH_START_INDEX + SIZE_OF_KEY_LENGTH;
-
+	public final static int PACKET_CHECKSUM_START_INDEX = KEY_LENGTH_START_INDEX + SIZE_OF_KEY_LENGTH;
+	public final static int PAYLOAD_CHECKSUM_START_INDEX = PACKET_CHECKSUM_START_INDEX + SIZE_OF_PACKET_CHECKSUM;
 	public final static int KEY_START_INDEX = PAYLOAD_CHECKSUM_START_INDEX + SIZE_OF_PAYLOAD_CHECKSUM;
 	// public final static int PAYLOAD_START_INDEX = KEY_START_INDEX + SIZE_OF_KEY
 	// (unknown);
-	// public final static int PACKET_CHECKSUM_START_INDEX = PAYLOAD_START_INDEX +
-	// SIZE_OF_PAYLOAD (unknown);
 
 	public static byte[] calculateChecksum(byte[] data) throws NoSuchAlgorithmException {
-		MessageDigest mDigest = MessageDigest.getInstance("MD5");
+		MessageDigest mDigest = MessageDigest.getInstance(CHECKSUM_TYPE);
 		mDigest.update(data);
 		return mDigest.digest();
 	}
