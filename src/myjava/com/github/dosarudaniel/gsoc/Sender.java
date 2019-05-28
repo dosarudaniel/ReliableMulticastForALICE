@@ -29,123 +29,123 @@ import java.util.concurrent.ThreadLocalRandom;
  *
  */
 public class Sender extends TimerTask {
-	private String ip_address;
-	private int portNumber;
+    private String ip_address;
+    private int portNumber;
 
-	public static final String AB = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-	public static final int MIN_LEN_KEY = 2;
-	public static final int MAX_LEN_KEY = 10;
-	public static final int MIN_LEN_METADATA = 10;
-	public static final int MAX_LEN_METADATA = 30;
-	public static final int MIN_LEN_DATA = 30;
-	public static final int MAX_LEN_DATA = 70;
+    public static final String AB = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    public static final int MIN_LEN_KEY = 2;
+    public static final int MAX_LEN_KEY = 10;
+    public static final int MIN_LEN_METADATA = 10;
+    public static final int MAX_LEN_METADATA = 30;
+    public static final int MIN_LEN_DATA = 30;
+    public static final int MAX_LEN_DATA = 70;
 
-	public static final int MAX_PAYLOAD_SIZE = 10;
+    public static final int MAX_PAYLOAD_SIZE = 10;
 
-	public static final int NUMBER_OF_PACKETS_TO_SENT = 2;
+    public static final int NUMBER_OF_PACKETS_TO_SENT = 20;
 
-	/**
-	 * Parameterized constructor
-	 *
-	 * @param ip_address
-	 * @param portNumber
-	 */
-	public Sender(String ip_address, int portNumber) {
-		super();
-		this.ip_address = ip_address;
-		this.portNumber = portNumber;
+    /**
+     * Parameterized constructor
+     *
+     * @param ip_address
+     * @param portNumber
+     */
+    public Sender(String ip_address, int portNumber) {
+	super();
+	this.ip_address = ip_address;
+	this.portNumber = portNumber;
+    }
+
+    /**
+     * Creates an object with a random length, random content payload. Calls the
+     * sendMulticast method every (default 10) seconds. Prints timestamp and the
+     * payload that was sent.
+     *
+     */
+    @Override
+    public void run() {
+	// generate a random length, random content metadata
+	int randomNumber = ThreadLocalRandom.current().nextInt(MIN_LEN_METADATA, MAX_LEN_METADATA);
+	String metadata = randomString(randomNumber);
+
+	// generate a random length, random content payload
+	randomNumber = ThreadLocalRandom.current().nextInt(MIN_LEN_DATA, MAX_LEN_DATA);
+	String payload = randomString(randomNumber);
+
+	// generate a random length, random content key
+	randomNumber = ThreadLocalRandom.current().nextInt(MIN_LEN_KEY, MAX_LEN_KEY);
+	String key = randomString(randomNumber);
+
+	System.out.println("Blob key = " + key);
+	System.out.println("Blob metadata = " + metadata);
+	System.out.println("Blob payload = " + payload);
+	UUID uuid = UUID.randomUUID();
+	Blob blob = null;
+
+	for (int i = 0; i < NUMBER_OF_PACKETS_TO_SENT; i++) {
+	    String payload_with_number = Integer.toString(i) + " " + payload;
+	    String metadata_with_number = Integer.toString(i) + " " + metadata;
+
+	    try {
+		blob = new Blob(metadata_with_number.getBytes(Charset.forName(Utils.CHARSET)),
+			payload_with_number.getBytes(Charset.forName(Utils.CHARSET)), key, uuid);
+		blob.send(MAX_PAYLOAD_SIZE, this.ip_address, this.portNumber);
+		String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
+		System.out.println("[" + timeStamp + "] Blob sent:" + payload);
+	    } catch (NoSuchAlgorithmException | IOException e) {
+		e.printStackTrace();
+	    }
 	}
 
-	/**
-	 * Creates an object with a random length, random content payload. Calls the
-	 * sendMulticast method every (default 10) seconds. Prints timestamp and the
-	 * payload that was sent.
-	 *
-	 */
-	@Override
-	public void run() {
-		// generate a random length, random content metadata
-		int randomNumber = ThreadLocalRandom.current().nextInt(MIN_LEN_METADATA, MAX_LEN_METADATA);
-		String metadata = randomString(randomNumber);
+    }
 
-		// generate a random length, random content payload
-		randomNumber = ThreadLocalRandom.current().nextInt(MIN_LEN_DATA, MAX_LEN_DATA);
-		String payload = randomString(randomNumber);
+    /**
+     * Sends multicast message that contains the serialized version of an object of
+     * type Blob
+     *
+     * @param blob - Object to send
+     * @throws IOException
+     * @throws NoSuchAlgorithmException
+     */
+    public void sendMulticast(Blob blob) throws IOException, NoSuchAlgorithmException {
+	try (DatagramSocket socket = new DatagramSocket()) {
+	    InetAddress group = InetAddress.getByName(this.ip_address);
+	    byte[] buf = serialize(blob);
+	    DatagramPacket packet = new DatagramPacket(buf, buf.length, group, this.portNumber);
+	    socket.send(packet);
+	}
+    }
 
-		// generate a random length, random content key
-		randomNumber = ThreadLocalRandom.current().nextInt(MIN_LEN_KEY, MAX_LEN_KEY);
-		String key = randomString(randomNumber);
-
-		System.out.println("Blob key = " + key);
-		System.out.println("Blob metadata = " + metadata);
-		System.out.println("Blob payload = " + payload);
-		UUID uuid = UUID.randomUUID();
-		Blob blob = null;
-
-		for (int i = 0; i < NUMBER_OF_PACKETS_TO_SENT; i++) {
-			String payload_with_number = Integer.toString(i) + " " + payload;
-			String metadata_with_number = Integer.toString(i) + " " + metadata;
-
-			try {
-				blob = new Blob(metadata_with_number.getBytes(Charset.forName(Utils.CHARSET)),
-						payload_with_number.getBytes(Charset.forName(Utils.CHARSET)), key, uuid);
-				blob.send(MAX_PAYLOAD_SIZE, this.ip_address, this.portNumber);
-				String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
-				System.out.println("[" + timeStamp + "] Blob sent:" + payload);
-			} catch (NoSuchAlgorithmException | IOException e) {
-				e.printStackTrace();
-			}
-		}
-
+    /**
+     * Generates a random content string of length len
+     *
+     * @param len - Length of the randomString
+     * @return String - A random content string of length len
+     */
+    static String randomString(int len) {
+	StringBuilder sb = new StringBuilder(len);
+	for (int i = 0; i < len; i++) {
+	    int randomNumber = ThreadLocalRandom.current().nextInt(0, AB.length());
+	    sb.append(AB.charAt(randomNumber));
 	}
 
-	/**
-	 * Sends multicast message that contains the serialized version of an object of
-	 * type Blob
-	 *
-	 * @param blob - Object to send
-	 * @throws IOException
-	 * @throws NoSuchAlgorithmException
-	 */
-	public void sendMulticast(Blob blob) throws IOException, NoSuchAlgorithmException {
-		try (DatagramSocket socket = new DatagramSocket()) {
-			InetAddress group = InetAddress.getByName(this.ip_address);
-			byte[] buf = serialize(blob);
-			DatagramPacket packet = new DatagramPacket(buf, buf.length, group, this.portNumber);
-			socket.send(packet);
-		}
-	}
+	return sb.toString();
+    }
 
-	/**
-	 * Generates a random content string of length len
-	 *
-	 * @param len - Length of the randomString
-	 * @return String - A random content string of length len
-	 */
-	static String randomString(int len) {
-		StringBuilder sb = new StringBuilder(len);
-		for (int i = 0; i < len; i++) {
-			int randomNumber = ThreadLocalRandom.current().nextInt(0, AB.length());
-			sb.append(AB.charAt(randomNumber));
-		}
-
-		return sb.toString();
+    /**
+     * Serializes a serializable Object
+     *
+     * @param obj - Object to be serialized
+     * @return byte[] the serialized version of the object
+     * @throws IOException
+     */
+    public static byte[] serialize(Object obj) throws IOException {
+	try (ByteArrayOutputStream out = new ByteArrayOutputStream();
+		ObjectOutputStream os = new ObjectOutputStream(out)) {
+	    os.writeObject(obj);
+	    os.flush();
+	    byte[] b = out.toByteArray();
+	    return b;
 	}
-
-	/**
-	 * Serializes a serializable Object
-	 *
-	 * @param obj - Object to be serialized
-	 * @return byte[] the serialized version of the object
-	 * @throws IOException
-	 */
-	public static byte[] serialize(Object obj) throws IOException {
-		try (ByteArrayOutputStream out = new ByteArrayOutputStream();
-				ObjectOutputStream os = new ObjectOutputStream(out)) {
-			os.writeObject(obj);
-			os.flush();
-			byte[] b = out.toByteArray();
-			return b;
-		}
-	}
+    }
 }
