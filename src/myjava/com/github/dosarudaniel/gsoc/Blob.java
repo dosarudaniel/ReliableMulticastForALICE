@@ -11,9 +11,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.security.NoSuchAlgorithmException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.UUID;
 
 /**
@@ -317,8 +315,8 @@ public class Blob {
 		byte[] fragmentedPayload = fragmentedBlob.getPayload();
 		int fragmentOffset = fragmentedBlob.getFragmentOffset();
 
-		String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
-		System.out.println("[" + timeStamp + "] Adding data fragment : with payload " + new String(fragmentedPayload));
+//		String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
+//		System.out.println("[" + timeStamp + "] Adding data fragment : with payload " + new String(fragmentedPayload));
 
 		if (fragmentedBlob.getPachetType() == PACKET_TYPE.DATA) {
 			if (this.payload == null) {
@@ -326,11 +324,13 @@ public class Blob {
 			}
 
 			System.arraycopy(fragmentedPayload, 0, this.payload, fragmentOffset, fragmentedPayload.length);
-		} else {
+		} else if (fragmentedBlob.getPachetType() == PACKET_TYPE.METADATA) {
 			if (this.metadata == null) {
 				this.metadata = new byte[fragmentedBlob.getBlobPayloadLength()];
 			}
 			System.arraycopy(fragmentedPayload, 0, this.metadata, fragmentOffset, fragmentedPayload.length);
+		} else {
+			throw new IOException("Packet type not recognized!");
 		}
 	}
 
