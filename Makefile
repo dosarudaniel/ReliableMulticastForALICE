@@ -17,7 +17,7 @@ runSender:build
 runReceiver:build
 	$(J) -cp bin test.com.github.dosarudaniel.gsoc.TestReceiver $(IP) $(PORT_NUMBER)
 
-runMulticastServer:build
+runMulticastServer:
 	$(J) -cp bin test.com.github.dosarudaniel.gsoc.MulticastServer $(IP) $(PORT_NUMBER)
 
 doc:
