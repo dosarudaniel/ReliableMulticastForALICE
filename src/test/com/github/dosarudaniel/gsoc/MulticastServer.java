@@ -43,6 +43,7 @@ public class MulticastServer {
 
 				// choose the blob to put the fragmentedBlob
 				if (blobReceived.getKey().equals("")) {
+					System.out.println("Received key:" + fragmentedBlob.getKey());
 					blobReceived.setKey(fragmentedBlob.getKey());
 					blobReceived.setUuid(fragmentedBlob.getUuid());
 				}
