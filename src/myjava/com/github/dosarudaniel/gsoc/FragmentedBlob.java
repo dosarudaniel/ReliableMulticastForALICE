@@ -45,14 +45,16 @@ public class FragmentedBlob {
 	 * Manual deserialization of a serialisedFragmentedBlob
 	 * 
 	 */
-	public FragmentedBlob(byte[] serialisedFragmentedBlob) throws IOException, NoSuchAlgorithmException {
+	public FragmentedBlob(byte[] serialisedFragmentedBlob, int packetLength)
+			throws IOException, NoSuchAlgorithmException {
+
 		// Field 9: Packet Checksum
-		this.packetChecksum = Arrays.copyOfRange(serialisedFragmentedBlob,
-				serialisedFragmentedBlob.length - Utils.SIZE_OF_PACKET_CHECKSUM, serialisedFragmentedBlob.length);
+		this.packetChecksum = Arrays.copyOfRange(serialisedFragmentedBlob, packetLength - Utils.SIZE_OF_PACKET_CHECKSUM,
+				packetLength);
 
 		// Check packet checksum:
-		if (!Arrays.equals(this.packetChecksum, Utils.calculateChecksum(Arrays.copyOfRange(serialisedFragmentedBlob, 0,
-				serialisedFragmentedBlob.length - Utils.SIZE_OF_PACKET_CHECKSUM)))) {
+		if (!Arrays.equals(this.packetChecksum, Utils.calculateChecksum(
+				Arrays.copyOfRange(serialisedFragmentedBlob, 0, packetLength - Utils.SIZE_OF_PACKET_CHECKSUM)))) {
 			throw new IOException("Packet checksum failed!");
 		}
 
@@ -92,7 +94,7 @@ public class FragmentedBlob {
 		this.key = new String(key_byte_array, StandardCharsets.UTF_8);
 		// Field 8: Payload
 		this.payload = Arrays.copyOfRange(serialisedFragmentedBlob, Utils.KEY_START_INDEX + keyLength,
-				serialisedFragmentedBlob.length - Utils.SIZE_OF_PACKET_CHECKSUM);
+				packetLength - Utils.SIZE_OF_PACKET_CHECKSUM);
 
 		// Check payload checksum:
 		if (!Arrays.equals(this.payloadChecksum, Utils.calculateChecksum(this.payload))) {
