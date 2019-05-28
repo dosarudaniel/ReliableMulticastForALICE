@@ -64,7 +64,7 @@ public class Sender extends TimerTask {
 
 		try {
 			blob = new Blob(metadata.getBytes(Charset.forName(Utils.CHARSET)),
-					payload.getBytes(Charset.forName(Utils.CHARSET)), randomString(4), UUID.randomUUID());
+					payload.getBytes(Charset.forName(Utils.CHARSET)), "abcd", UUID.randomUUID());
 			blob.send(MAX_PAYLOAD_SIZE, this.ip_address, this.portNumber);
 			String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
 			System.out.println("[" + timeStamp + "] Blob sent:" + payload);
