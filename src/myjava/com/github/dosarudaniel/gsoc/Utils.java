@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -122,9 +123,9 @@ public class Utils {
 	try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 	    out.write(size_array);
 	    String key, value;
-	    Iterator it = metadataMap.entrySet().iterator();
+	    Iterator<Entry<String, String>> it = metadataMap.entrySet().iterator();
 	    while (it.hasNext()) {
-		Map.Entry<String, String> pair = (Map.Entry) it.next();
+		Map.Entry<String, String> pair = it.next();
 		key = pair.getKey();
 		value = pair.getValue();
 
