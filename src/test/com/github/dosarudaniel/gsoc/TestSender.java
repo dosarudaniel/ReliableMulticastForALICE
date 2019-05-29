@@ -30,10 +30,12 @@ public class TestSender {
 	    String usage = "Usage:\n";
 	    usage += "\tjava -cp bin test.com.github.dosarudaniel.gsoc.TestSender ";
 	    usage += "<IP> <PORT_NUMBER> ";
-	    usage += "<NR_OF_PACKETS_TO_BE_SENT> <MAX_PAYLOAD_SIZE> ";
-	    usage += "<KEY_LENGTH> <METADATA_LENGTH> <PAYLOAD_LENGTH> \n";
+	    usage += "<MAX_PAYLOAD_SIZE> ";
+	    usage += "<KEY_LENGTH> <METADATA_LENGTH> <PAYLOAD_LENGTH> <NR_OF_PACKETS_TO_BE_SENT>\n\n";
 	    usage += "Example:\n";
-	    usage += "\tjava -cp bin test.com.github.dosarudaniel.gsoc.TestSender 230.0.0.0 5000 100 512 50 150 1024\n";
+	    usage += "\tjava -cp bin test.com.github.dosarudaniel.gsoc.TestSender 230.0.0.0 5000 512 50 150 1024 100\n";
+	    usage += "\t |\n";
+	    usage += "\t --> Sends 100 packets with payload size 1024 B, metadata size 150 B, key length 50 B to the multicast address 230.0.0.0 on port 5000. ";
 	    System.out.println(usage);
 	    return;
 	}
