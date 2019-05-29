@@ -26,8 +26,9 @@ public class TestSender {
      */
     public static void main(String[] args) {
 	Timer timer = new Timer();
-	// java TestSender <IP> <PORT_NUMBER>
-	// Ex: java TestSender 230.0.0.0 5000
-	timer.schedule(new Sender(args[0], Integer.parseInt(args[1])), 0, TIME_INTERVAL_SECONDS * 1000L);
+	// java TestSender <IP> <PORT_NUMBER> <NR_OF_PACKETS_TO_BE_SENT>
+	// Ex: java TestSender 230.0.0.0 5000 200
+	timer.schedule(new Sender(args[0], Integer.parseInt(args[1]), Integer.parseInt(args[2])), 0,
+		TIME_INTERVAL_SECONDS * 1000L);
     }
 }

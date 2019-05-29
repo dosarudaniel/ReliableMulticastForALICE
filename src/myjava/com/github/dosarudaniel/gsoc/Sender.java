@@ -42,7 +42,7 @@ public class Sender extends TimerTask {
 
     public static final int MAX_PAYLOAD_SIZE = 10;
 
-    public static final int NUMBER_OF_PACKETS_TO_SENT = 20;
+    private int nrOfPacketsToBeSent = 200;
 
     /**
      * Parameterized constructor
@@ -50,10 +50,11 @@ public class Sender extends TimerTask {
      * @param ip_address
      * @param portNumber
      */
-    public Sender(String ip_address, int portNumber) {
+    public Sender(String ip_address, int portNumber, int nrOfPacketsToBeSent) {
 	super();
 	this.ip_address = ip_address;
 	this.portNumber = portNumber;
+	this.nrOfPacketsToBeSent = nrOfPacketsToBeSent;
     }
 
     /**
@@ -82,7 +83,7 @@ public class Sender extends TimerTask {
 	UUID uuid = UUID.randomUUID();
 	Blob blob = null;
 
-	for (int i = 0; i < NUMBER_OF_PACKETS_TO_SENT; i++) {
+	for (int i = 0; i < this.nrOfPacketsToBeSent; i++) {
 	    String payload_with_number = Integer.toString(i) + " " + payload;
 	    String metadata_with_number = Integer.toString(i) + " " + metadata;
 
