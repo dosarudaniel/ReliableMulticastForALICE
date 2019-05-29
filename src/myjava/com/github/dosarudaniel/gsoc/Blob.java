@@ -33,8 +33,6 @@ public class Blob {
 
     // to be decided if this is necessary
     private ArrayList<FragmentedBlob> blobFragmentsArrayList;
-    private ArrayList<byte[]> blobByteRange_data;
-    private ArrayList<byte[]> blobByteRange_metadata;
     private int fragmentSize;
 
     private UUID uuid;
@@ -95,15 +93,11 @@ public class Blob {
 	    // TODO
 	    System.out.println("This Blob can be sent without fragmenting. Implement this TODO!");
 	} else {
-	    this.fragmentBlob(maxPayloadSize);
 	    /*
-	     * 
 	     * fragment metadata
-	     * 
 	     */
 	    byte[] commonHeader = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER - Utils.SIZE_OF_FRAGMENT_OFFSET
 		    - Utils.SIZE_OF_PAYLOAD_CHECKSUM];
-
 	    byte[] packetType_byte_array = new byte[1];
 	    packetType_byte_array[0] = (byte) METADATA_CODE;
 	    byte[] blobMetadataLength_byte_array = ByteBuffer.allocate(4).putInt(this.metadata.length).array();
@@ -113,104 +107,104 @@ public class Blob {
 	    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 		// 2. 1 byte, packet type or flags - to be decided
 		out.write(packetType_byte_array);
-
 		// 3. 16 bytes, uuid
 		out.write(Utils.getBytes(this.uuid));
-
 		// 4. 4 bytes, blob metadata Length
 		out.write(blobMetadataLength_byte_array);
-
 		// 5. 2 bytes, keyLength
 		out.write(keyLength_byte_array);
 
 		commonHeader = out.toByteArray();
 	    }
 
-	    for (int i = 0; i < this.blobByteRange_metadata.size(); i++) {
-		byte[] payload_metadata = this.blobByteRange_metadata.get(i);
-		byte[] packet = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER + payload_metadata.length
+	    int indexMetadata = 0;
+
+	    while (indexMetadata <= this.metadata.length) {
+		int maxPayloadSize_copy = maxPayloadSize;
+		if (maxPayloadSize_copy + indexMetadata > this.metadata.length) {
+		    maxPayloadSize_copy = this.metadata.length - indexMetadata;
+		}
+
+		byte[] metadataFragment = new byte[maxPayloadSize_copy];
+		System.arraycopy(this.metadata, indexMetadata, metadataFragment, 0, maxPayloadSize_copy);
+
+		// byte[] payload_metadata = this.blobByteRange_metadata.get(i);
+		byte[] packet = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER + metadataFragment.length
 			+ this.key.length()];
-		fragmentOffset_byte_array = ByteBuffer.allocate(4).putInt(i * this.fragmentSize).array();
-		// commonHeader
+		fragmentOffset_byte_array = ByteBuffer.allocate(4).putInt(indexMetadata).array();
 
 		try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 		    // fragment offset
 		    out.write(fragmentOffset_byte_array);
-
 		    // Common header: packet type + uuid + blob metadata Length + keyLength
 		    out.write(commonHeader);
-
 		    // payload checksum
-		    out.write(Utils.calculateChecksum(payload_metadata));
-
+		    out.write(Utils.calculateChecksum(metadataFragment));
 		    // the key
 		    out.write(this.key.getBytes());
-
 		    // the payload metadata
-		    out.write(payload_metadata);
-
+		    out.write(metadataFragment);
 		    // the packet checksum
 		    out.write(Utils.calculateChecksum(out.toByteArray()));
 
 		    packet = out.toByteArray();
 		}
-
 		// send the metadata packet
 		Utils.sendFragmentMulticast(packet, targetIp, port);
+
+		indexMetadata = indexMetadata + maxPayloadSize;
 	    }
 
 	    /*
-	     * 
 	     * fragment data
-	     * 
 	     */
 	    commonHeader = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER - Utils.SIZE_OF_FRAGMENT_OFFSET
 		    - Utils.SIZE_OF_PAYLOAD_CHECKSUM];
 
 	    packetType_byte_array = new byte[1];
 	    packetType_byte_array[0] = (byte) DATA_CODE;
-
 	    byte[] blobPayloadLength_byte_array = ByteBuffer.allocate(4).putInt(this.payload.length).array();
 	    keyLength_byte_array = ByteBuffer.allocate(2).putShort((short) this.key.length()).array();
 
 	    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 		// 2. 1 byte, packet type or flags - to be decided
 		out.write(packetType_byte_array);
-
 		// 3. 16 bytes, uuid
 		out.write(Utils.getBytes(this.uuid));
-
 		// 4. 4 bytes, blob payload Length
 		out.write(blobPayloadLength_byte_array);
-
 		// 5. 2 bytes, keyLength
 		out.write(keyLength_byte_array);
 
 		commonHeader = out.toByteArray();
 	    }
 
-	    for (int i = 0; i < this.blobByteRange_data.size(); i++) {
-		byte[] payload_data = this.blobByteRange_data.get(i);
-		byte[] packet = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER + payload_data.length
+	    int indexPayload = 0;
+	    while (indexPayload <= this.payload.length) {
+		int maxPayloadSize_copy = maxPayloadSize;
+		if (maxPayloadSize_copy + indexPayload > this.payload.length) {
+		    maxPayloadSize_copy = this.payload.length - indexPayload;
+		}
+
+		byte[] payloadFragment = new byte[maxPayloadSize_copy];
+		System.arraycopy(this.payload, indexPayload, payloadFragment, 0, maxPayloadSize_copy);
+
+		// byte[] payload_metadata = this.blobByteRange_metadata.get(i);
+		byte[] packet = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER + payloadFragment.length
 			+ this.key.length()];
-		fragmentOffset_byte_array = ByteBuffer.allocate(4).putInt(i * this.fragmentSize).array();
+		fragmentOffset_byte_array = ByteBuffer.allocate(4).putInt(indexPayload).array();
 
 		try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 		    // fragment offset
 		    out.write(fragmentOffset_byte_array);
-
 		    // Common header: packet type + uuid + blob metadata Length + keyLength
 		    out.write(commonHeader);
-
-		    // payload_data checksum
-		    out.write(Utils.calculateChecksum(payload_data));
-
+		    // payload checksum
+		    out.write(Utils.calculateChecksum(payloadFragment));
 		    // the key
 		    out.write(this.key.getBytes());
-
-		    // the payload_data
-		    out.write(payload_data);
-
+		    // the payload metadata
+		    out.write(payloadFragment);
 		    // the packet checksum
 		    out.write(Utils.calculateChecksum(out.toByteArray()));
 
@@ -220,55 +214,9 @@ public class Blob {
 		// send the metadata packet
 		Utils.sendFragmentMulticast(packet, targetIp, port);
 
+		indexPayload = indexPayload + maxPayloadSize;
 	    }
 	}
-    }
-
-    /**
-     * Fragments a Blob into multiple FragmentedBlobs
-     *
-     * @param maxPayloadSize
-     * @return ArrayList<FragmentedBlob>
-     * @throws NoSuchAlgorithmException
-     * @throws IOException
-     */
-    public void fragmentBlob(int maxPayloadSize) throws NoSuchAlgorithmException, IOException {
-	this.fragmentSize = maxPayloadSize;
-	int numberOfMetadataFragments = this.metadata.length / maxPayloadSize;
-	int numberOfPayloadFragments = this.payload.length / maxPayloadSize;
-
-	this.blobByteRange_metadata = new ArrayList<>();
-	this.blobByteRange_data = new ArrayList<>();
-
-	int i = 0;
-	byte[] fragmentedPayload;
-	for (i = 0; i < numberOfMetadataFragments; i++) {
-	    fragmentedPayload = new byte[maxPayloadSize];
-	    System.arraycopy(this.metadata, maxPayloadSize * i, fragmentedPayload, 0, maxPayloadSize);
-	    this.blobByteRange_metadata.add(fragmentedPayload);
-	}
-	// put the remaining bytes from metadata
-	if (this.metadata.length - maxPayloadSize * i > 0) {
-	    fragmentedPayload = new byte[this.metadata.length - maxPayloadSize * i];
-	    System.arraycopy(this.metadata, maxPayloadSize * i, fragmentedPayload, 0,
-		    this.metadata.length - maxPayloadSize * i);
-	    this.blobByteRange_metadata.add(fragmentedPayload);
-	}
-
-	for (i = 0; i < numberOfPayloadFragments; i++) {
-	    fragmentedPayload = new byte[maxPayloadSize];
-	    System.arraycopy(this.payload, maxPayloadSize * i, fragmentedPayload, 0, maxPayloadSize);
-	    this.blobByteRange_data.add(fragmentedPayload);
-	}
-
-	if (this.payload.length - maxPayloadSize * i > 0) {
-	    // put the remaining bytes from the payload
-	    fragmentedPayload = new byte[this.payload.length - maxPayloadSize * i];
-	    System.arraycopy(this.payload, maxPayloadSize * i, fragmentedPayload, 0,
-		    this.payload.length - maxPayloadSize * i);
-	    this.blobByteRange_data.add(fragmentedPayload);
-	}
-
     }
 
     // manual serialization
@@ -299,10 +247,6 @@ public class Blob {
 
 	    // 8. unknown number of bytes - the real data to be transported
 	    out.write(this.payload);
-
-	    // No need for packet checksum since I do not have any fragmentation here ?
-//			// 9. 16 bytes, packet checksum
-//			out.write(Utils.calculateChecksum(out.toByteArray()));
 
 	    return out.toByteArray();
 	}
