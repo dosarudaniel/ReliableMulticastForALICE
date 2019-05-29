@@ -33,12 +33,16 @@ public class Sender extends TimerTask {
     private int portNumber;
 
     public static final String AB = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-    public static final int MIN_LEN_KEY = 2;
-    public static final int MAX_LEN_KEY = 10;
-    public static final int MIN_LEN_METADATA = 10;
-    public static final int MAX_LEN_METADATA = 30;
-    public static final int MIN_LEN_DATA = 30;
-    public static final int MAX_LEN_DATA = 70;
+    public static final int MIN_LEN_KEY = 20;
+    public static final int MAX_LEN_KEY = 100;
+    public static final int MIN_LEN_METADATA = 1000;
+    public static final int MAX_LEN_METADATA = 3000;
+    public static final int MIN_LEN_DATA = 30_000;
+    public static final int MAX_LEN_DATA = 10_0000;
+
+    private int keyLength;
+    private int metadataLength;
+    private int payloadLength;
 
     private int maxPayloadSize;
     private int nrOfPacketsToBeSent;
@@ -49,12 +53,16 @@ public class Sender extends TimerTask {
      * @param ip_address
      * @param portNumber
      */
-    public Sender(String ip_address, int portNumber, int nrOfPacketsToBeSent, int maxPayloadSize) {
+    public Sender(String ip_address, int portNumber, int nrOfPacketsToBeSent, int maxPayloadSize, int keyLength,
+	    int metadataLength, int payloadLength) {
 	super();
 	this.ip_address = ip_address;
 	this.portNumber = portNumber;
 	this.nrOfPacketsToBeSent = nrOfPacketsToBeSent;
 	this.maxPayloadSize = maxPayloadSize;
+	this.keyLength = keyLength;
+	this.metadataLength = metadataLength;
+	this.payloadLength = payloadLength;
     }
 
     /**
@@ -66,20 +74,22 @@ public class Sender extends TimerTask {
     @Override
     public void run() {
 	// generate a random length, random content metadata
-	int randomNumber = ThreadLocalRandom.current().nextInt(MIN_LEN_METADATA, MAX_LEN_METADATA);
-	String metadata = randomString(randomNumber);
+	// int randomNumber = ThreadLocalRandom.current().nextInt(MIN_LEN_METADATA,
+	// MAX_LEN_METADATA);
+	String metadata = randomString(this.metadataLength);
 
 	// generate a random length, random content payload
-	randomNumber = ThreadLocalRandom.current().nextInt(MIN_LEN_DATA, MAX_LEN_DATA);
-	String payload = randomString(randomNumber);
+	// randomNumber = ThreadLocalRandom.current().nextInt(MIN_LEN_DATA,
+	// MAX_LEN_DATA);
+	String payload = randomString(this.payloadLength);
 
 	// generate a random length, random content key
-	randomNumber = ThreadLocalRandom.current().nextInt(MIN_LEN_KEY, MAX_LEN_KEY);
-	String key = randomString(randomNumber);
+	// randomNumber = ThreadLocalRandom.current().nextInt(MIN_LEN_KEY, MAX_LEN_KEY);
+	String key = randomString(this.keyLength);
 
-	System.out.println("Blob key = " + key);
-	System.out.println("Blob metadata = " + metadata);
-	System.out.println("Blob payload = " + payload);
+//	System.out.println("Blob key = " + key);
+//	System.out.println("Blob metadata = " + metadata);
+//	System.out.println("Blob payload = " + payload);
 	UUID uuid = UUID.randomUUID();
 	Blob blob = null;
 
@@ -91,11 +101,11 @@ public class Sender extends TimerTask {
 		blob = new Blob(metadata_with_number.getBytes(Charset.forName(Utils.CHARSET)),
 			payload_with_number.getBytes(Charset.forName(Utils.CHARSET)), key, uuid);
 		blob.send(this.maxPayloadSize, this.ip_address, this.portNumber);
-		String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
-		System.out.println("[" + timeStamp + "] Blob sent:" + payload);
 	    } catch (NoSuchAlgorithmException | IOException e) {
 		e.printStackTrace();
 	    }
+	    String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
+	    System.out.println("[" + timeStamp + "] Blob nr: " + Integer.toString(i) + " sent.");
 	}
 
     }
