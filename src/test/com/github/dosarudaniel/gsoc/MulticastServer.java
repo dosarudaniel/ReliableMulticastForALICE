@@ -63,7 +63,7 @@ public class MulticastServer {
 			// + 1));
 			System.out.println("-- You lost Blob nr " + Integer.toString(number + 1));
 		    }
-		    number++;
+		    number = intSeqNumber;
 		    System.out.println("Blob nr : " + seqNumber + " is complete.");
 		    blobReceived = new Blob();
 		}
