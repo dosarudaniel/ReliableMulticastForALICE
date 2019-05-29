@@ -53,8 +53,8 @@ public class Sender extends TimerTask {
      * @param ip_address
      * @param portNumber
      */
-    public Sender(String ip_address, int portNumber, int nrOfPacketsToBeSent, int maxPayloadSize, int keyLength,
-	    int metadataLength, int payloadLength) {
+    public Sender(String ip_address, int portNumber, int maxPayloadSize, int keyLength, int metadataLength,
+	    int payloadLength, int nrOfPacketsToBeSent) {
 	super();
 	this.ip_address = ip_address;
 	this.portNumber = portNumber;
