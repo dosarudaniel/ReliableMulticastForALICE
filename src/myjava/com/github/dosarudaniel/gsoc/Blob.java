@@ -93,7 +93,7 @@ public class Blob {
 	if (maxPayloadSize > this.payload.length + this.metadata.length) {
 	    // no need to fragment the Blob
 	    // TODO
-	    System.out.println("This Blob is not big enough for fragmenting. Implement this TODO!");
+	    System.out.println("This Blob can be sent without fragmenting. Implement this TODO!");
 	} else {
 	    this.fragmentBlob(maxPayloadSize);
 	    /*
