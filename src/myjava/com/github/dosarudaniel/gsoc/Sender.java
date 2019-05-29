@@ -40,9 +40,8 @@ public class Sender extends TimerTask {
     public static final int MIN_LEN_DATA = 30;
     public static final int MAX_LEN_DATA = 70;
 
-    public static final int MAX_PAYLOAD_SIZE = 10;
-
-    private int nrOfPacketsToBeSent = 200;
+    private int maxPayloadSize;
+    private int nrOfPacketsToBeSent;
 
     /**
      * Parameterized constructor
@@ -50,11 +49,12 @@ public class Sender extends TimerTask {
      * @param ip_address
      * @param portNumber
      */
-    public Sender(String ip_address, int portNumber, int nrOfPacketsToBeSent) {
+    public Sender(String ip_address, int portNumber, int nrOfPacketsToBeSent, int maxPayloadSize) {
 	super();
 	this.ip_address = ip_address;
 	this.portNumber = portNumber;
 	this.nrOfPacketsToBeSent = nrOfPacketsToBeSent;
+	this.maxPayloadSize = maxPayloadSize;
     }
 
     /**
@@ -90,7 +90,7 @@ public class Sender extends TimerTask {
 	    try {
 		blob = new Blob(metadata_with_number.getBytes(Charset.forName(Utils.CHARSET)),
 			payload_with_number.getBytes(Charset.forName(Utils.CHARSET)), key, uuid);
-		blob.send(MAX_PAYLOAD_SIZE, this.ip_address, this.portNumber);
+		blob.send(this.maxPayloadSize, this.ip_address, this.portNumber);
 		String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
 		System.out.println("[" + timeStamp + "] Blob sent:" + payload);
 	    } catch (NoSuchAlgorithmException | IOException e) {
