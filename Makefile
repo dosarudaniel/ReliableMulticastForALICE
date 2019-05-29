@@ -11,7 +11,7 @@ DOC = documentation
 build:
 	cd ./src ; find . -name \*.java | xargs $(JC) $(JFLAGS) -d ../bin
 
-runSender:build
+runSender:
 	$(J) -cp bin test.com.github.dosarudaniel.gsoc.TestSender $(IP) $(PORT_NUMBER)
 
 runReceiver:build
