@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -59,6 +60,29 @@ public class Utils {
     // (unknown);
     // public final static int PACKET_CHECKSUM_START_INDEX = PAYLOAD_START_INDEX +
     // SIZE_OF_PAYLOAD (unknown);
+
+    public static class Pair {
+	public int first;
+	public int second;
+
+	public Pair(int first, int second) {
+	    this.first = first;
+	    this.second = second;
+	}
+
+	@Override
+	public String toString() {
+	    return "(" + Integer.toString(this.first) + "," + Integer.toString(this.second) + ")";
+	}
+    }
+
+    public static class PairComparator implements Comparator<Pair> {
+
+	@Override
+	public int compare(Pair p1, Pair p2) {
+	    return p1.first - p2.first;
+	}
+    }
 
     public static byte[] calculateChecksum(byte[] data) throws NoSuchAlgorithmException {
 	MessageDigest mDigest = MessageDigest.getInstance("MD5");

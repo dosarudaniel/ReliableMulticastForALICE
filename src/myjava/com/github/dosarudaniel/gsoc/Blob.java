@@ -11,9 +11,12 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Iterator;
+import java.util.TreeSet;
 import java.util.UUID;
+
+import myjava.com.github.dosarudaniel.gsoc.Utils.Pair;
+import myjava.com.github.dosarudaniel.gsoc.Utils.PairComparator;
 
 /**
  * Blob class - the structure of the object sent via multicast messages
@@ -31,19 +34,14 @@ public class Blob {
 	METADATA, DATA;
     }
 
-    // to be decided if this is necessary
-    private ArrayList<FragmentedBlob> blobFragmentsArrayList;
-    private int fragmentSize;
-
     private UUID uuid;
     private byte[] payloadAndMetadataChecksum;
     private String key;
     private byte[] metadata;
-    private boolean[] metadataReceived;
-    private boolean isMetadataComplete;
     private byte[] payload;
-    private boolean isPayloadComplete;
-    private boolean[] payloadReceived;
+
+    private TreeSet<Utils.Pair> metadataByteRanges;
+    private TreeSet<Utils.Pair> payloadByteRanges;
 
     /**
      * Parameterized constructor - creates a Blob object that contains a payload and
@@ -69,18 +67,8 @@ public class Blob {
     public Blob() {
 	this.key = "";
 	this.uuid = null;
-	this.metadataReceived = null;
-	this.payloadReceived = null;
-	this.isMetadataComplete = false;
-	this.isPayloadComplete = false;
-
-    }
-
-    // va fi chemata de serverul UDP, pe masura ce primeste, deserializeaza un
-    // fragment si vede carui Blob ii apartine
-    public void notifyFragment(FragmentedBlob fragmentedBlob)
-	    throws NoSuchAlgorithmException, UnsupportedEncodingException, IOException {
-	addFragmentedBlob(fragmentedBlob);
+	this.metadataByteRanges = new TreeSet<>(new PairComparator());
+	this.payloadByteRanges = new TreeSet<>(new PairComparator());
     }
 
     /*
@@ -128,7 +116,6 @@ public class Blob {
 		byte[] metadataFragment = new byte[maxPayloadSize_copy];
 		System.arraycopy(this.metadata, indexMetadata, metadataFragment, 0, maxPayloadSize_copy);
 
-		// byte[] payload_metadata = this.blobByteRange_metadata.get(i);
 		byte[] packet = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER + metadataFragment.length
 			+ this.key.length()];
 		fragmentOffset_byte_array = ByteBuffer.allocate(4).putInt(indexMetadata).array();
@@ -189,7 +176,6 @@ public class Blob {
 		byte[] payloadFragment = new byte[maxPayloadSize_copy];
 		System.arraycopy(this.payload, indexPayload, payloadFragment, 0, maxPayloadSize_copy);
 
-		// byte[] payload_metadata = this.blobByteRange_metadata.get(i);
 		byte[] packet = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER + payloadFragment.length
 			+ this.key.length()];
 		fragmentOffset_byte_array = ByteBuffer.allocate(4).putInt(indexPayload).array();
@@ -210,7 +196,6 @@ public class Blob {
 
 		    packet = out.toByteArray();
 		}
-
 		// send the metadata packet
 		Utils.sendFragmentMulticast(packet, targetIp, port);
 
@@ -253,29 +238,36 @@ public class Blob {
     }
 
     public boolean isComplete() {
-	if (this.isPayloadComplete && this.isMetadataComplete) {
-	    return true;
-	}
-	if (this.metadataReceived == null) {
-	    return false;
-	}
-	boolean assumption = true;
-	for (int i = this.metadataReceived.length - 1; i >= 0; i--) {
-	    assumption = assumption & this.metadataReceived[i];
-	    if (assumption == false) {
-		return false;
-	    }
-	}
-
-	if (this.payloadReceived == null) {
+	if (this.metadata == null || this.payload == null) {
 	    return false;
 	}
 
-	for (int i = this.payloadReceived.length - 1; i >= 0; i--) {
-	    assumption = assumption & this.payloadReceived[i];
-	    if (assumption == false) {
+	Iterator<Pair> iterator = this.metadataByteRanges.iterator();
+	int index = 0;
+	while (iterator.hasNext()) {
+	    Pair pair = iterator.next();
+	    if (index != pair.first) {
 		return false;
 	    }
+	    index = pair.second;
+	}
+
+	if (index != this.metadata.length) {
+	    return false;
+	}
+
+	iterator = this.payloadByteRanges.iterator();
+	index = 0;
+	while (iterator.hasNext()) {
+	    Pair pair = iterator.next();
+	    if (index != pair.first) {
+		return false;
+	    }
+	    index = pair.second;
+	}
+
+	if (index != this.payload.length) {
+	    return false;
 	}
 
 	return true;
@@ -295,53 +287,20 @@ public class Blob {
 	byte[] fragmentedPayload = fragmentedBlob.getPayload();
 	int fragmentOffset = fragmentedBlob.getFragmentOffset();
 
-//		String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
-//		System.out.println("[" + timeStamp + "] Adding data fragment : with payload " + new String(fragmentedPayload));
-
 	if (fragmentedBlob.getPachetType() == PACKET_TYPE.DATA) {
 	    if (this.payload == null) {
 		this.payload = new byte[fragmentedBlob.getBlobPayloadLength()];
-		if (fragmentedBlob.getFragmentOffset() + fragmentedBlob.getPayload().length != fragmentedBlob
-			.getBlobPayloadLength()) { // daca nu e ultimul fragment
-		    int size = fragmentedBlob.getBlobPayloadLength() / fragmentedBlob.getPayload().length;
-		    if (fragmentedBlob.getBlobPayloadLength() % fragmentedBlob.getPayload().length > 0) {
-			size++;
-		    }
-		    this.payloadReceived = new boolean[size];
-		    Arrays.fill(this.payloadReceived, false);
-		} else { // this is the last fragment with data (and the only one)
-		    this.isPayloadComplete = true;
-		    this.payloadReceived = new boolean[1];
-		    Arrays.fill(this.payloadReceived, false);
-		}
-		this.fragmentSize = fragmentedBlob.getPayload().length;
 	    }
-	    int index = fragmentedBlob.getFragmentOffset() / this.fragmentSize;
-	    this.payloadReceived[index] = true;
 	    System.arraycopy(fragmentedPayload, 0, this.payload, fragmentOffset, fragmentedPayload.length);
+	    Pair pair = new Pair(fragmentOffset, fragmentOffset + fragmentedPayload.length);
+	    this.payloadByteRanges.add(pair);
 	} else if (fragmentedBlob.getPachetType() == PACKET_TYPE.METADATA) {
 	    if (this.metadata == null) {
 		this.metadata = new byte[fragmentedBlob.getBlobPayloadLength()];
-
-		if (fragmentedBlob.getFragmentOffset() + fragmentedBlob.getPayload().length != fragmentedBlob
-			.getBlobPayloadLength()) { // daca nu e ultimul fragment
-		    int size = fragmentedBlob.getBlobPayloadLength() / fragmentedBlob.getPayload().length;
-		    if (fragmentedBlob.getBlobPayloadLength() % fragmentedBlob.getPayload().length > 0) {
-			size++;
-		    }
-		    this.metadataReceived = new boolean[size];
-		    Arrays.fill(this.metadataReceived, false);
-		} else { // this is the last fragment with data (and the only one)
-		    this.isMetadataComplete = true;
-		    this.metadataReceived = new boolean[1];
-		    Arrays.fill(this.metadataReceived, false);
-		}
-
-		this.fragmentSize = fragmentedBlob.getPayload().length;
 	    }
-	    int index = fragmentedBlob.getFragmentOffset() / this.fragmentSize;
-	    this.metadataReceived[index] = true;
 	    System.arraycopy(fragmentedPayload, 0, this.metadata, fragmentOffset, fragmentedPayload.length);
+	    Pair pair = new Pair(fragmentOffset, fragmentOffset + fragmentedPayload.length);
+	    this.metadataByteRanges.add(pair);
 	} else {
 	    throw new IOException("Packet type not recognized!");
 	}
