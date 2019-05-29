@@ -104,7 +104,7 @@ public class FragmentedBlob {
 
     // manual serialization
     public byte[] toBytes() throws IOException, NoSuchAlgorithmException {
-	byte[] fragmentOffset_byte_array = ByteBuffer.allocate(4).putInt(this.fragmentOffset).array();
+	byte[] fragmentOffset_byte_array = ByteBuffer.allocate(Integer.BYTES).putInt(this.fragmentOffset).array();
 
 	// 0 -> METADATA
 	// 1 -> DATA
