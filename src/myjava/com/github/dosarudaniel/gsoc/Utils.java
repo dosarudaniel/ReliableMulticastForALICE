@@ -1,12 +1,18 @@
 package myjava.com.github.dosarudaniel.gsoc;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -106,5 +112,70 @@ public class Utils {
 	    DatagramPacket datagramPacket = new DatagramPacket(packet, packet.length, group, destinationPort);
 	    socket.send(datagramPacket);
 	}
+    }
+
+    public static byte[] serializeMetadata(Map<String, String> metadataMap) throws IOException {
+	byte[] size_array = ByteBuffer.allocate(Integer.BYTES).putInt(metadataMap.size()).array();
+	byte[] key_length_array;
+	byte[] value_length_array;
+
+	try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+	    out.write(size_array);
+	    String key, value;
+	    Iterator it = metadataMap.entrySet().iterator();
+	    while (it.hasNext()) {
+		Map.Entry<String, String> pair = (Map.Entry) it.next();
+		key = pair.getKey();
+		value = pair.getValue();
+
+		key_length_array = ByteBuffer.allocate(Integer.BYTES).putInt(key.length()).array();
+		value_length_array = ByteBuffer.allocate(Integer.BYTES).putInt(value.length()).array();
+		out.write(key_length_array);
+		out.write(key.getBytes());
+		out.write(value_length_array);
+		out.write(value.getBytes());
+
+		it.remove(); // avoids a ConcurrentModificationException
+	    }
+	    return out.toByteArray();
+	}
+    }
+
+    public static Map<String, String> deserializeMetadata(byte[] metadata) {
+	byte[] key_length_array;
+	byte[] value_length_array;
+	byte[] key_array;
+	byte[] value_array;
+	String key, value;
+	int keyLength, valueLength;
+	int index = Integer.BYTES;
+
+	byte[] size_array = Arrays.copyOfRange(metadata, 0, index);
+	ByteBuffer wrapped = ByteBuffer.wrap(size_array);
+	int size = wrapped.getInt();
+	Map<String, String> metadataMap = new HashMap<>();
+
+	for (int i = 0; i < size; i++) {
+	    key_length_array = Arrays.copyOfRange(metadata, index, index + Integer.BYTES);
+	    index += Integer.BYTES;
+	    wrapped = ByteBuffer.wrap(key_length_array);
+	    keyLength = wrapped.getInt();
+
+	    key_array = Arrays.copyOfRange(metadata, index, index + keyLength);
+	    index += keyLength;
+	    key = new String(key_array, StandardCharsets.UTF_8);
+
+	    value_length_array = Arrays.copyOfRange(metadata, index, index + Integer.BYTES);
+	    index += Integer.BYTES;
+	    wrapped = ByteBuffer.wrap(value_length_array);
+	    valueLength = wrapped.getInt();
+
+	    value_array = Arrays.copyOfRange(metadata, index, index + valueLength);
+	    index += valueLength;
+	    value = new String(value_array, StandardCharsets.UTF_8);
+
+	    metadataMap.put(key, value);
+	}
+	return metadataMap;
     }
 }
