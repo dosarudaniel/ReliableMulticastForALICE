@@ -32,6 +32,7 @@ public class MulticastServer {
 	try (MulticastSocket socket = new MulticastSocket(portNumber)) {
 	    InetAddress group = InetAddress.getByName(ip_address);
 	    socket.joinGroup(group);
+	    int number = -1;
 	    while (true) {
 		// Receive object
 		DatagramPacket packet = new DatagramPacket(buf, buf.length);
@@ -43,8 +44,9 @@ public class MulticastServer {
 
 		// choose the blob to put the fragmentedBlob
 		if (blobReceived.getKey().equals("")) {
-		    System.out.println("Received key:" + fragmentedBlob.getKey());
-		    System.out.println("Sequence number " + new String(fragmentedBlob.getPayload()).substring(0, 4));
+//		    System.out.println("Received key:" + fragmentedBlob.getKey());
+//		    System.out.println(" payload :" + new String(fragmentedBlob.getPayload()).substring(0, 3));
+
 		    blobReceived.setKey(fragmentedBlob.getKey());
 		    blobReceived.setUuid(fragmentedBlob.getUuid());
 		}
@@ -52,7 +54,17 @@ public class MulticastServer {
 		blobReceived.addFragmentedBlob(fragmentedBlob);
 
 		if (blobReceived.isComplete()) {
-		    System.out.println(blobReceived);
+		    // System.out.println(blobReceived);
+		    int indexOfSpace = new String(blobReceived.getPayload()).indexOf(' ');
+		    String seqNumber = new String(blobReceived.getPayload()).substring(0, indexOfSpace);
+		    int intSeqNumber = Integer.parseInt(seqNumber);
+		    if (intSeqNumber != number + 1) {
+			// System.out.println("---- " + intSeqNumber + " vs " + Integer.toString(number
+			// + 1));
+			System.out.println("-- You lost Blob nr " + Integer.toString(number + 1));
+		    }
+		    number++;
+		    System.out.println("Blob nr : " + seqNumber + " is complete.");
 		    blobReceived = new Blob();
 		}
 
