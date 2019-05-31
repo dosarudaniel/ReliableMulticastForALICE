@@ -13,11 +13,13 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.nio.charset.Charset;
 import java.security.NoSuchAlgorithmException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.TimerTask;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Sender unit which generates and sends new objects at fixed time intervals
@@ -29,6 +31,8 @@ import java.util.concurrent.ThreadLocalRandom;
  *
  */
 public class Sender extends TimerTask {
+    private static Logger logger = Logger.getLogger("Sender");
+
     private String ip_address;
     private int portNumber;
 
@@ -52,9 +56,11 @@ public class Sender extends TimerTask {
      *
      * @param ip_address
      * @param portNumber
+     * @throws IOException
+     * @throws SecurityException
      */
     public Sender(String ip_address, int portNumber, int maxPayloadSize, int keyLength, int metadataLength,
-	    int payloadLength, int nrOfPacketsToBeSent) {
+	    int payloadLength, int nrOfPacketsToBeSent) throws SecurityException, IOException {
 	super();
 	this.ip_address = ip_address;
 	this.portNumber = portNumber;
@@ -63,6 +69,9 @@ public class Sender extends TimerTask {
 	this.keyLength = keyLength;
 	this.metadataLength = metadataLength;
 	this.payloadLength = payloadLength;
+
+	Handler fh = new FileHandler("%t/ALICE_MulticastSender_log");
+	Logger.getLogger("").addHandler(fh);
     }
 
     /**
@@ -93,10 +102,12 @@ public class Sender extends TimerTask {
 	UUID uuid = UUID.randomUUID();
 	Blob blob = null;
 
+	logger.log(Level.INFO, "Before loop");
+
 	for (int i = 0; i < this.nrOfPacketsToBeSent; i++) {
 	    String payload_with_number = Integer.toString(i) + " " + payload;
 	    String metadata_with_number = Integer.toString(i) + " " + metadata;
-
+	    logger.log(Level.INFO, "Sending packet nr " + i);
 	    try {
 		blob = new Blob(metadata_with_number.getBytes(Charset.forName(Utils.CHARSET)),
 			payload_with_number.getBytes(Charset.forName(Utils.CHARSET)), key, uuid);
@@ -104,9 +115,9 @@ public class Sender extends TimerTask {
 	    } catch (NoSuchAlgorithmException | IOException e) {
 		e.printStackTrace();
 	    }
-	    String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
-	    System.out.println("[" + timeStamp + "] Blob nr: " + Integer.toString(i) + " sent.");
 	}
+
+	logger.log(Level.INFO, "After loop");
 
     }
 
