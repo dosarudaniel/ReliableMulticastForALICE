@@ -4,6 +4,7 @@
  */
 package test.com.github.dosarudaniel.gsoc;
 
+import java.io.IOException;
 import java.util.Timer;
 
 import myjava.com.github.dosarudaniel.gsoc.Sender;
@@ -23,8 +24,11 @@ public class TestSender {
      * Schedules a sender to send a multicast message every TIME_INTERVAL_SECONDS
      *
      * @param args multicastIpAddress and portNumber
+     * @throws IOException
+     * @throws SecurityException
+     * @throws NumberFormatException
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws NumberFormatException, SecurityException, IOException {
 
 	if (args.length != 7) {
 	    String usage = "Usage:\n";
