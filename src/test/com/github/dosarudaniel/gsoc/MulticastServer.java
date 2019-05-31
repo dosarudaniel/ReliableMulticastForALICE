@@ -8,6 +8,10 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import myjava.com.github.dosarudaniel.gsoc.Blob;
 import myjava.com.github.dosarudaniel.gsoc.FragmentedBlob;
@@ -15,6 +19,7 @@ import myjava.com.github.dosarudaniel.gsoc.Utils;
 
 // TODO, posibil de integrat in Receiver sau Sender
 public class MulticastServer {
+    private static Logger logger = Logger.getLogger("MulticastServer");
     static final int MIN_LEN = 50;
     static final int MAX_LEN = 130;
 
@@ -23,8 +28,21 @@ public class MulticastServer {
     Map<String, Blob> currentCacheContent = new HashMap<>(); // Blob-uri complete
 
     public static void main(String[] args) throws NoSuchAlgorithmException, IOException {
+
+	if (args.length != 2) {
+	    String usage = "Usage:\n";
+	    usage += "\tjava -cp bin test.com.github.dosarudaniel.gsoc.MulticastServer ";
+	    usage += "<IP> <PORT_NUMBER> ";
+	    System.out.println(usage);
+	    return;
+	}
+
 	String ip_address = args[0];
 	int portNumber = Integer.parseInt(args[1]);
+
+	Handler fh = new FileHandler("%t/ALICE_MulticastServer_log");
+	Logger.getLogger("").addHandler(fh);
+
 	byte[] buf = new byte[Utils.PACKET_MAX_SIZE];
 
 	Blob blobReceived = new Blob();
@@ -36,7 +54,7 @@ public class MulticastServer {
 	    while (true) {
 		// Receive object
 		DatagramPacket packet = new DatagramPacket(buf, buf.length);
-		System.out.println("Receive...");
+		logger.log(Level.INFO, "Receive..");
 		socket.receive(packet);
 
 		FragmentedBlob fragmentedBlob = new FragmentedBlob(buf, packet.getLength());
