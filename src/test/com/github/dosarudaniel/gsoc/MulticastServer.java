@@ -36,6 +36,7 @@ public class MulticastServer {
 	    while (true) {
 		// Receive object
 		DatagramPacket packet = new DatagramPacket(buf, buf.length);
+		System.out.println("Receive...");
 		socket.receive(packet);
 
 		FragmentedBlob fragmentedBlob = new FragmentedBlob(buf, packet.getLength());
