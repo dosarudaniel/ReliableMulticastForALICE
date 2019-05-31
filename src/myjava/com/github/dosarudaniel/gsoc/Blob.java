@@ -107,7 +107,7 @@ public class Blob {
 
 	    int indexMetadata = 0;
 
-	    while (indexMetadata <= this.metadata.length) {
+	    while (indexMetadata < this.metadata.length) {
 		int maxPayloadSize_copy = maxPayloadSize;
 		if (maxPayloadSize_copy + indexMetadata > this.metadata.length) {
 		    maxPayloadSize_copy = this.metadata.length - indexMetadata;
@@ -115,7 +115,6 @@ public class Blob {
 
 		byte[] metadataFragment = new byte[maxPayloadSize_copy];
 		System.arraycopy(this.metadata, indexMetadata, metadataFragment, 0, maxPayloadSize_copy);
-
 		byte[] packet = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER + metadataFragment.length
 			+ this.key.length()];
 		fragmentOffset_byte_array = ByteBuffer.allocate(4).putInt(indexMetadata).array();
@@ -167,7 +166,7 @@ public class Blob {
 	    }
 
 	    int indexPayload = 0;
-	    while (indexPayload <= this.payload.length) {
+	    while (indexPayload < this.payload.length) {
 		int maxPayloadSize_copy = maxPayloadSize;
 		if (maxPayloadSize_copy + indexPayload > this.payload.length) {
 		    maxPayloadSize_copy = this.payload.length - indexPayload;
@@ -198,7 +197,6 @@ public class Blob {
 		}
 		// send the metadata packet
 		Utils.sendFragmentMulticast(packet, targetIp, port);
-
 		indexPayload = indexPayload + maxPayloadSize;
 	    }
 	}
