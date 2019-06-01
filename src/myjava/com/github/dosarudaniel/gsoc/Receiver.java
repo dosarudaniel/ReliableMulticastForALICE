@@ -5,15 +5,15 @@
  */
 package myjava.com.github.dosarudaniel.gsoc;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.security.NoSuchAlgorithmException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Receiver class waits for DatagramPacket from the Sender and prints the
@@ -24,6 +24,7 @@ import java.util.Date;
  *
  */
 public class Receiver {
+    private static Logger logger;
     private final static int BUF_SIZE = 65536;
     private byte[] buf = new byte[BUF_SIZE];
     private String ip_address;
@@ -34,11 +35,17 @@ public class Receiver {
      *
      * @param ip_address
      * @param portNumber
+     * @throws IOException
+     * @throws SecurityException
      */
-    public Receiver(String ip_address, int portNumber) {
+    public Receiver(String ip_address, int portNumber) throws SecurityException, IOException {
 	super();
 	this.ip_address = ip_address;
 	this.portNumber = portNumber;
+
+	logger = Logger.getLogger(this.getClass().getCanonicalName());
+	Handler fh = new FileHandler("%t/ALICE_MulticastReceiver_log");
+	Logger.getLogger(this.getClass().getCanonicalName()).addHandler(fh);
     }
 
     /**
@@ -58,38 +65,17 @@ public class Receiver {
 	try (MulticastSocket socket = new MulticastSocket(this.portNumber)) {
 	    InetAddress group = InetAddress.getByName(this.ip_address);
 	    socket.joinGroup(group);
+	    int nr_packets_received = 0;
+	    DatagramPacket packet = new DatagramPacket(this.buf, this.buf.length);
 	    while (true) {
 		// Receive object
-		DatagramPacket packet = new DatagramPacket(this.buf, this.buf.length);
 		socket.receive(packet);
-		// deserialize
-		// FragmentedBlob fragmentedBlob = ByteToFragmentedBlob(packet);
-		Blob blob = (Blob) deserialize(this.buf);
-		// Print timestamp and content
-		String timeStamp = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(new Date());
-		String payload = "";// new String(blob.getPayload(), "UTF-8");
-		System.out.println("[" + timeStamp + "]Data received:" + payload);
-		if ("end".equals(payload)) {
-		    break;
-		}
-
+		logger.log(Level.INFO, "Received packet nr " + nr_packets_received++);
 	    }
-	    socket.leaveGroup(group);
+	} catch (Exception e) {
+	    logger.log(Level.SEVERE, "Could not create a MulticastSocket.");
+	    e.printStackTrace();
 	}
-    }
 
-    /**
-     * Deserializes objects received through DatagramPackets
-     *
-     * @param data - The serialized object
-     * @return Object - The deserialized object
-     * @throws IOException
-     * @throws ClassNotFoundException
-     */
-    public static Object deserialize(byte[] data) throws IOException, ClassNotFoundException {
-	try (ByteArrayInputStream in = new ByteArrayInputStream(data);
-		ObjectInputStream is = new ObjectInputStream(in)) {
-	    return is.readObject();
-	}
     }
 }
