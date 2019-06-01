@@ -100,16 +100,19 @@ public class Sender extends TimerTask {
 	logger.log(Level.INFO, "Before loop");
 
 	for (int i = 0; i < this.nrOfPacketsToBeSent; i++) {
-	    String payload_with_number = Integer.toString(i) + " " + payload;
-	    String metadata_with_number = Integer.toString(i) + " " + metadata;
+//	    String payload_with_number = Integer.toString(i) + " " + payload;
+//	    String metadata_with_number = Integer.toString(i) + " " + metadata;
 	    logger.log(Level.INFO, "Sending packet nr " + i);
 	    try {
-		blob = new Blob(metadata_with_number.getBytes(Charset.forName(Utils.CHARSET)),
-			payload_with_number.getBytes(Charset.forName(Utils.CHARSET)), key, uuid);
+		blob = new Blob(metadata.getBytes(Charset.forName(Utils.CHARSET)),
+			payload.getBytes(Charset.forName(Utils.CHARSET)), key, uuid);
 		blob.send(this.maxPayloadSize, this.ip_address, this.portNumber);
 	    } catch (NoSuchAlgorithmException | IOException e) {
 		e.printStackTrace();
 	    }
+	    payload = randomString(this.payloadLength);
+	    metadata = randomString(this.metadataLength);
+	    key = randomString(this.keyLength);
 	}
 
 	logger.log(Level.INFO, "After loop");
