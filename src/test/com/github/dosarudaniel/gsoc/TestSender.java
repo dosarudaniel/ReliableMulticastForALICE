@@ -34,7 +34,7 @@ public class TestSender {
 	    String usage = "Usage:\n";
 	    usage += "\tjava -cp bin test.com.github.dosarudaniel.gsoc.TestSender ";
 	    usage += "<IP> <PORT_NUMBER> ";
-	    usage += "<MAX_PAYLOAD_SIZE> ";
+	    usage += "<FRAGMENT_MAX_PAYLOAD_SIZE> ";
 	    usage += "<KEY_LENGTH> <METADATA_LENGTH> <PAYLOAD_LENGTH> <NR_OF_PACKETS_TO_BE_SENT>\n\n";
 	    usage += "Example:\n";
 	    usage += "\tjava -cp bin test.com.github.dosarudaniel.gsoc.TestSender 230.0.0.0 5000 512 50 150 1024 100\n";
