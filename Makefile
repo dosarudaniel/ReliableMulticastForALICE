@@ -23,8 +23,8 @@ runReceiver:build
 runBasicTests:build
 	$(J) -cp bin test.com.github.dosarudaniel.gsoc.BasicTests
 
-runMulticastServer:
-	$(J) -cp bin test.com.github.dosarudaniel.gsoc.MulticastServer $(IP) $(PORT_NUMBER)
+runTestMulticastServer:
+	$(J) -cp bin test.com.github.dosarudaniel.gsoc.TestMulticastServer $(IP) $(PORT_NUMBER)
 
 doc:
 	$(JD) src/test/com/github/dosarudaniel/gsoc/* \
