@@ -5,12 +5,7 @@
  */
 package myjava.com.github.dosarudaniel.gsoc;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.nio.charset.Charset;
 import java.security.NoSuchAlgorithmException;
 import java.util.TimerTask;
@@ -31,7 +26,7 @@ import java.util.logging.Logger;
  *
  */
 public class Sender extends TimerTask {
-    private static Logger logger = Logger.getLogger("Sender");
+    private static Logger logger;
 
     private String ip_address;
     private int portNumber;
@@ -69,9 +64,9 @@ public class Sender extends TimerTask {
 	this.keyLength = keyLength;
 	this.metadataLength = metadataLength;
 	this.payloadLength = payloadLength;
-
+	logger = Logger.getLogger(this.getClass().getCanonicalName());
 	Handler fh = new FileHandler("%t/ALICE_MulticastSender_log");
-	Logger.getLogger("").addHandler(fh);
+	Logger.getLogger(this.getClass().getCanonicalName()).addHandler(fh);
     }
 
     /**
@@ -122,23 +117,6 @@ public class Sender extends TimerTask {
     }
 
     /**
-     * Sends multicast message that contains the serialized version of an object of
-     * type Blob
-     *
-     * @param blob - Object to send
-     * @throws IOException
-     * @throws NoSuchAlgorithmException
-     */
-    public void sendMulticast(Blob blob) throws IOException, NoSuchAlgorithmException {
-	try (DatagramSocket socket = new DatagramSocket()) {
-	    InetAddress group = InetAddress.getByName(this.ip_address);
-	    byte[] buf = serialize(blob);
-	    DatagramPacket packet = new DatagramPacket(buf, buf.length, group, this.portNumber);
-	    socket.send(packet);
-	}
-    }
-
-    /**
      * Generates a random content string of length len
      *
      * @param len - Length of the randomString
@@ -152,22 +130,5 @@ public class Sender extends TimerTask {
 	}
 
 	return sb.toString();
-    }
-
-    /**
-     * Serializes a serializable Object
-     *
-     * @param obj - Object to be serialized
-     * @return byte[] the serialized version of the object
-     * @throws IOException
-     */
-    public static byte[] serialize(Object obj) throws IOException {
-	try (ByteArrayOutputStream out = new ByteArrayOutputStream();
-		ObjectOutputStream os = new ObjectOutputStream(out)) {
-	    os.writeObject(obj);
-	    os.flush();
-	    byte[] b = out.toByteArray();
-	    return b;
-	}
     }
 }
