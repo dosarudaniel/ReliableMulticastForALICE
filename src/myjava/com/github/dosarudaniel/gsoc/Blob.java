@@ -45,7 +45,7 @@ public class Blob {
 
     /**
      * Parameterized constructor - creates a Blob object that contains a payload and
-     * a checksum. The checksum is the sha1 of the payload.
+     * a checksum. The checksum is the utils.CHECKSUM_TYPE of the payload.
      *
      * @param payload - The data string
      * @throws NoSuchAlgorithmException

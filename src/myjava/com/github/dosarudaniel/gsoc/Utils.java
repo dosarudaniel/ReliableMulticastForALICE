@@ -21,6 +21,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class Utils {
     public final static int PACKET_MAX_SIZE = 65536;
     public final static String CHARSET = "UTF-8";
+    public final static String CHECKSUM_TYPE = "MD5";
     static final String AB = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     // Field size (in bytes)
@@ -85,7 +86,7 @@ public class Utils {
     }
 
     public static byte[] calculateChecksum(byte[] data) throws NoSuchAlgorithmException {
-	MessageDigest mDigest = MessageDigest.getInstance("MD5");
+	MessageDigest mDigest = MessageDigest.getInstance(CHECKSUM_TYPE);
 	mDigest.update(data);
 	return mDigest.digest();
     }
