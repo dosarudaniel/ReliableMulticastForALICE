@@ -9,10 +9,15 @@ import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.UUID;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import myjava.com.github.dosarudaniel.gsoc.Blob.PACKET_TYPE;
 
 public class FragmentedBlob {
+    private static Logger logger;
     private int fragmentOffset;
     private PACKET_TYPE packetType;
     private UUID uuid;
@@ -24,13 +29,16 @@ public class FragmentedBlob {
     private byte[] payload;
     private byte[] packetChecksum;
 
-    public FragmentedBlob(String payload) throws NoSuchAlgorithmException {
+    public FragmentedBlob(String payload) throws NoSuchAlgorithmException, SecurityException, IOException {
 	this.payload = payload.getBytes(Charset.forName(Utils.CHARSET));
 	this.payloadChecksum = Utils.calculateChecksum(this.payload);
+	logger = Logger.getLogger(this.getClass().getCanonicalName());
+	Handler fh = new FileHandler("%t/ALICE_Blob_log");
+	Logger.getLogger(this.getClass().getCanonicalName()).addHandler(fh);
     }
 
     public FragmentedBlob(int fragmentOffset, PACKET_TYPE packetType, UUID uuid, int blobPayloadLength, String key,
-	    byte[] payload) throws NoSuchAlgorithmException {
+	    byte[] payload) throws NoSuchAlgorithmException, SecurityException, IOException {
 	this.fragmentOffset = fragmentOffset;
 	this.packetType = packetType;
 	this.uuid = uuid;
@@ -39,6 +47,9 @@ public class FragmentedBlob {
 	this.key = key;
 	this.payload = payload;
 	// this.packetChecksum = Utils.calculateChecksum(smth);?
+	logger = Logger.getLogger(this.getClass().getCanonicalName());
+	Handler fh = new FileHandler("%t/ALICE_Blob_log");
+	Logger.getLogger(this.getClass().getCanonicalName()).addHandler(fh);
     }
 
     /*
@@ -78,7 +89,7 @@ public class FragmentedBlob {
 	    this.packetType = PACKET_TYPE.SMALL_BLOB_CODE;
 	    break;
 	default:
-	    // TODO: Log this error
+	    logger.log(Level.WARNING, "Unrecognized packet type");
 	    break;
 	}
 	// Field 3: UUID

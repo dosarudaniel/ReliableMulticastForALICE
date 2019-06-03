@@ -14,6 +14,10 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import myjava.com.github.dosarudaniel.gsoc.Utils.Pair;
 import myjava.com.github.dosarudaniel.gsoc.Utils.PairComparator;
@@ -27,6 +31,7 @@ import myjava.com.github.dosarudaniel.gsoc.Utils.PairComparator;
  */
 
 public class Blob {
+    private static Logger logger;
     public final static int METADATA_CODE = 0;
     public final static int DATA_CODE = 1;
     public final static int SMALL_BLOB_CODE = 2;
@@ -55,8 +60,11 @@ public class Blob {
      * @param uuid     - The UUID of the Blob
      * 
      * @throws NoSuchAlgorithmException
+     * @throws IOException
+     * @throws SecurityException
      */
-    public Blob(byte[] metadata, byte[] payload, String key, UUID uuid) throws NoSuchAlgorithmException {
+    public Blob(byte[] metadata, byte[] payload, String key, UUID uuid)
+	    throws NoSuchAlgorithmException, SecurityException, IOException {
 	this.metadata = metadata;
 	this.payload = payload;
 	this.key = key;
@@ -69,7 +77,9 @@ public class Blob {
 	this.metadataByteRanges.add(new Pair(0, this.metadata.length));
 	this.payloadByteRanges = new TreeSet<>(new PairComparator());
 	this.payloadByteRanges.add(new Pair(0, this.payload.length));
-
+	logger = Logger.getLogger(this.getClass().getCanonicalName());
+	Handler fh = new FileHandler("%t/ALICE_Blob_log");
+	Logger.getLogger(this.getClass().getCanonicalName()).addHandler(fh);
     }
 
     /**
@@ -82,8 +92,10 @@ public class Blob {
      * @param metadata - The metadata byte array
      * @param key      - The key string
      * @param uuid     - The UUID of the Blob
+     * @throws IOException
+     * @throws SecurityException
      */
-    public Blob() {
+    public Blob() throws SecurityException, IOException {
 	this.metadata = null;
 	this.payload = null;
 	this.key = "";
@@ -91,6 +103,9 @@ public class Blob {
 	this.payloadAndMetadataChecksum = null;
 	this.metadataByteRanges = new TreeSet<>(new PairComparator());
 	this.payloadByteRanges = new TreeSet<>(new PairComparator());
+	logger = Logger.getLogger(this.getClass().getCanonicalName());
+	Handler fh = new FileHandler("%t/ALICE_MulticastSender_log");
+	Logger.getLogger(this.getClass().getCanonicalName()).addHandler(fh);
     }
 
     /**
@@ -400,6 +415,7 @@ public class Blob {
 
 		if (fragmentOffset != 0) { // sanity check
 		    // log error
+		    logger.log(Level.WARNING, "FragmentOffset should be 0, check packet integrity");
 		}
 		System.arraycopy(fragmentedPayload, 0, this.metadata, fragmentOffset, metadataLength);
 		System.arraycopy(fragmentedPayload, metadataLength, this.payload, fragmentOffset, payloadLength);
@@ -409,8 +425,7 @@ public class Blob {
 		this.payloadByteRanges.add(pairPayloadByteRange);
 		this.metadataByteRanges.add(pairMetadataByteRange);
 	    } else {
-		// log this error "metadata and payload should be null"
-		System.out.println("metadata and payload should be null");
+		logger.log(Level.WARNING, "metadata and payload byte arrays should be null");
 	    }
 	} else {
 	    throw new IOException("Packet type not recognized!");
