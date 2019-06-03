@@ -78,19 +78,31 @@ public class Utils {
     }
 
     public static class PairComparator implements Comparator<Pair> {
-
 	@Override
 	public int compare(Pair p1, Pair p2) {
 	    return p1.first - p2.first;
 	}
     }
 
+    /**
+     * Calculates the CHECKSUM_TYPE checksum of the byte[] data Default
+     * CHECKSUM_TYPE - MD5
+     * 
+     * @param byte[] - data
+     * @return byte[] - the checksum of the data
+     */
     public static byte[] calculateChecksum(byte[] data) throws NoSuchAlgorithmException {
 	MessageDigest mDigest = MessageDigest.getInstance(CHECKSUM_TYPE);
 	mDigest.update(data);
 	return mDigest.digest();
     }
 
+    /**
+     * Converts a byte[] into uuid
+     * 
+     * @param byte[] - the serialized uuid
+     * @return uuid - the deserialized UUID
+     */
     public static UUID getUuid(byte[] bytes) {
 	ByteBuffer bb = ByteBuffer.wrap(bytes);
 	long firstLong = bb.getLong();
@@ -98,6 +110,12 @@ public class Utils {
 	return new UUID(firstLong, secondLong);
     }
 
+    /**
+     * Converts an uuid into byte[]
+     * 
+     * @param uuid - An UUID
+     * @return byte[] - the serialized uuid
+     */
     public static byte[] getBytes(UUID uuid) {
 	ByteBuffer bb = ByteBuffer.wrap(new byte[16]);
 	bb.putLong(uuid.getMostSignificantBits());
@@ -140,6 +158,13 @@ public class Utils {
 	}
     }
 
+    /**
+     * Serializes a Map of metadata <key, value> into byte[]
+     *
+     * @param metadata - Map<String, String> with metadata key, values
+     * @return byte array with the serialized metadata
+     * @throws IOException
+     */
     public static byte[] serializeMetadata(Map<String, String> metadataMap) throws IOException {
 	byte[] size_array = ByteBuffer.allocate(Integer.BYTES).putInt(metadataMap.size()).array();
 	byte[] key_length_array;
@@ -163,10 +188,23 @@ public class Utils {
 
 		it.remove(); // avoids a ConcurrentModificationException
 	    }
+
+	    // int size elements
+	    // -int keyLength
+	    // -String key
+	    // -int valueLength
+	    // -String value
 	    return out.toByteArray();
 	}
     }
 
+    /**
+     * Serializes a Map of metadata <key, value> into byte[]
+     *
+     * @param metadata - byte array with the serialized metadata
+     * @return metadata - Map<String, String> with metadata key, values
+     * @throws IOException
+     */
     public static Map<String, String> deserializeMetadata(byte[] metadata) {
 	byte[] key_length_array;
 	byte[] value_length_array;
