@@ -39,7 +39,7 @@ public class MulticastServer {
     public void work() throws IOException, NoSuchAlgorithmException {
 	byte[] buf = new byte[Utils.PACKET_MAX_SIZE];
 
-	Blob blob;// = new Blob();
+	Blob blob = null;
 
 	try (MulticastSocket socket = new MulticastSocket(this.portNumber)) {
 	    InetAddress group = InetAddress.getByName(this.ip_address);
@@ -69,7 +69,7 @@ public class MulticastServer {
 
 		    // Remove the blob from inFlight
 		    if (this.inFlight.remove(blob.getUuid()) == null) {
-			// If you get a SMALL_BLOB this will be logged
+			// If you get a SMALL_BLOB this statement will be logged
 			logger.log(Level.WARNING, "Complete blob " + blob.getUuid() + " was not added to the inFlight");
 		    }
 		} else {
