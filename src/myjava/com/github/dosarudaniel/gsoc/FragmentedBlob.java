@@ -21,7 +21,9 @@ public class FragmentedBlob {
     private int fragmentOffset;
     private PACKET_TYPE packetType;
     private UUID uuid;
-    private int blobPayloadLength; // Total length of the Blob's payload
+    // Total length of the Blob's payload if packetType is DATA or SMALL_BLOB
+    // Total length of the Blob's metadata if packetType is METADATA
+    private int blobDataLength;
 
     // private short keyLength; // <-- key.length()
     private byte[] payloadChecksum;
@@ -37,12 +39,12 @@ public class FragmentedBlob {
 	Logger.getLogger(this.getClass().getCanonicalName()).addHandler(fh);
     }
 
-    public FragmentedBlob(int fragmentOffset, PACKET_TYPE packetType, UUID uuid, int blobPayloadLength, String key,
+    public FragmentedBlob(int fragmentOffset, PACKET_TYPE packetType, UUID uuid, int blobDataLength, String key,
 	    byte[] payload) throws NoSuchAlgorithmException, SecurityException, IOException {
 	this.fragmentOffset = fragmentOffset;
 	this.packetType = packetType;
 	this.uuid = uuid;
-	this.blobPayloadLength = blobPayloadLength;
+	this.blobDataLength = blobDataLength;
 	this.payloadChecksum = Utils.calculateChecksum(payload);
 	this.key = key;
 	this.payload = payload;
@@ -66,7 +68,11 @@ public class FragmentedBlob {
 	// Check packet checksum:
 	if (!Arrays.equals(this.packetChecksum, Utils.calculateChecksum(
 		Arrays.copyOfRange(serialisedFragmentedBlob, 0, packetLength - Utils.SIZE_OF_PACKET_CHECKSUM)))) {
-	    throw new IOException("Packet checksum failed!");
+	    logger.log(Level.SEVERE, "Packet checksum failed!");
+	    // ignore this packet, wait for another one
+	    return;
+	    // Request another packet?
+	    // throw new IOException("Packet checksum failed!");
 	}
 
 	// Field 1: Fragment Offset
@@ -86,7 +92,7 @@ public class FragmentedBlob {
 	    this.packetType = PACKET_TYPE.DATA;
 	    break;
 	case Blob.SMALL_BLOB_CODE:
-	    this.packetType = PACKET_TYPE.SMALL_BLOB_CODE;
+	    this.packetType = PACKET_TYPE.SMALL_BLOB;
 	    break;
 	default:
 	    logger.log(Level.WARNING, "Unrecognized packet type");
@@ -97,12 +103,12 @@ public class FragmentedBlob {
 		Utils.UUID_START_INDEX + Utils.SIZE_OF_UUID);
 	this.uuid = Utils.getUuid(uuid_byte_array);
 	// Field 4: Blob Payload Length
-	byte[] blobPayloadLength_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob,
+	byte[] blobDataLength_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob,
 		Utils.BLOB_PAYLOAD_LENGTH_START_INDEX,
 		Utils.BLOB_PAYLOAD_LENGTH_START_INDEX + Utils.SIZE_OF_BLOB_PAYLOAD_LENGTH);
 	// Get the blob payload length:
-	wrapped = ByteBuffer.wrap(blobPayloadLength_byte_array);
-	this.blobPayloadLength = wrapped.getInt();
+	wrapped = ByteBuffer.wrap(blobDataLength_byte_array);
+	this.blobDataLength = wrapped.getInt();
 	// Field 5: Key length
 	byte[] keyLength_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob, Utils.KEY_LENGTH_START_INDEX,
 		Utils.KEY_LENGTH_START_INDEX + Utils.SIZE_OF_KEY_LENGTH);
@@ -124,6 +130,8 @@ public class FragmentedBlob {
 	if (!Arrays.equals(this.payloadChecksum, Utils.calculateChecksum(this.payload))) {
 	    throw new IOException("Payload checksum failed!");
 	}
+
+	return;
     }
 
     // manual serialization
@@ -136,7 +144,7 @@ public class FragmentedBlob {
 	byte[] packetType_byte_array = new byte[1];
 	packetType_byte_array[0] = pachetType_byte;
 
-	byte[] blobPayloadLength_byte_array = ByteBuffer.allocate(4).putInt(this.blobPayloadLength).array();
+	byte[] blobDataLength_byte_array = ByteBuffer.allocate(4).putInt(this.blobDataLength).array();
 	byte[] keyLength_byte_array = ByteBuffer.allocate(2).putShort((short) this.key.length()).array();
 
 	try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
@@ -150,7 +158,7 @@ public class FragmentedBlob {
 	    out.write(Utils.getBytes(this.uuid));
 
 	    // 4. 4 bytes, blob payload Length
-	    out.write(blobPayloadLength_byte_array);
+	    out.write(blobDataLength_byte_array);
 
 	    // 5. 2 bytes, keyLength
 	    out.write(keyLength_byte_array);
@@ -211,12 +219,12 @@ public class FragmentedBlob {
 	this.payloadChecksum = payloadChecksum;
     }
 
-    public int getBlobPayloadLength() {
-	return this.blobPayloadLength;
+    public int getblobDataLength() {
+	return this.blobDataLength;
     }
 
-    public void setBlobPayloadLength(int blobPayloadLength) {
-	this.blobPayloadLength = blobPayloadLength;
+    public void setblobDataLength(int blobDataLength) {
+	this.blobDataLength = blobDataLength;
     }
 
     /**
