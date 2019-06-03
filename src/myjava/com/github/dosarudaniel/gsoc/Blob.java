@@ -79,8 +79,6 @@ public class Blob {
      * @param metadata - The metadata byte array
      * @param key      - The key string
      * @param uuid     - The UUID of the Blob
-     * 
-     * @throws NoSuchAlgorithmException
      */
     public Blob() {
 	this.metadata = null;
@@ -92,9 +90,17 @@ public class Blob {
 	this.payloadByteRanges = new TreeSet<>(new PairComparator());
     }
 
-    /*
-     * Send an entire Blob via multicast messages
+    /**
+     * Send method - fragments a blob into smaller serialized fragmentedBlobs and
+     * sends them via UDP multicast
      * 
+     *
+     * @param maxPayloadSize - The maximum payload size of the serialized
+     *                       fragmentedBlob
+     * @param targetIp       - Destination multicast IP
+     * @param port           - Socket port number
+     * 
+     * @throws NoSuchAlgorithmException, IOException
      */
     public void send(int maxPayloadSize, String targetIp, int port) throws NoSuchAlgorithmException, IOException {
 	if (maxPayloadSize > this.payload.length + this.metadata.length) {
