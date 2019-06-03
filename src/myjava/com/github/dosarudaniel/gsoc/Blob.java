@@ -61,7 +61,10 @@ public class Blob {
 	this.payload = payload;
 	this.key = key;
 	this.uuid = uuid;
-	this.payloadAndMetadataChecksum = Utils.calculateChecksum(this.payload);
+	byte[] metadataAndPayload = new byte[metadata.length + payload.length];
+	System.arraycopy(metadata, 0, metadataAndPayload, 0, metadata.length);
+	System.arraycopy(payload, 0, metadataAndPayload, metadata.length, payload.length);
+	this.payloadAndMetadataChecksum = Utils.calculateChecksum(metadataAndPayload);
 	this.metadataByteRanges = new TreeSet<>(new PairComparator());
 	this.metadataByteRanges.add(new Pair(0, this.metadata.length));
 	this.payloadByteRanges = new TreeSet<>(new PairComparator());
@@ -105,8 +108,57 @@ public class Blob {
     public void send(int maxPayloadSize, String targetIp, int port) throws NoSuchAlgorithmException, IOException {
 	if (maxPayloadSize > this.payload.length + this.metadata.length) {
 	    // no need to fragment the Blob
-	    // TODO
-	    System.out.println("This Blob can be sent without fragmenting. Implement this TODO!");
+
+	    byte[] commonHeader = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER - Utils.SIZE_OF_FRAGMENT_OFFSET
+		    - Utils.SIZE_OF_PAYLOAD_CHECKSUM];
+	    byte[] packetType_byte_array = new byte[1];
+	    packetType_byte_array[0] = (byte) SMALL_BLOB_CODE;
+
+	    byte[] blobPayloadLength_byte_array = ByteBuffer.allocate(4).putInt(this.payload.length).array();
+	    byte[] keyLength_byte_array = ByteBuffer.allocate(2).putShort((short) this.key.length()).array();
+	    byte[] fragmentOffset_byte_array;
+
+	    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+		// 2. 1 byte, packet type or flags - to be decided
+		out.write(packetType_byte_array);
+		// 3. 16 bytes, uuid
+		out.write(Utils.getBytes(this.uuid));
+		// 4. 4 bytes, blob payload + metadata Length
+		out.write(blobPayloadLength_byte_array);
+		// 5. 2 bytes, keyLength
+		out.write(keyLength_byte_array);
+
+		commonHeader = out.toByteArray();
+	    }
+
+	    byte[] metadataAndPayloadFragment = new byte[this.payload.length + this.metadata.length];
+
+	    System.arraycopy(this.metadata, 0, metadataAndPayloadFragment, 0, this.metadata.length);
+	    System.arraycopy(this.payload, 0, metadataAndPayloadFragment, this.metadata.length, this.payload.length);
+
+	    byte[] packet = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER
+		    + metadataAndPayloadFragment.length + this.key.length()];
+	    // Offset zero
+	    fragmentOffset_byte_array = ByteBuffer.allocate(4).putInt(0).array();
+
+	    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+		// fragment offset
+		out.write(fragmentOffset_byte_array);
+		// Common header: packet type + uuid + blob metadata Length + keyLength
+		out.write(commonHeader);
+		// payload checksum
+		out.write(this.payloadAndMetadataChecksum);
+		// the key
+		out.write(this.key.getBytes());
+		// the payload metadata
+		out.write(metadataAndPayloadFragment);
+		// the packet checksum
+		out.write(Utils.calculateChecksum(out.toByteArray()));
+
+		packet = out.toByteArray();
+	    }
+	    // send the metadata packet
+	    Utils.sendFragmentMulticast(packet, targetIp, port);
 	} else {
 	    /*
 	     * fragment metadata
@@ -229,6 +281,18 @@ public class Blob {
 	}
     }
 
+    /**
+     * toBytes method - serialize a Blob into a fragmentedBlob with (metadata and
+     * payload)
+     * 
+     *
+     * @param maxPayloadSize - The maximum payload size of the serialized
+     *                       fragmentedBlob
+     * @param targetIp       - Destination multicast IP
+     * @param port           - Socket port number
+     * 
+     * @throws NoSuchAlgorithmException, IOException
+     */
     // manual serialization
     public byte[] toBytes() throws IOException {
 	byte[] blobPayloadLength_byte_array = ByteBuffer.allocate(4).putInt(this.payload.length).array();
@@ -326,6 +390,28 @@ public class Blob {
 	    System.arraycopy(fragmentedPayload, 0, this.metadata, fragmentOffset, fragmentedPayload.length);
 	    Pair pair = new Pair(fragmentOffset, fragmentOffset + fragmentedPayload.length);
 	    this.metadataByteRanges.add(pair);
+	} else if (fragmentedBlob.getPachetType() == PACKET_TYPE.SMALL_BLOB_CODE) {
+	    if (this.metadata == null && this.payload == null) {
+		int metadataLength = fragmentedPayload.length - fragmentedBlob.getBlobPayloadLength();
+		int payloadLength = fragmentedBlob.getBlobPayloadLength();
+
+		this.metadata = new byte[metadataLength];
+		this.payload = new byte[payloadLength];
+
+		if (fragmentOffset != 0) { // sanity check
+		    // log error
+		}
+		System.arraycopy(fragmentedPayload, 0, this.metadata, fragmentOffset, metadataLength);
+		System.arraycopy(fragmentedPayload, metadataLength, this.payload, fragmentOffset, payloadLength);
+
+		Pair pairPayloadByteRange = new Pair(0, payloadLength);
+		Pair pairMetadataByteRange = new Pair(0, metadataLength);
+		this.payloadByteRanges.add(pairPayloadByteRange);
+		this.metadataByteRanges.add(pairMetadataByteRange);
+	    } else {
+		// log this error "metadata and payload should be null"
+		System.out.println("metadata and payload should be null");
+	    }
 	} else {
 	    throw new IOException("Packet type not recognized!");
 	}

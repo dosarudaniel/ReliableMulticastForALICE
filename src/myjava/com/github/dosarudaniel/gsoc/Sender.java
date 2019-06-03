@@ -107,6 +107,8 @@ public class Sender extends TimerTask {
 		blob = new Blob(metadata.getBytes(Charset.forName(Utils.CHARSET)),
 			payload.getBytes(Charset.forName(Utils.CHARSET)), key, uuid);
 		blob.send(this.maxPayloadSize, this.ip_address, this.portNumber);
+
+		System.out.println(blob);
 	    } catch (NoSuchAlgorithmException | IOException e) {
 		e.printStackTrace();
 	    }

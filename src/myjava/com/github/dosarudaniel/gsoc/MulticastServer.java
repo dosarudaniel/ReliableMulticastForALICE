@@ -69,6 +69,7 @@ public class MulticastServer {
 
 		    // Remove the blob from inFlight
 		    if (this.inFlight.remove(blob.getUuid()) == null) {
+			// If you get a SMALL_BLOB this will be logged
 			logger.log(Level.WARNING, "Complete blob " + blob.getUuid() + " was not added to the inFlight");
 		    }
 		} else {

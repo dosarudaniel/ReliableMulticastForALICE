@@ -67,7 +67,20 @@ public class FragmentedBlob {
 	// Field 2: Packet type
 	byte[] packetType_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob, Utils.PACKET_TYPE_START_INDEX,
 		Utils.PACKET_TYPE_START_INDEX + Utils.SIZE_OF_PACKET_TYPE);
-	this.packetType = (packetType_byte_array[0] == 0 ? PACKET_TYPE.METADATA : PACKET_TYPE.DATA);
+	switch (packetType_byte_array[0]) {
+	case Blob.METADATA_CODE:
+	    this.packetType = PACKET_TYPE.METADATA;
+	    break;
+	case Blob.DATA_CODE:
+	    this.packetType = PACKET_TYPE.DATA;
+	    break;
+	case Blob.SMALL_BLOB_CODE:
+	    this.packetType = PACKET_TYPE.SMALL_BLOB_CODE;
+	    break;
+	default:
+	    // TODO: Log this error
+	    break;
+	}
 	// Field 3: UUID
 	byte[] uuid_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob, Utils.UUID_START_INDEX,
 		Utils.UUID_START_INDEX + Utils.SIZE_OF_UUID);
@@ -95,7 +108,7 @@ public class FragmentedBlob {
 	// Field 8: Payload
 	this.payload = Arrays.copyOfRange(serialisedFragmentedBlob, Utils.KEY_START_INDEX + keyLength,
 		packetLength - Utils.SIZE_OF_PACKET_CHECKSUM);
-
+	System.out.println("Received " + new String(this.payload));
 	// Check payload checksum:
 	if (!Arrays.equals(this.payloadChecksum, Utils.calculateChecksum(this.payload))) {
 	    throw new IOException("Payload checksum failed!");
