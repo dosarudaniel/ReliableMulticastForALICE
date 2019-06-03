@@ -35,7 +35,7 @@ public class FragmentedBlob {
 	this.payload = payload.getBytes(Charset.forName(Utils.CHARSET));
 	this.payloadChecksum = Utils.calculateChecksum(this.payload);
 	logger = Logger.getLogger(this.getClass().getCanonicalName());
-	Handler fh = new FileHandler("%t/ALICE_Blob_log");
+	Handler fh = new FileHandler("%t/ALICE_FragmentedBlob_log");
 	Logger.getLogger(this.getClass().getCanonicalName()).addHandler(fh);
     }
 
@@ -48,9 +48,8 @@ public class FragmentedBlob {
 	this.payloadChecksum = Utils.calculateChecksum(payload);
 	this.key = key;
 	this.payload = payload;
-	// this.packetChecksum = Utils.calculateChecksum(smth);?
 	logger = Logger.getLogger(this.getClass().getCanonicalName());
-	Handler fh = new FileHandler("%t/ALICE_Blob_log");
+	Handler fh = new FileHandler("%t/ALICE_FragmentedBlob_log");
 	Logger.getLogger(this.getClass().getCanonicalName()).addHandler(fh);
     }
 
@@ -58,8 +57,7 @@ public class FragmentedBlob {
      * Manual deserialization of a serialisedFragmentedBlob
      * 
      */
-    public FragmentedBlob(byte[] serialisedFragmentedBlob, int packetLength)
-	    throws IOException, NoSuchAlgorithmException {
+    public FragmentedBlob(byte[] serialisedFragmentedBlob, int packetLength) throws NoSuchAlgorithmException {
 
 	// Field 9: Packet Checksum
 	this.packetChecksum = Arrays.copyOfRange(serialisedFragmentedBlob, packetLength - Utils.SIZE_OF_PACKET_CHECKSUM,
@@ -128,7 +126,10 @@ public class FragmentedBlob {
 	System.out.println("Received " + new String(this.payload));
 	// Check payload checksum:
 	if (!Arrays.equals(this.payloadChecksum, Utils.calculateChecksum(this.payload))) {
-	    throw new IOException("Payload checksum failed!");
+	    logger.log(Level.SEVERE, "Payload checksum failed!");
+	    // ignore this packet, wait for another one
+	    return;
+	    // Request another packet?
 	}
 
 	return;
