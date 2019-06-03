@@ -37,7 +37,7 @@ public class Blob {
     public final static int SMALL_BLOB_CODE = 2;
 
     public enum PACKET_TYPE {
-	METADATA, DATA, SMALL_BLOB_CODE;
+	METADATA, DATA, SMALL_BLOB;
     }
 
     private UUID uuid;
@@ -393,22 +393,39 @@ public class Blob {
 
 	if (fragmentedBlob.getPachetType() == PACKET_TYPE.DATA) {
 	    if (this.payload == null) {
-		this.payload = new byte[fragmentedBlob.getBlobPayloadLength()];
+		this.payload = new byte[fragmentedBlob.getblobDataLength()];
+	    }
+	    if (this.payload.length != fragmentedBlob.getblobDataLength()) { // Another fragment
+		logger.log(Level.WARNING, "payload.length should be " + fragmentedBlob.getblobDataLength());
+		logger.log(Level.INFO, "Adjusting payload size at " + fragmentedBlob.getblobDataLength());
+		this.payload = new byte[fragmentedBlob.getblobDataLength()];
 	    }
 	    System.arraycopy(fragmentedPayload, 0, this.payload, fragmentOffset, fragmentedPayload.length);
 	    Pair pair = new Pair(fragmentOffset, fragmentOffset + fragmentedPayload.length);
-	    this.payloadByteRanges.add(pair);
+	    if (this.payloadByteRanges != null) {
+		this.payloadByteRanges.add(pair);
+	    } else {
+		logger.log(Level.WARNING, "payloadByteRanges is null");
+		this.payloadByteRanges = new TreeSet<>(new PairComparator());
+		this.payloadByteRanges.add(pair);
+	    }
+
 	} else if (fragmentedBlob.getPachetType() == PACKET_TYPE.METADATA) {
 	    if (this.metadata == null) {
-		this.metadata = new byte[fragmentedBlob.getBlobPayloadLength()];
+		this.metadata = new byte[fragmentedBlob.getblobDataLength()];
+	    }
+	    if (this.metadata.length != fragmentedBlob.getblobDataLength()) { // Another fragment
+		logger.log(Level.WARNING, "metadata.length should be " + fragmentedBlob.getblobDataLength());
+		logger.log(Level.INFO, "Adjusting metadata size at " + fragmentedBlob.getblobDataLength());
+		this.payload = new byte[fragmentedBlob.getblobDataLength()];
 	    }
 	    System.arraycopy(fragmentedPayload, 0, this.metadata, fragmentOffset, fragmentedPayload.length);
 	    Pair pair = new Pair(fragmentOffset, fragmentOffset + fragmentedPayload.length);
 	    this.metadataByteRanges.add(pair);
-	} else if (fragmentedBlob.getPachetType() == PACKET_TYPE.SMALL_BLOB_CODE) {
+	} else if (fragmentedBlob.getPachetType() == PACKET_TYPE.SMALL_BLOB) {
 	    if (this.metadata == null && this.payload == null) {
-		int metadataLength = fragmentedPayload.length - fragmentedBlob.getBlobPayloadLength();
-		int payloadLength = fragmentedBlob.getBlobPayloadLength();
+		int metadataLength = fragmentedPayload.length - fragmentedBlob.getblobDataLength();
+		int payloadLength = fragmentedBlob.getblobDataLength();
 
 		this.metadata = new byte[metadataLength];
 		this.payload = new byte[payloadLength];
@@ -425,7 +442,7 @@ public class Blob {
 		this.payloadByteRanges.add(pairPayloadByteRange);
 		this.metadataByteRanges.add(pairMetadataByteRange);
 	    } else {
-		logger.log(Level.WARNING, "metadata and payload byte arrays should be null");
+		logger.log(Level.WARNING, "metadata and payload byte arrays should be null for an empty SMALL BLOB");
 	    }
 	} else {
 	    throw new IOException("Packet type not recognized!");

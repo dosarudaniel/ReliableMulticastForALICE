@@ -49,6 +49,7 @@ public class Utils {
     // key: ------------- 43 ....... 43+x-1
     // payload: --------- 43+x ..... 43+x+y-1
     // packetChecksum: -- 43+x+y ... 58+x+y
+
     // Start indexes of the fields in the serialized byte[]
     public final static int FRAGMENT_OFFSET_START_INDEX = 0;
     public final static int PACKET_TYPE_START_INDEX = FRAGMENT_OFFSET_START_INDEX + SIZE_OF_FRAGMENT_OFFSET;
