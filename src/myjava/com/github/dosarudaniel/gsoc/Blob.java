@@ -29,9 +29,10 @@ import myjava.com.github.dosarudaniel.gsoc.Utils.PairComparator;
 public class Blob {
     public final static int METADATA_CODE = 0;
     public final static int DATA_CODE = 1;
+    public final static int SMALL_BLOB_CODE = 2;
 
     public enum PACKET_TYPE {
-	METADATA, DATA;
+	METADATA, DATA, SMALL_BLOB_CODE;
     }
 
     private UUID uuid;
@@ -44,29 +45,49 @@ public class Blob {
     private TreeSet<Utils.Pair> payloadByteRanges;
 
     /**
-     * Parameterized constructor - creates a Blob object that contains a payload and
-     * a checksum. The checksum is the utils.CHECKSUM_TYPE of the payload.
+     * Parameterized constructor - creates a Blob object to be sent that contains a
+     * payload and a checksum. The checksum is the Utils.CHECKSUM_TYPE of the
+     * payload.
      *
-     * @param payload - The data string
+     * @param payload  - The data byte array
+     * @param metadata - The metadata byte array
+     * @param key      - The key string
+     * @param uuid     - The UUID of the Blob
+     * 
      * @throws NoSuchAlgorithmException
-     * @throws UnsupportedEncodingException
      */
-    public Blob(String payload) throws NoSuchAlgorithmException, UnsupportedEncodingException {
-	this.payload = payload.getBytes(Charset.forName(Utils.CHARSET));
-	this.payloadAndMetadataChecksum = Utils.calculateChecksum(this.payload);
-    }
-
     public Blob(byte[] metadata, byte[] payload, String key, UUID uuid) throws NoSuchAlgorithmException {
+	this.metadata = metadata;
 	this.payload = payload;
-	this.payloadAndMetadataChecksum = Utils.calculateChecksum(this.payload);
 	this.key = key;
 	this.uuid = uuid;
-	this.metadata = metadata;
+	this.payloadAndMetadataChecksum = Utils.calculateChecksum(this.payload);
+	this.metadataByteRanges = new TreeSet<>(new PairComparator());
+	this.metadataByteRanges.add(new Pair(0, this.metadata.length));
+	this.payloadByteRanges = new TreeSet<>(new PairComparator());
+	this.payloadByteRanges.add(new Pair(0, this.payload.length));
+
     }
 
+    /**
+     * Unparameterized constructor - creates an empty Blob object that receives
+     * fragmentedBlob objects and puts their content into the metadata or payload
+     * members via addFragmentedBlob method
+     * 
+     *
+     * @param payload  - The data byte array
+     * @param metadata - The metadata byte array
+     * @param key      - The key string
+     * @param uuid     - The UUID of the Blob
+     * 
+     * @throws NoSuchAlgorithmException
+     */
     public Blob() {
+	this.metadata = null;
+	this.payload = null;
 	this.key = "";
 	this.uuid = null;
+	this.payloadAndMetadataChecksum = null;
 	this.metadataByteRanges = new TreeSet<>(new PairComparator());
 	this.payloadByteRanges = new TreeSet<>(new PairComparator());
     }
