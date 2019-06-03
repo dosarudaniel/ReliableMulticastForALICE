@@ -113,6 +113,7 @@ public class Sender extends TimerTask {
 	    payload = randomString(this.payloadLength);
 	    metadata = randomString(this.metadataLength);
 	    key = randomString(this.keyLength);
+	    uuid = UUID.randomUUID();
 	}
 
 	logger.log(Level.INFO, "After loop");
