@@ -10,7 +10,6 @@ import java.nio.charset.Charset;
 import java.security.NoSuchAlgorithmException;
 import java.util.TimerTask;
 import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -80,16 +79,17 @@ public class Sender extends TimerTask {
 	// generate a random length, random content metadata
 	// int randomNumber = ThreadLocalRandom.current().nextInt(MIN_LEN_METADATA,
 	// MAX_LEN_METADATA);
-	String metadata = randomString(this.metadataLength);
+
+	String metadata = Utils.randomString(this.metadataLength);
 
 	// generate a random length, random content payload
 	// randomNumber = ThreadLocalRandom.current().nextInt(MIN_LEN_DATA,
 	// MAX_LEN_DATA);
-	String payload = randomString(this.payloadLength);
+	String payload = Utils.randomString(this.payloadLength);
 
 	// generate a random length, random content key
 	// randomNumber = ThreadLocalRandom.current().nextInt(MIN_LEN_KEY, MAX_LEN_KEY);
-	String key = randomString(this.keyLength);
+	String key = Utils.randomString(this.keyLength);
 
 //	System.out.println("Blob key = " + key);
 //	System.out.println("Blob metadata = " + metadata);
@@ -112,29 +112,13 @@ public class Sender extends TimerTask {
 	    } catch (NoSuchAlgorithmException | IOException e) {
 		e.printStackTrace();
 	    }
-	    payload = randomString(this.payloadLength);
-	    metadata = randomString(this.metadataLength);
-	    key = randomString(this.keyLength);
+	    payload = Utils.randomString(this.payloadLength);
+	    metadata = Utils.randomString(this.metadataLength);
+	    key = Utils.randomString(this.keyLength);
 	    uuid = UUID.randomUUID();
 	}
 
 	logger.log(Level.INFO, "After loop");
 
-    }
-
-    /**
-     * Generates a random content string of length len
-     *
-     * @param len - Length of the randomString
-     * @return String - A random content string of length len
-     */
-    static String randomString(int len) {
-	StringBuilder sb = new StringBuilder(len);
-	for (int i = 0; i < len; i++) {
-	    int randomNumber = ThreadLocalRandom.current().nextInt(0, AB.length());
-	    sb.append(AB.charAt(randomNumber));
-	}
-
-	return sb.toString();
     }
 }

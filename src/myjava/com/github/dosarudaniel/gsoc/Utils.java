@@ -130,7 +130,7 @@ public class Utils {
      * @param len - Length of the randomString
      * @return String - A random content string of length len
      */
-    public static String generateRandomString(int len) {
+    public static String randomString(int len) {
 	StringBuilder sb = new StringBuilder(len);
 	for (int i = 0; i < len; i++) {
 	    int randomNumber = ThreadLocalRandom.current().nextInt(0, AB.length());
