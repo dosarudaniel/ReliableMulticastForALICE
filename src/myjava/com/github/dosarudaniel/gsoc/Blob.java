@@ -32,13 +32,9 @@ import myjava.com.github.dosarudaniel.gsoc.Utils.PairComparator;
 
 public class Blob {
     private static Logger logger;
-    public final static int METADATA_CODE = 0;
-    public final static int DATA_CODE = 1;
-    public final static int SMALL_BLOB_CODE = 2;
-
-    public enum PACKET_TYPE {
-	METADATA, DATA, SMALL_BLOB;
-    }
+    public final static byte METADATA_CODE = 0;
+    public final static byte DATA_CODE = 1;
+    public final static byte SMALL_BLOB_CODE = 2;
 
     private final UUID uuid;
     private final String key;
@@ -137,7 +133,7 @@ public class Blob {
 	    byte[] commonHeader = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER - Utils.SIZE_OF_FRAGMENT_OFFSET
 		    - Utils.SIZE_OF_PAYLOAD_CHECKSUM];
 	    byte[] packetType_byte_array = new byte[1];
-	    packetType_byte_array[0] = (byte) SMALL_BLOB_CODE;
+	    packetType_byte_array[0] = SMALL_BLOB_CODE;
 
 	    byte[] blobPayloadLength_byte_array = ByteBuffer.allocate(4).putInt(this.payload.length).array();
 	    byte[] keyLength_byte_array = ByteBuffer.allocate(2).putShort((short) this.key.length()).array();
@@ -191,7 +187,7 @@ public class Blob {
 	    byte[] commonHeader = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER - Utils.SIZE_OF_FRAGMENT_OFFSET
 		    - Utils.SIZE_OF_PAYLOAD_CHECKSUM];
 	    byte[] packetType_byte_array = new byte[1];
-	    packetType_byte_array[0] = (byte) METADATA_CODE;
+	    packetType_byte_array[0] = METADATA_CODE;
 	    byte[] blobMetadataLength_byte_array = ByteBuffer.allocate(4).putInt(this.metadata.length).array();
 	    byte[] keyLength_byte_array = ByteBuffer.allocate(2).putShort((short) this.key.length()).array();
 	    byte[] fragmentOffset_byte_array;
@@ -252,7 +248,7 @@ public class Blob {
 		    - Utils.SIZE_OF_PAYLOAD_CHECKSUM];
 
 	    packetType_byte_array = new byte[1];
-	    packetType_byte_array[0] = (byte) DATA_CODE;
+	    packetType_byte_array[0] = DATA_CODE;
 	    byte[] blobPayloadLength_byte_array = ByteBuffer.allocate(4).putInt(this.payload.length).array();
 	    keyLength_byte_array = ByteBuffer.allocate(2).putShort((short) this.key.length()).array();
 
@@ -356,7 +352,7 @@ public class Blob {
 	byte[] fragmentedPayload = fragmentedBlob.getPayload();
 	int fragmentOffset = fragmentedBlob.getFragmentOffset();
 
-	if (fragmentedBlob.getPachetType() == PACKET_TYPE.DATA) {
+	if (fragmentedBlob.getPachetType() == DATA_CODE) {
 	    if (this.payload == null) {
 		this.payload = new byte[fragmentedBlob.getblobDataLength()];
 	    }
@@ -366,7 +362,7 @@ public class Blob {
 	    System.arraycopy(fragmentedPayload, 0, this.payload, fragmentOffset, fragmentedPayload.length);
 	    Pair pair = new Pair(fragmentOffset, fragmentOffset + fragmentedPayload.length);
 	    this.payloadByteRanges.add(pair);
-	} else if (fragmentedBlob.getPachetType() == PACKET_TYPE.METADATA) {
+	} else if (fragmentedBlob.getPachetType() == METADATA_CODE) {
 	    if (this.metadata == null) {
 		this.metadata = new byte[fragmentedBlob.getblobDataLength()];
 	    }
@@ -376,7 +372,7 @@ public class Blob {
 	    System.arraycopy(fragmentedPayload, 0, this.metadata, fragmentOffset, fragmentedPayload.length);
 	    Pair pair = new Pair(fragmentOffset, fragmentOffset + fragmentedPayload.length);
 	    this.metadataByteRanges.add(pair);
-	} else if (fragmentedBlob.getPachetType() == PACKET_TYPE.SMALL_BLOB) {
+	} else if (fragmentedBlob.getPachetType() == SMALL_BLOB_CODE) {
 	    if (this.metadata == null && this.payload == null) {
 		int metadataLength = fragmentedPayload.length - fragmentedBlob.getblobDataLength();
 		int payloadLength = fragmentedBlob.getblobDataLength();
