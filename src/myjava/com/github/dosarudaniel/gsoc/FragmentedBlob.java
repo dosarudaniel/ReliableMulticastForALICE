@@ -2,7 +2,6 @@ package myjava.com.github.dosarudaniel.gsoc;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -123,16 +122,6 @@ public class FragmentedBlob {
 	// Field 8: Payload
 	this.payload = Arrays.copyOfRange(serialisedFragmentedBlob, Utils.KEY_START_INDEX + keyLength,
 		packetLength - Utils.SIZE_OF_PACKET_CHECKSUM);
-	System.out.println("Received " + new String(this.payload));
-	// Check payload checksum:
-	if (!Arrays.equals(this.payloadChecksum, Utils.calculateChecksum(this.payload))) {
-	    logger.log(Level.SEVERE, "Payload checksum failed!");
-	    // ignore this packet, wait for another one
-	    return;
-	    // Request another packet?
-	}
-
-	return;
     }
 
     // manual serialization
@@ -229,17 +218,9 @@ public class FragmentedBlob {
     }
 
     /**
-     * Returns the payload and checks if the checksum is correct.
-     *
-     * @return String - The payload of a Blob object
-     * @throws NoSuchAlgorithmException
-     * @throws UnsupportedEncodingException
-     * @throws IOException                  - if checksum failed
+     * Returns the payload
      */
-    public byte[] getPayload() throws NoSuchAlgorithmException, UnsupportedEncodingException, IOException {
-	if (!Arrays.equals(this.payloadChecksum, Utils.calculateChecksum(this.payload))) {
-	    throw new IOException("Checksum failed!");
-	}
+    public byte[] getPayload() {
 	return this.payload;
     }
 
