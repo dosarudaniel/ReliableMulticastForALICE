@@ -42,11 +42,11 @@ public class Blob {
     private final UUID uuid;
     private final String key;
     private byte[] payloadAndMetadataChecksum;
-    private byte[] metadata;
-    private byte[] payload;
+    private byte[] metadata = null;
+    private byte[] payload = null;
 
-    private TreeSet<Utils.Pair> metadataByteRanges;
-    private TreeSet<Utils.Pair> payloadByteRanges;
+    private TreeSet<Utils.Pair> metadataByteRanges = new TreeSet<>(new PairComparator());
+    private TreeSet<Utils.Pair> payloadByteRanges = new TreeSet<>(new PairComparator());
 
     /**
      * Parameterized constructor - creates a Blob object to be sent that contains a
@@ -72,10 +72,9 @@ public class Blob {
 	System.arraycopy(metadata, 0, metadataAndPayload, 0, metadata.length);
 	System.arraycopy(payload, 0, metadataAndPayload, metadata.length, payload.length);
 	this.payloadAndMetadataChecksum = Utils.calculateChecksum(metadataAndPayload);
-	this.metadataByteRanges = new TreeSet<>(new PairComparator());
 	this.metadataByteRanges.add(new Pair(0, this.metadata.length));
-	this.payloadByteRanges = new TreeSet<>(new PairComparator());
 	this.payloadByteRanges.add(new Pair(0, this.payload.length));
+
 	logger = Logger.getLogger(this.getClass().getCanonicalName());
 	Handler fh = new FileHandler("%t/ALICE_Blob_log");
 	Logger.getLogger(this.getClass().getCanonicalName()).addHandler(fh);
@@ -95,13 +94,9 @@ public class Blob {
      * @throws SecurityException
      */
     public Blob(String key, UUID uuid) throws SecurityException, IOException {
-	this.metadata = null;
-	this.payload = null;
 	this.key = key;
 	this.uuid = uuid;
 	this.payloadAndMetadataChecksum = null;
-	this.metadataByteRanges = new TreeSet<>(new PairComparator());
-	this.payloadByteRanges = new TreeSet<>(new PairComparator());
 	logger = Logger.getLogger(this.getClass().getCanonicalName());
 	Handler fh = new FileHandler("%t/ALICE_MulticastSender_log");
 	Logger.getLogger(this.getClass().getCanonicalName()).addHandler(fh);
