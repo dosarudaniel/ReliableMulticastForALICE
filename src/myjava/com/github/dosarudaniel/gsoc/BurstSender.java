@@ -7,7 +7,6 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.nio.charset.Charset;
 import java.util.TimerTask;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -52,12 +51,11 @@ public class BurstSender extends TimerTask {
 
 	Handler fh = new FileHandler("%t/ALICE_MulticastBurstSender_log");
 	Logger.getLogger(this.getClass().getCanonicalName()).addHandler(fh);
-
     }
 
     @Override
     public void run() {
-	String payload = randomString(this.payloadLength);
+	String payload = Utils.randomString(this.payloadLength);
 
 	byte[] packet = payload.getBytes(Charset.forName(Utils.CHARSET));
 
@@ -86,23 +84,5 @@ public class BurstSender extends TimerTask {
 	    // TODO Auto-generated catch block
 	    e.printStackTrace();
 	}
-
     }
-
-    /**
-     * Generates a random content string of length len
-     *
-     * @param len - Length of the randomString
-     * @return String - A random content string of length len
-     */
-    static String randomString(int len) {
-	StringBuilder sb = new StringBuilder(len);
-	for (int i = 0; i < len; i++) {
-	    int randomNumber = ThreadLocalRandom.current().nextInt(0, AB.length());
-	    sb.append(AB.charAt(randomNumber));
-	}
-
-	return sb.toString();
-    }
-
 }
