@@ -17,7 +17,7 @@ runSender:
 runBurstSender:
 	$(J) -cp bin test.com.github.dosarudaniel.gsoc.TestBurstSender $(IP) $(PORT_NUMBER)
 
-runReceiver:build
+runReceiver:
 	$(J) -cp bin test.com.github.dosarudaniel.gsoc.TestReceiver $(IP) $(PORT_NUMBER)
 
 runBasicTests:build
