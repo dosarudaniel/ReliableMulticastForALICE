@@ -45,8 +45,8 @@ public class Blob {
     private byte[] metadata = null;
     private byte[] payload = null;
 
-    private TreeSet<Utils.Pair> metadataByteRanges = new TreeSet<>(new PairComparator());
-    private TreeSet<Utils.Pair> payloadByteRanges = new TreeSet<>(new PairComparator());
+    private final TreeSet<Utils.Pair> metadataByteRanges = new TreeSet<>(new PairComparator());
+    private final TreeSet<Utils.Pair> payloadByteRanges = new TreeSet<>(new PairComparator());
 
     /**
      * Parameterized constructor - creates a Blob object to be sent that contains a
@@ -360,28 +360,17 @@ public class Blob {
 		this.payload = new byte[fragmentedBlob.getblobDataLength()];
 	    }
 	    if (this.payload.length != fragmentedBlob.getblobDataLength()) { // Another fragment
-		logger.log(Level.WARNING, "payload.length should be " + fragmentedBlob.getblobDataLength());
-		logger.log(Level.INFO, "Adjusting payload size at " + fragmentedBlob.getblobDataLength());
-		this.payload = new byte[fragmentedBlob.getblobDataLength()];
+		throw new IOException("payload.length should have size = " + fragmentedBlob.getblobDataLength());
 	    }
 	    System.arraycopy(fragmentedPayload, 0, this.payload, fragmentOffset, fragmentedPayload.length);
 	    Pair pair = new Pair(fragmentOffset, fragmentOffset + fragmentedPayload.length);
-	    if (this.payloadByteRanges != null) {
-		this.payloadByteRanges.add(pair);
-	    } else {
-		logger.log(Level.WARNING, "payloadByteRanges is null");
-		this.payloadByteRanges = new TreeSet<>(new PairComparator());
-		this.payloadByteRanges.add(pair);
-	    }
-
+	    this.payloadByteRanges.add(pair);
 	} else if (fragmentedBlob.getPachetType() == PACKET_TYPE.METADATA) {
 	    if (this.metadata == null) {
 		this.metadata = new byte[fragmentedBlob.getblobDataLength()];
 	    }
 	    if (this.metadata.length != fragmentedBlob.getblobDataLength()) { // Another fragment
-		logger.log(Level.WARNING, "metadata.length should be " + fragmentedBlob.getblobDataLength());
-		logger.log(Level.INFO, "Adjusting metadata size at " + fragmentedBlob.getblobDataLength());
-		this.payload = new byte[fragmentedBlob.getblobDataLength()];
+		throw new IOException("metadata.length should have size = " + fragmentedBlob.getblobDataLength());
 	    }
 	    System.arraycopy(fragmentedPayload, 0, this.metadata, fragmentOffset, fragmentedPayload.length);
 	    Pair pair = new Pair(fragmentOffset, fragmentOffset + fragmentedPayload.length);
