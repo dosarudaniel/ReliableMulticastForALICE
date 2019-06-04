@@ -46,36 +46,43 @@ public class MulticastServer {
 	    socket.joinGroup(group);
 
 	    while (true) {
-		// Receive object
-		DatagramPacket packet = new DatagramPacket(buf, buf.length);
-		socket.receive(packet);
+		try {
+		    // Receive object
+		    DatagramPacket packet = new DatagramPacket(buf, buf.length);
+		    socket.receive(packet);
 
-		FragmentedBlob fragmentedBlob = new FragmentedBlob(buf, packet.getLength());
+		    FragmentedBlob fragmentedBlob = new FragmentedBlob(buf, packet.getLength());
 
-		blob = this.inFlight.get(fragmentedBlob.getUuid());
-		if (blob == null) {
-		    blob = new Blob();
-		    blob.setKey(fragmentedBlob.getKey());
-		    blob.setUuid(fragmentedBlob.getUuid());
-		}
-
-		blob.addFragmentedBlob(fragmentedBlob);
-
-		if (blob.isComplete()) {
-		    // Add the complete Blob to the cache
-		    System.out.println("Received " + blob);
-		    this.currentCacheContent.put(blob.getKey(), blob);
-		    logger.log(Level.INFO, "Complete blob with key " + blob.getKey() + " was added to the cache.");
-
-		    // Remove the blob from inFlight
-		    if (this.inFlight.remove(blob.getUuid()) == null) {
-			// If you get a SMALL_BLOB this statement will be logged
-			logger.log(Level.WARNING, "Complete blob " + blob.getUuid() + " was not added to the inFlight");
+		    blob = this.inFlight.get(fragmentedBlob.getUuid());
+		    if (blob == null) {
+			blob = new Blob();
+			blob.setKey(fragmentedBlob.getKey());
+			blob.setUuid(fragmentedBlob.getUuid());
 		    }
-		} else {
-		    // Update inFlight
-		    this.inFlight.put(blob.getUuid(), blob);
-		    logger.log(Level.INFO, "Update inFlight blob " + blob);
+
+		    blob.addFragmentedBlob(fragmentedBlob);
+
+		    if (blob.isComplete()) {
+			// Add the complete Blob to the cache
+			System.out.println("Received " + blob);
+			this.currentCacheContent.put(blob.getKey(), blob);
+			logger.log(Level.INFO, "Complete blob with key " + blob.getKey() + " was added to the cache.");
+
+			// Remove the blob from inFlight
+			if (this.inFlight.remove(blob.getUuid()) == null) {
+			    // If you get a SMALL_BLOB this statement will be logged
+			    logger.log(Level.WARNING,
+				    "Complete blob " + blob.getUuid() + " was not added to the inFlight");
+			}
+		    } else {
+			// Update inFlight
+			this.inFlight.put(blob.getUuid(), blob);
+			logger.log(Level.INFO, "Update inFlight blob " + blob);
+		    }
+
+		} catch (Exception e) {
+		    logger.log(Level.WARNING, "Exception thrown");
+		    e.printStackTrace();
 		}
 	    }
 	    // socket.leaveGroup(group);
