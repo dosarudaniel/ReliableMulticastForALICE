@@ -132,8 +132,7 @@ public class Blob {
 
 	    byte[] commonHeader = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER - Utils.SIZE_OF_FRAGMENT_OFFSET
 		    - Utils.SIZE_OF_PAYLOAD_CHECKSUM];
-	    byte[] packetType_byte_array = new byte[1];
-	    packetType_byte_array[0] = SMALL_BLOB_CODE;
+	    byte[] packetType_byte_array = new byte[] { SMALL_BLOB_CODE };
 
 	    byte[] blobPayloadLength_byte_array = ByteBuffer.allocate(4).putInt(this.payload.length).array();
 	    byte[] keyLength_byte_array = ByteBuffer.allocate(2).putShort((short) this.key.length()).array();
@@ -186,8 +185,7 @@ public class Blob {
 	     */
 	    byte[] commonHeader = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER - Utils.SIZE_OF_FRAGMENT_OFFSET
 		    - Utils.SIZE_OF_PAYLOAD_CHECKSUM];
-	    byte[] packetType_byte_array = new byte[1];
-	    packetType_byte_array[0] = METADATA_CODE;
+	    byte[] packetType_byte_array = new byte[] { METADATA_CODE };
 	    byte[] blobMetadataLength_byte_array = ByteBuffer.allocate(4).putInt(this.metadata.length).array();
 	    byte[] keyLength_byte_array = ByteBuffer.allocate(2).putShort((short) this.key.length()).array();
 	    byte[] fragmentOffset_byte_array;
@@ -247,8 +245,7 @@ public class Blob {
 	    commonHeader = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER - Utils.SIZE_OF_FRAGMENT_OFFSET
 		    - Utils.SIZE_OF_PAYLOAD_CHECKSUM];
 
-	    packetType_byte_array = new byte[1];
-	    packetType_byte_array[0] = DATA_CODE;
+	    packetType_byte_array = new byte[] { DATA_CODE };
 	    byte[] blobPayloadLength_byte_array = ByteBuffer.allocate(4).putInt(this.payload.length).array();
 	    keyLength_byte_array = ByteBuffer.allocate(2).putShort((short) this.key.length()).array();
 
