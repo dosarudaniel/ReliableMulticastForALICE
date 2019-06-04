@@ -30,6 +30,23 @@ public class Receiver {
     private String ip_address;
     private int portNumber;
 
+    private Thread thread = new Thread(new Runnable() {
+	@Override
+	public void run() {
+	    while (true) {
+		try {
+		    Thread.sleep(1000);
+		} catch (InterruptedException e) {
+		    e.printStackTrace();
+		}
+		logger.log(Level.INFO, "Received " + Receiver.nrPacketsReceived + " packets.");
+		Receiver.nrPacketsReceived = 0;
+	    }
+	}
+    });
+
+    public static int nrPacketsReceived = 0;
+
     /**
      * Parameterized constructor
      *
@@ -67,15 +84,18 @@ public class Receiver {
 	    socket.joinGroup(group);
 	    int nr_packets_received = 0;
 	    DatagramPacket packet = new DatagramPacket(this.buf, this.buf.length);
+	    this.thread.start();
 	    while (true) {
 		// Receive object
 		socket.receive(packet);
-		logger.log(Level.INFO, "Received packet nr " + nr_packets_received++);
+		this.nrPacketsReceived++;
 	    }
 	} catch (Exception e) {
 	    logger.log(Level.SEVERE, "Could not create a MulticastSocket.");
 	    e.printStackTrace();
 	}
-
     }
+
+    // Create a new thread that reads once per second nrPacketsReceived variable
+    // syso(nrPacketsReceived) and reset it: nrPacketsReceived = 0
 }
