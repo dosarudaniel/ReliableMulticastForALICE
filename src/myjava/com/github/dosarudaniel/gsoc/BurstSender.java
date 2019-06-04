@@ -12,7 +12,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class BurstSender {
-    private static Logger logger;
+    private static Logger logger = Logger.getLogger(BurstSender.class.getCanonicalName());
     private String ip_address;
     private int portNumber;
     private int payloadLength;
@@ -42,14 +42,11 @@ public class BurstSender {
 
     public BurstSender(String ip_address, int portNumber, int payloadLength, int rate, int timeToRun)
 	    throws SecurityException, IOException {
-	super();
-	this.rate = rate;
 	this.ip_address = ip_address;
 	this.portNumber = portNumber;
 	this.payloadLength = payloadLength;
+	this.rate = rate;
 	this.timeToRun = timeToRun;
-	System.out.println("--- " + this.getClass().getCanonicalName());
-	logger = Logger.getLogger(this.getClass().getCanonicalName());
 
 	Handler fh = new FileHandler("%t/ALICE_MulticastBurstSender_log");
 	Logger.getLogger(this.getClass().getCanonicalName()).addHandler(fh);
@@ -62,8 +59,6 @@ public class BurstSender {
 
 	long milis = 1000 / this.rate;
 	int nanos = (1_000_000_000 / this.rate) % 1_000_000;
-
-	System.out.println(milis + " ms " + nanos + " ns");
 
 	try (DatagramSocket socket = new DatagramSocket()) {
 	    InetAddress group = InetAddress.getByName(this.ip_address);
@@ -78,17 +73,13 @@ public class BurstSender {
 		socket.send(datagramPacket);
 		nrPacketsSent++;
 	    }
-
 	    counterRunning = false;
 	    this.thread.join();
 	} catch (SocketException e1) {
-	    // TODO Auto-generated catch block
 	    e1.printStackTrace();
 	} catch (IOException e) {
-	    // TODO Auto-generated catch block
 	    e.printStackTrace();
 	} catch (InterruptedException e) {
-	    // TODO Auto-generated catch block
 	    e.printStackTrace();
 	}
     }
