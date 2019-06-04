@@ -1,24 +1,18 @@
 package myjava.com.github.dosarudaniel.gsoc;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.UUID;
-import java.util.logging.FileHandler;
-import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import myjava.com.github.dosarudaniel.gsoc.Blob.PACKET_TYPE;
 
 public class FragmentedBlob {
     private static Logger logger;
     private int fragmentOffset;
-    private PACKET_TYPE packetType;
+    private byte packetType;
     private UUID uuid;
     // Total length of the Blob's payload if packetType is DATA or SMALL_BLOB
     // Total length of the Blob's metadata if packetType is METADATA
@@ -29,28 +23,6 @@ public class FragmentedBlob {
     private String key;
     private byte[] payload;
     private byte[] packetChecksum;
-
-    public FragmentedBlob(String payload) throws NoSuchAlgorithmException, SecurityException, IOException {
-	this.payload = payload.getBytes(Charset.forName(Utils.CHARSET));
-	this.payloadChecksum = Utils.calculateChecksum(this.payload);
-	logger = Logger.getLogger(this.getClass().getCanonicalName());
-	Handler fh = new FileHandler("%t/ALICE_FragmentedBlob_log");
-	Logger.getLogger(this.getClass().getCanonicalName()).addHandler(fh);
-    }
-
-    public FragmentedBlob(int fragmentOffset, PACKET_TYPE packetType, UUID uuid, int blobDataLength, String key,
-	    byte[] payload) throws NoSuchAlgorithmException, SecurityException, IOException {
-	this.fragmentOffset = fragmentOffset;
-	this.packetType = packetType;
-	this.uuid = uuid;
-	this.blobDataLength = blobDataLength;
-	this.payloadChecksum = Utils.calculateChecksum(payload);
-	this.key = key;
-	this.payload = payload;
-	logger = Logger.getLogger(this.getClass().getCanonicalName());
-	Handler fh = new FileHandler("%t/ALICE_FragmentedBlob_log");
-	Logger.getLogger(this.getClass().getCanonicalName()).addHandler(fh);
-    }
 
     /*
      * Manual deserialization of a serialisedFragmentedBlob
@@ -79,20 +51,8 @@ public class FragmentedBlob {
 	// Field 2: Packet type
 	byte[] packetType_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob, Utils.PACKET_TYPE_START_INDEX,
 		Utils.PACKET_TYPE_START_INDEX + Utils.SIZE_OF_PACKET_TYPE);
-	switch (packetType_byte_array[0]) {
-	case Blob.METADATA_CODE:
-	    this.packetType = PACKET_TYPE.METADATA;
-	    break;
-	case Blob.DATA_CODE:
-	    this.packetType = PACKET_TYPE.DATA;
-	    break;
-	case Blob.SMALL_BLOB_CODE:
-	    this.packetType = PACKET_TYPE.SMALL_BLOB;
-	    break;
-	default:
-	    logger.log(Level.WARNING, "Unrecognized packet type");
-	    break;
-	}
+	this.packetType = packetType_byte_array[0];
+
 	// Field 3: UUID
 	byte[] uuid_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob, Utils.UUID_START_INDEX,
 		Utils.UUID_START_INDEX + Utils.SIZE_OF_UUID);
@@ -122,51 +82,6 @@ public class FragmentedBlob {
 		packetLength - Utils.SIZE_OF_PACKET_CHECKSUM);
     }
 
-    // manual serialization
-    public byte[] toBytes() throws IOException, NoSuchAlgorithmException {
-	byte[] fragmentOffset_byte_array = ByteBuffer.allocate(Integer.BYTES).putInt(this.fragmentOffset).array();
-
-	// 0 -> METADATA
-	// 1 -> DATA
-	byte pachetType_byte = (byte) (this.packetType == PACKET_TYPE.METADATA ? 0 : 1);
-	byte[] packetType_byte_array = new byte[1];
-	packetType_byte_array[0] = pachetType_byte;
-
-	byte[] blobDataLength_byte_array = ByteBuffer.allocate(4).putInt(this.blobDataLength).array();
-	byte[] keyLength_byte_array = ByteBuffer.allocate(2).putShort((short) this.key.length()).array();
-
-	try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-	    // 1. 4 bytes, fragment Offset
-	    out.write(fragmentOffset_byte_array);
-
-	    // 2. 1 byte, packet type or flags - to be decided
-	    out.write(packetType_byte_array);
-
-	    // 3. 16 bytes, uuid
-	    out.write(Utils.getBytes(this.uuid));
-
-	    // 4. 4 bytes, blob payload Length
-	    out.write(blobDataLength_byte_array);
-
-	    // 5. 2 bytes, keyLength
-	    out.write(keyLength_byte_array);
-
-	    // 6. 16 bytes, payload checksum
-	    out.write(this.payloadChecksum);
-
-	    // 7. keyLength bytes, key
-	    out.write(this.key.getBytes(Charset.forName(Utils.CHARSET)));
-
-	    // 8. this.payload.length number of bytes - the payload to be transported
-	    out.write(this.payload);
-
-	    // 9. 16 bytes, packet checksum
-	    out.write(Utils.calculateChecksum(out.toByteArray()));
-
-	    return out.toByteArray();
-	}
-    }
-
     public int getFragmentOffset() {
 	return this.fragmentOffset;
     }
@@ -191,14 +106,6 @@ public class FragmentedBlob {
 	this.uuid = uuid;
     }
 
-    public PACKET_TYPE getPachetType() {
-	return this.packetType;
-    }
-
-    public void setPachetType(PACKET_TYPE pachetType) {
-	this.packetType = pachetType;
-    }
-
     public byte[] getPayloadChecksum() {
 	return this.payloadChecksum;
     }
@@ -215,9 +122,14 @@ public class FragmentedBlob {
 	this.blobDataLength = blobDataLength;
     }
 
-    /**
-     * Returns the payload
-     */
+    public byte getPachetType() {
+	return this.packetType;
+    }
+
+    public void setPachetType(byte packetType) {
+	this.packetType = packetType;
+    }
+
     public byte[] getPayload() {
 	return this.payload;
     }
@@ -229,10 +141,12 @@ public class FragmentedBlob {
     @Override
     public String toString() {
 	String output = "";
-	if (this.packetType == PACKET_TYPE.METADATA) {
+	if (this.packetType == Blob.METADATA_CODE) {
 	    output += "Metadata ";
-	} else {
+	} else if (this.packetType == Blob.DATA_CODE) {
 	    output += "Data ";
+	} else if (this.packetType == Blob.SMALL_BLOB_CODE) {
+	    output += "Small Blob ";
 	}
 	output += "fragmentedBlob with \n";
 	output += "fragmentOffset = " + Integer.toString(this.fragmentOffset) + "\n";
@@ -244,4 +158,5 @@ public class FragmentedBlob {
 
 	return output;
     }
+
 }
