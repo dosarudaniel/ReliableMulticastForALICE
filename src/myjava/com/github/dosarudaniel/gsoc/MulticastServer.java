@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -36,7 +35,7 @@ public class MulticastServer {
 	this.currentCacheContent = new HashMap<>();
     }
 
-    public void work() throws IOException, NoSuchAlgorithmException {
+    public void work() throws IOException {
 	byte[] buf = new byte[Utils.PACKET_MAX_SIZE];
 
 	Blob blob = null;
