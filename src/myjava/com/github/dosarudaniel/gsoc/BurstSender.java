@@ -18,16 +18,34 @@ public class BurstSender extends TimerTask {
     private String ip_address;
     private int portNumber;
     private int payloadLength;
-    private int nrOfPacketsToBeSent;
+    private int rate;
+    public static int nrPacketsSent = 0;
+
+    private Thread thread = new Thread(new Runnable() {
+	@Override
+	public void run() {
+	    int oldNrPacketsSent = 0;
+	    while (true) {
+		try {
+		    Thread.sleep(1000);
+		} catch (InterruptedException e) {
+		    e.printStackTrace();
+		}
+		logger.log(Level.INFO, "Sent " + (BurstSender.nrPacketsSent - oldNrPacketsSent)
+			+ " packets per second. \n" + "Total " + BurstSender.nrPacketsSent);
+		oldNrPacketsSent = BurstSender.nrPacketsSent;
+	    }
+	}
+    });
 
     public static final String AB = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
-    public BurstSender(String ip_address, int portNumber, int payloadLength, int nrOfPacketsToBeSent)
+    public BurstSender(String ip_address, int portNumber, int payloadLength, int rate)
 	    throws SecurityException, IOException {
 	super();
+	this.rate = rate;
 	this.ip_address = ip_address;
 	this.portNumber = portNumber;
-	this.nrOfPacketsToBeSent = nrOfPacketsToBeSent;
 	this.payloadLength = payloadLength;
 	System.out.println("--- " + this.getClass().getCanonicalName());
 	logger = Logger.getLogger(this.getClass().getCanonicalName());
@@ -42,20 +60,22 @@ public class BurstSender extends TimerTask {
 	String payload = randomString(this.payloadLength);
 
 	byte[] packet = payload.getBytes(Charset.forName(Utils.CHARSET));
-	int nr_packets_sent = 0;
 
-	int rate = 1;
+	long milis = 1000 / this.rate;
+	int nanos = (1_000_000_000 / this.rate) % 1_000_000;
+
+	System.out.println(milis + " ms " + nanos + " ns");
+
 	try (DatagramSocket socket = new DatagramSocket()) {
 	    InetAddress group = InetAddress.getByName(this.ip_address);
 	    DatagramPacket datagramPacket = new DatagramPacket(packet, packet.length, group, this.portNumber);
+	    this.thread.start();
 
-	    while (nr_packets_sent < this.nrOfPacketsToBeSent) {
-		Thread.sleep(rate);
+	    while (true) {
+		Thread.sleep(milis, nanos);
 		socket.send(datagramPacket);
-		nr_packets_sent++;
+		nrPacketsSent++;
 	    }
-	    logger.log(Level.INFO, "Sent " + nr_packets_sent + " packets of size " + this.payloadLength + " at "
-		    + (1000 / rate) + " packets per second.");
 	} catch (SocketException e1) {
 	    // TODO Auto-generated catch block
 	    e1.printStackTrace();

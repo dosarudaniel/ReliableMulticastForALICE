@@ -33,14 +33,16 @@ public class Receiver {
     private Thread thread = new Thread(new Runnable() {
 	@Override
 	public void run() {
+	    int oldNrPacketsReceived = 0;
 	    while (true) {
 		try {
 		    Thread.sleep(1000);
 		} catch (InterruptedException e) {
 		    e.printStackTrace();
 		}
-		logger.log(Level.INFO, "Received " + Receiver.nrPacketsReceived + " packets.");
-		Receiver.nrPacketsReceived = 0;
+		logger.log(Level.INFO, "Received " + (Receiver.nrPacketsReceived - oldNrPacketsReceived)
+			+ " packets per second. \n" + "Total " + Receiver.nrPacketsReceived);
+		oldNrPacketsReceived = Receiver.nrPacketsReceived;
 	    }
 	}
     });

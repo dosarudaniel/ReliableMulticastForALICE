@@ -33,8 +33,8 @@ public class TestBurstSender {
 	if (args.length != 4) {
 	    String usage = args.length + "Usage:\n";
 	    usage += "\tjava -cp bin test.com.github.dosarudaniel.gsoc.TestBurstSender ";
-	    usage += "<IP> <PORT_NUMBER> ";
-	    usage += "<MAX_PAYLOAD_SIZE> <NR_OF_PACKETS_TO_BE_SENT>";
+	    usage += "<IP>  <PORT_NUMBER>  ";
+	    usage += "<MAX_PAYLOAD_SIZE>  <RATE>";
 	    System.out.println(usage);
 	    return;
 	}
