@@ -59,9 +59,7 @@ public class MulticastServer {
 		    }
 		    blob = this.inFlight.get(fragmentedBlob.getUuid());
 		    if (blob == null) {
-			blob = new Blob();
-			blob.setKey(fragmentedBlob.getKey());
-			blob.setUuid(fragmentedBlob.getUuid());
+			blob = new Blob(fragmentedBlob.getKey(), fragmentedBlob.getUuid());
 		    }
 
 		    blob.addFragmentedBlob(fragmentedBlob);

@@ -39,9 +39,9 @@ public class Blob {
 	METADATA, DATA, SMALL_BLOB;
     }
 
-    private UUID uuid;
+    private final UUID uuid;
+    private final String key;
     private byte[] payloadAndMetadataChecksum;
-    private String key;
     private byte[] metadata;
     private byte[] payload;
 
@@ -94,11 +94,11 @@ public class Blob {
      * @throws IOException
      * @throws SecurityException
      */
-    public Blob() throws SecurityException, IOException {
+    public Blob(String key, UUID uuid) throws SecurityException, IOException {
 	this.metadata = null;
 	this.payload = null;
-	this.key = "";
-	this.uuid = null;
+	this.key = key;
+	this.uuid = uuid;
 	this.payloadAndMetadataChecksum = null;
 	this.metadataByteRanges = new TreeSet<>(new PairComparator());
 	this.payloadByteRanges = new TreeSet<>(new PairComparator());
@@ -407,16 +407,8 @@ public class Blob {
 	return this.key;
     }
 
-    public void setKey(String key) {
-	this.key = key;
-    }
-
     public UUID getUuid() {
 	return this.uuid;
-    }
-
-    public void setUuid(UUID uuid) {
-	this.uuid = uuid;
     }
 
     public byte[] getMetadata() {
