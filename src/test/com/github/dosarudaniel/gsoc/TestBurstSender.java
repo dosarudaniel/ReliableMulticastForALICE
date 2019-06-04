@@ -5,7 +5,6 @@
 package test.com.github.dosarudaniel.gsoc;
 
 import java.io.IOException;
-import java.util.Timer;
 
 import myjava.com.github.dosarudaniel.gsoc.BurstSender;
 
@@ -18,7 +17,6 @@ import myjava.com.github.dosarudaniel.gsoc.BurstSender;
  *
  */
 public class TestBurstSender {
-    static final int TIME_INTERVAL_SECONDS = 60;
 
     /**
      * Schedules a BurstSender to send NR_OF_PACKETS_TO_BE_SENT multicast messages
@@ -30,18 +28,17 @@ public class TestBurstSender {
      * @throws NumberFormatException
      */
     public static void main(String[] args) throws NumberFormatException, SecurityException, IOException {
-	if (args.length != 4) {
+	if (args.length != 5) {
 	    String usage = args.length + "Usage:\n";
 	    usage += "\tjava -cp bin test.com.github.dosarudaniel.gsoc.TestBurstSender ";
 	    usage += "<IP>  <PORT_NUMBER>  ";
-	    usage += "<MAX_PAYLOAD_SIZE>  <RATE>";
+	    usage += "<MAX_PAYLOAD_SIZE>  <RATE>  <TIME_TO_RUN>";
 	    System.out.println(usage);
 	    return;
 	}
 
-	Timer timer = new Timer();
-
-	timer.schedule(new BurstSender(args[0], Integer.parseInt(args[1]), Integer.parseInt(args[2]),
-		Integer.parseInt(args[3])), 0, TIME_INTERVAL_SECONDS * 1000L);
+	BurstSender bS = new BurstSender(args[0], Integer.parseInt(args[1]), Integer.parseInt(args[2]),
+		Integer.parseInt(args[3]), Integer.parseInt(args[4]));
+	bS.work();
     }
 }

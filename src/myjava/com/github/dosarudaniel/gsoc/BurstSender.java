@@ -6,25 +6,26 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.nio.charset.Charset;
-import java.util.TimerTask;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class BurstSender extends TimerTask {
+public class BurstSender {
     private static Logger logger;
     private String ip_address;
     private int portNumber;
     private int payloadLength;
     private int rate;
+    private int timeToRun = 0;
     public static int nrPacketsSent = 0;
+    public static boolean counterRunning = false;
 
     private Thread thread = new Thread(new Runnable() {
 	@Override
 	public void run() {
 	    int oldNrPacketsSent = 0;
-	    while (true) {
+	    while (BurstSender.counterRunning) {
 		try {
 		    Thread.sleep(1000);
 		} catch (InterruptedException e) {
@@ -39,13 +40,14 @@ public class BurstSender extends TimerTask {
 
     public static final String AB = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
-    public BurstSender(String ip_address, int portNumber, int payloadLength, int rate)
+    public BurstSender(String ip_address, int portNumber, int payloadLength, int rate, int timeToRun)
 	    throws SecurityException, IOException {
 	super();
 	this.rate = rate;
 	this.ip_address = ip_address;
 	this.portNumber = portNumber;
 	this.payloadLength = payloadLength;
+	this.timeToRun = timeToRun;
 	System.out.println("--- " + this.getClass().getCanonicalName());
 	logger = Logger.getLogger(this.getClass().getCanonicalName());
 
@@ -53,8 +55,7 @@ public class BurstSender extends TimerTask {
 	Logger.getLogger(this.getClass().getCanonicalName()).addHandler(fh);
     }
 
-    @Override
-    public void run() {
+    public void work() {
 	String payload = Utils.randomString(this.payloadLength);
 
 	byte[] packet = payload.getBytes(Charset.forName(Utils.CHARSET));
@@ -69,11 +70,17 @@ public class BurstSender extends TimerTask {
 	    DatagramPacket datagramPacket = new DatagramPacket(packet, packet.length, group, this.portNumber);
 	    this.thread.start();
 
-	    while (true) {
+	    long t = System.currentTimeMillis();
+	    long end = t + 1000 * this.timeToRun;
+	    counterRunning = true;
+	    while (System.currentTimeMillis() < end) {
 		Thread.sleep(milis, nanos);
 		socket.send(datagramPacket);
 		nrPacketsSent++;
 	    }
+
+	    counterRunning = false;
+	    this.thread.join();
 	} catch (SocketException e1) {
 	    // TODO Auto-generated catch block
 	    e1.printStackTrace();
