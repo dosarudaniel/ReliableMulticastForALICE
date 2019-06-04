@@ -11,6 +11,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.TreeSet;
 import java.util.UUID;
 import java.util.logging.FileHandler;
@@ -410,8 +411,8 @@ public class Blob {
 	return this.uuid;
     }
 
-    public byte[] getMetadata() {
-	return this.metadata;
+    public Map<String, String> getMetadata() {
+	return Utils.deserializeMetadata(this.metadata);
     }
 
     public void setMetadata(byte[] metadata) {
