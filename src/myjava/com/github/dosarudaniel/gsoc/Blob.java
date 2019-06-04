@@ -402,24 +402,15 @@ public class Blob {
 	    if (this.metadata == null && this.payload == null) {
 		int metadataLength = fragmentedPayload.length - fragmentedBlob.getblobDataLength();
 		int payloadLength = fragmentedBlob.getblobDataLength();
-
 		this.metadata = new byte[metadataLength];
 		this.payload = new byte[payloadLength];
 
-		if (fragmentOffset != 0) { // sanity check
-		    // log error
-		    logger.log(Level.WARNING, "FragmentOffset should be 0, check packet integrity");
-		}
 		System.arraycopy(fragmentedPayload, 0, this.metadata, fragmentOffset, metadataLength);
 		System.arraycopy(fragmentedPayload, metadataLength, this.payload, fragmentOffset, payloadLength);
-
 		this.payloadChecksum = fragmentedBlob.getPayloadChecksum();
 		this.metadataChecksum = Utils.calculateChecksum(this.metadata);
-
-		Pair pairPayloadByteRange = new Pair(0, payloadLength);
-		Pair pairMetadataByteRange = new Pair(0, metadataLength);
-		this.payloadByteRanges.add(pairPayloadByteRange);
-		this.metadataByteRanges.add(pairMetadataByteRange);
+		this.payloadByteRanges.add(new Pair(0, payloadLength));
+		this.metadataByteRanges.add(new Pair(0, metadataLength));
 	    } else {
 		logger.log(Level.WARNING, "metadata and payload byte arrays should be null for an empty SMALL BLOB");
 	    }
