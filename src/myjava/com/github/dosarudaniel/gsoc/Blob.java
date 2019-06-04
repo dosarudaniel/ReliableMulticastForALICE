@@ -104,6 +104,21 @@ public class Blob {
 
     /**
      * Send method - fragments a blob into smaller serialized fragmentedBlobs and
+     * sends them via UDP multicast. Reads the maxPayloadSize from a file <--TODO
+     *
+     * @param targetIp - Destination multicast IP
+     * @param port     - Socket port number
+     * 
+     * @throws NoSuchAlgorithmException, IOException
+     */
+    public void send(String targetIp, int port) throws NoSuchAlgorithmException, IOException {
+	// TODO: get maxPayloadSize from a file
+	int maxPayloadSize = 1500;
+	send(maxPayloadSize, targetIp, port);
+    }
+
+    /**
+     * Send method - fragments a blob into smaller serialized fragmentedBlobs and
      * sends them via UDP multicast
      * 
      *
