@@ -180,7 +180,7 @@ public class Utils {
 		key = pair.getKey();
 		value = pair.getValue();
 
-		key_length_array = ByteBuffer.allocate(Integer.BYTES).putInt(key.length()).array();
+		key_length_array = ByteBuffer.allocate(Integer.BYTES).putInt(key.getBytes().length).array();
 		value_length_array = ByteBuffer.allocate(Integer.BYTES).putInt(value.length()).array();
 		out.write(key_length_array);
 		out.write(key.getBytes());
