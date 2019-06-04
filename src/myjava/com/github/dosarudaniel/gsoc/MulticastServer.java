@@ -35,6 +35,25 @@ public class MulticastServer {
 	this.currentCacheContent = new HashMap<>();
     }
 
+    private Thread thread = new Thread(new Runnable() {
+	@Override
+	public void run() {
+	    int oldNrPacketsReceived = 0;
+	    while (true) {
+		try {
+		    Thread.sleep(1000);
+		} catch (InterruptedException e) {
+		    e.printStackTrace();
+		}
+		logger.log(Level.INFO, "Received " + (MulticastServer.nrPacketsReceived - oldNrPacketsReceived)
+			+ " packets per second. \n" + "Total " + MulticastServer.nrPacketsReceived);
+		oldNrPacketsReceived = MulticastServer.nrPacketsReceived;
+	    }
+	}
+    });
+
+    public static int nrPacketsReceived = 0;
+
     public void work() throws IOException {
 	byte[] buf = new byte[Utils.PACKET_MAX_SIZE];
 
@@ -43,7 +62,7 @@ public class MulticastServer {
 	try (MulticastSocket socket = new MulticastSocket(this.portNumber)) {
 	    InetAddress group = InetAddress.getByName(this.ip_address);
 	    socket.joinGroup(group);
-
+	    this.thread.start();
 	    while (true) {
 		try {
 		    // Receive object
@@ -65,8 +84,8 @@ public class MulticastServer {
 		    blob.addFragmentedBlob(fragmentedBlob);
 
 		    if (blob.isComplete()) {
+			nrPacketsReceived++;
 			// Add the complete Blob to the cache
-			System.out.println("Received " + blob);
 			this.currentCacheContent.put(blob.getKey(), blob);
 			logger.log(Level.INFO, "Complete blob with key " + blob.getKey() + " was added to the cache.");
 
@@ -79,7 +98,7 @@ public class MulticastServer {
 		    } else {
 			// Update inFlight
 			this.inFlight.put(blob.getUuid(), blob);
-			logger.log(Level.INFO, "Update inFlight blob " + blob);
+			// logger.log(Level.INFO, "Update inFlight blob " + blob);
 		    }
 		} catch (Exception e) {
 		    logger.log(Level.WARNING, "Exception thrown");

@@ -12,7 +12,6 @@ import java.util.TimerTask;
 import java.util.UUID;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -44,6 +43,26 @@ public class Sender extends TimerTask {
 
     private int maxPayloadSize;
     private int nrOfPacketsToBeSent;
+
+    public static int nrPacketsSent = 0;
+    public static boolean counterRunning = false;
+
+    private Thread thread = new Thread(new Runnable() {
+	@Override
+	public void run() {
+	    int oldNrPacketsSent = 0;
+	    while (Sender.counterRunning) {
+		try {
+		    Thread.sleep(1000);
+		} catch (InterruptedException e) {
+		    e.printStackTrace();
+		}
+//		logger.log(Level.INFO, "Sent " + (Sender.nrPacketsSent - oldNrPacketsSent) + " packets per second. \n"
+//			+ "Total " + Sender.nrPacketsSent);
+		oldNrPacketsSent = Sender.nrPacketsSent;
+	    }
+	}
+    });
 
     /**
      * Parameterized constructor
@@ -97,18 +116,19 @@ public class Sender extends TimerTask {
 	UUID uuid = UUID.randomUUID();
 	Blob blob = null;
 
-	logger.log(Level.INFO, "Before loop");
-
+	this.thread.start();
+	counterRunning = true;
 	for (int i = 0; i < this.nrOfPacketsToBeSent; i++) {
+
+	    nrPacketsSent++;
 //	    String payload_with_number = Integer.toString(i) + " " + payload;
 //	    String metadata_with_number = Integer.toString(i) + " " + metadata;
-	    logger.log(Level.INFO, "Sending packet nr " + i);
+	    // logger.log(Level.INFO, "Sending packet nr " + i);
 	    try {
 		blob = new Blob(metadata.getBytes(Charset.forName(Utils.CHARSET)),
 			payload.getBytes(Charset.forName(Utils.CHARSET)), key, uuid);
 		blob.send(this.maxPayloadSize, this.ip_address, this.portNumber);
 
-		System.out.println(blob);
 	    } catch (NoSuchAlgorithmException | IOException e) {
 		e.printStackTrace();
 	    }
@@ -118,7 +138,13 @@ public class Sender extends TimerTask {
 	    uuid = UUID.randomUUID();
 	}
 
-	logger.log(Level.INFO, "After loop");
+	counterRunning = false;
+	try {
+	    this.thread.join();
+	} catch (InterruptedException e) {
+	    // TODO Auto-generated catch block
+	    e.printStackTrace();
+	}
 
     }
 }
