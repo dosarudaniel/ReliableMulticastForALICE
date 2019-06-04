@@ -52,7 +52,12 @@ public class MulticastServer {
 		    socket.receive(packet);
 
 		    FragmentedBlob fragmentedBlob = new FragmentedBlob(buf, packet.getLength());
-
+		    if (this.currentCacheContent != null) {
+			if (this.currentCacheContent.remove(fragmentedBlob.getKey()) != null) {
+			    logger.log(Level.INFO,
+				    "Blob with key " + fragmentedBlob.getKey() + " was removed from the cache.");
+			}
+		    }
 		    blob = this.inFlight.get(fragmentedBlob.getUuid());
 		    if (blob == null) {
 			blob = new Blob();
