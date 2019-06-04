@@ -12,6 +12,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class BurstSender {
+    public static final String AB = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     private static Logger logger = Logger.getLogger(BurstSender.class.getCanonicalName());
     private String ip_address;
     private int portNumber;
@@ -38,12 +39,10 @@ public class BurstSender {
 	}
     });
 
-    public static final String AB = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-
-    public BurstSender(String ip_address, int portNumber, int payloadLength, int rate, int timeToRun)
+    public BurstSender(String ip_address, int portnumber, int payloadLength, int rate, int timeToRun)
 	    throws SecurityException, IOException {
 	this.ip_address = ip_address;
-	this.portNumber = portNumber;
+	this.portNumber = portnumber;
 	this.payloadLength = payloadLength;
 	this.rate = rate;
 	this.timeToRun = timeToRun;
