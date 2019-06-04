@@ -78,6 +78,36 @@ public class Blob {
     }
 
     /**
+     * Parameterized constructor - creates a Blob object to be sent that contains a
+     * payload and a checksum. The checksum is the Utils.CHECKSUM_TYPE of the
+     * payload.
+     *
+     * @param metadata - The metadata HaspMap
+     * @param payload  - The data byte array
+     * @param key      - The key string
+     * @param uuid     - The UUID of the Blob
+     * 
+     * @throws NoSuchAlgorithmException
+     * @throws IOException
+     * @throws SecurityException
+     */
+    public Blob(Map<String, String> metadataMap, byte[] payload, String key, UUID uuid)
+	    throws NoSuchAlgorithmException, SecurityException, IOException {
+	this.metadata = Utils.serializeMetadata(metadataMap);
+	this.metadataChecksum = Utils.calculateChecksum(this.metadata);
+	this.payload = payload;
+	this.payloadChecksum = Utils.calculateChecksum(this.payload);
+	this.key = key;
+	this.uuid = uuid;
+	this.metadataByteRanges.add(new Pair(0, this.metadata.length));
+	this.payloadByteRanges.add(new Pair(0, this.payload.length));
+
+	logger = Logger.getLogger(this.getClass().getCanonicalName());
+	Handler fh = new FileHandler("%t/ALICE_Blob_log");
+	Logger.getLogger(this.getClass().getCanonicalName()).addHandler(fh);
+    }
+
+    /**
      * Unparameterized constructor - creates an empty Blob object that receives
      * fragmentedBlob objects and puts their content into the metadata or payload
      * members via addFragmentedBlob method
@@ -129,26 +159,11 @@ public class Blob {
 	if (maxPayloadSize > this.payload.length + this.metadata.length) {
 	    // no need to fragment the Blob
 
-	    byte[] commonHeader = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER - Utils.SIZE_OF_FRAGMENT_OFFSET
-		    - Utils.SIZE_OF_PAYLOAD_CHECKSUM];
 	    byte[] packetType_byte_array = new byte[] { SMALL_BLOB_CODE };
 
 	    byte[] blobPayloadLength_byte_array = ByteBuffer.allocate(4).putInt(this.payload.length).array();
 	    byte[] keyLength_byte_array = ByteBuffer.allocate(2).putShort((short) this.key.length()).array();
 	    byte[] fragmentOffset_byte_array;
-
-	    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-		// 2. 1 byte, packet type or flags - to be decided
-		out.write(packetType_byte_array);
-		// 3. 16 bytes, uuid
-		out.write(Utils.getBytes(this.uuid));
-		// 4. 4 bytes, blob payload + metadata Length
-		out.write(blobPayloadLength_byte_array);
-		// 5. 2 bytes, keyLength
-		out.write(keyLength_byte_array);
-
-		commonHeader = out.toByteArray();
-	    }
 
 	    byte[] metadataAndPayloadFragment = new byte[this.payload.length + this.metadata.length];
 
@@ -163,8 +178,14 @@ public class Blob {
 	    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 		// fragment offset
 		out.write(fragmentOffset_byte_array);
-		// Common header: packet type + uuid + blob metadata Length + keyLength
-		out.write(commonHeader);
+		// 2. 1 byte, packet type or flags - to be decided
+		out.write(packetType_byte_array);
+		// 3. 16 bytes, uuid
+		out.write(Utils.getBytes(this.uuid));
+		// 4. 4 bytes, blob payload + metadata Length
+		out.write(blobPayloadLength_byte_array);
+		// 5. 2 bytes, keyLength
+		out.write(keyLength_byte_array);
 		// payload checksum
 		out.write(this.payloadChecksum);
 		// the key
@@ -355,6 +376,7 @@ public class Blob {
 	    throws NoSuchAlgorithmException, UnsupportedEncodingException, IOException {
 	byte[] fragmentedPayload = fragmentedBlob.getPayload();
 	int fragmentOffset = fragmentedBlob.getFragmentOffset();
+	Pair pair = new Pair(fragmentOffset, fragmentOffset + fragmentedPayload.length);
 
 	if (fragmentedBlob.getPachetType() == DATA_CODE) {
 	    if (this.payload == null) {
@@ -365,18 +387,16 @@ public class Blob {
 		throw new IOException("payload.length should have size = " + fragmentedBlob.getblobDataLength());
 	    }
 	    System.arraycopy(fragmentedPayload, 0, this.payload, fragmentOffset, fragmentedPayload.length);
-	    Pair pair = new Pair(fragmentOffset, fragmentOffset + fragmentedPayload.length);
 	    this.payloadByteRanges.add(pair);
 	} else if (fragmentedBlob.getPachetType() == METADATA_CODE) {
 	    if (this.metadata == null) {
 		this.metadata = new byte[fragmentedBlob.getblobDataLength()];
-		this.metadataChecksum = fragmentedBlob.getPayloadChecksum();
+		this.metadataChecksum = fragmentedBlob.getPayloadChecksum(); // metadata == payload
 	    }
 	    if (this.metadata.length != fragmentedBlob.getblobDataLength()) { // Another fragment
 		throw new IOException("metadata.length should have size = " + fragmentedBlob.getblobDataLength());
 	    }
 	    System.arraycopy(fragmentedPayload, 0, this.metadata, fragmentOffset, fragmentedPayload.length);
-	    Pair pair = new Pair(fragmentOffset, fragmentOffset + fragmentedPayload.length);
 	    this.metadataByteRanges.add(pair);
 	} else if (fragmentedBlob.getPachetType() == SMALL_BLOB_CODE) {
 	    if (this.metadata == null && this.payload == null) {
