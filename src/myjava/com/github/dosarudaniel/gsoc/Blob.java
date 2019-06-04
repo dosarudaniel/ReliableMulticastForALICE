@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeSet;
@@ -38,7 +39,8 @@ public class Blob {
 
     private final UUID uuid;
     private final String key;
-    private byte[] payloadAndMetadataChecksum;
+    private byte[] payloadChecksum = null;
+    private byte[] metadataChecksum = null;
     private byte[] metadata = null;
     private byte[] payload = null;
 
@@ -62,13 +64,11 @@ public class Blob {
     public Blob(byte[] metadata, byte[] payload, String key, UUID uuid)
 	    throws NoSuchAlgorithmException, SecurityException, IOException {
 	this.metadata = metadata;
+	this.metadataChecksum = Utils.calculateChecksum(this.metadata);
 	this.payload = payload;
+	this.payloadChecksum = Utils.calculateChecksum(this.payload);
 	this.key = key;
 	this.uuid = uuid;
-	byte[] metadataAndPayload = new byte[metadata.length + payload.length];
-	System.arraycopy(metadata, 0, metadataAndPayload, 0, metadata.length);
-	System.arraycopy(payload, 0, metadataAndPayload, metadata.length, payload.length);
-	this.payloadAndMetadataChecksum = Utils.calculateChecksum(metadataAndPayload);
 	this.metadataByteRanges.add(new Pair(0, this.metadata.length));
 	this.payloadByteRanges.add(new Pair(0, this.payload.length));
 
@@ -93,7 +93,6 @@ public class Blob {
     public Blob(String key, UUID uuid) throws SecurityException, IOException {
 	this.key = key;
 	this.uuid = uuid;
-	this.payloadAndMetadataChecksum = null;
 	logger = Logger.getLogger(this.getClass().getCanonicalName());
 	Handler fh = new FileHandler("%t/ALICE_MulticastSender_log");
 	Logger.getLogger(this.getClass().getCanonicalName()).addHandler(fh);
@@ -167,7 +166,7 @@ public class Blob {
 		// Common header: packet type + uuid + blob metadata Length + keyLength
 		out.write(commonHeader);
 		// payload checksum
-		out.write(this.payloadAndMetadataChecksum);
+		out.write(this.payloadChecksum);
 		// the key
 		out.write(this.key.getBytes());
 		// the payload metadata
@@ -223,7 +222,7 @@ public class Blob {
 		    // Common header: packet type + uuid + blob metadata Length + keyLength
 		    out.write(commonHeader);
 		    // payload checksum
-		    out.write(Utils.calculateChecksum(metadataFragment));
+		    out.write(this.metadataChecksum);
 		    // the key
 		    out.write(this.key.getBytes());
 		    // the payload metadata
@@ -282,7 +281,7 @@ public class Blob {
 		    // Common header: packet type + uuid + blob metadata Length + keyLength
 		    out.write(commonHeader);
 		    // payload checksum
-		    out.write(Utils.calculateChecksum(payloadFragment));
+		    out.write(this.payloadChecksum);
 		    // the key
 		    out.write(this.key.getBytes());
 		    // the payload metadata
@@ -299,7 +298,7 @@ public class Blob {
 	}
     }
 
-    public boolean isComplete() {
+    public boolean isComplete() throws IOException, NoSuchAlgorithmException {
 	if (this.metadata == null || this.payload == null) {
 	    return false;
 	}
@@ -332,6 +331,14 @@ public class Blob {
 	    return false;
 	}
 
+	if (!Arrays.equals(this.payloadChecksum, Utils.calculateChecksum(this.payload))) {
+	    throw new IOException("Payload checksum failed");
+	}
+
+	if (!Arrays.equals(this.metadataChecksum, Utils.calculateChecksum(this.metadata))) {
+	    throw new IOException("Metadata checksum failed");
+	}
+
 	return true;
     }
 
@@ -352,6 +359,7 @@ public class Blob {
 	if (fragmentedBlob.getPachetType() == DATA_CODE) {
 	    if (this.payload == null) {
 		this.payload = new byte[fragmentedBlob.getblobDataLength()];
+		this.payloadChecksum = fragmentedBlob.getPayloadChecksum();
 	    }
 	    if (this.payload.length != fragmentedBlob.getblobDataLength()) { // Another fragment
 		throw new IOException("payload.length should have size = " + fragmentedBlob.getblobDataLength());
@@ -362,6 +370,7 @@ public class Blob {
 	} else if (fragmentedBlob.getPachetType() == METADATA_CODE) {
 	    if (this.metadata == null) {
 		this.metadata = new byte[fragmentedBlob.getblobDataLength()];
+		this.metadataChecksum = fragmentedBlob.getPayloadChecksum();
 	    }
 	    if (this.metadata.length != fragmentedBlob.getblobDataLength()) { // Another fragment
 		throw new IOException("metadata.length should have size = " + fragmentedBlob.getblobDataLength());
@@ -383,6 +392,9 @@ public class Blob {
 		}
 		System.arraycopy(fragmentedPayload, 0, this.metadata, fragmentOffset, metadataLength);
 		System.arraycopy(fragmentedPayload, metadataLength, this.payload, fragmentOffset, payloadLength);
+
+		this.payloadChecksum = fragmentedBlob.getPayloadChecksum();
+		this.metadataChecksum = Utils.calculateChecksum(this.metadata);
 
 		Pair pairPayloadByteRange = new Pair(0, payloadLength);
 		Pair pairMetadataByteRange = new Pair(0, metadataLength);
