@@ -162,7 +162,7 @@ public class Blob {
 	    byte[] packetType_byte_array = new byte[] { SMALL_BLOB_CODE };
 
 	    byte[] blobPayloadLength_byte_array = ByteBuffer.allocate(4).putInt(this.payload.length).array();
-	    byte[] keyLength_byte_array = ByteBuffer.allocate(2).putShort((short) this.key.length()).array();
+	    byte[] keyLength_byte_array = ByteBuffer.allocate(2).putShort((short) this.key.getBytes().length).array();
 	    byte[] fragmentOffset_byte_array;
 
 	    byte[] metadataAndPayloadFragment = new byte[this.payload.length + this.metadata.length];
@@ -171,7 +171,7 @@ public class Blob {
 	    System.arraycopy(this.payload, 0, metadataAndPayloadFragment, this.metadata.length, this.payload.length);
 
 	    byte[] packet = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER
-		    + metadataAndPayloadFragment.length + this.key.length()];
+		    + metadataAndPayloadFragment.length + this.key.getBytes().length];
 	    // Offset zero
 	    fragmentOffset_byte_array = ByteBuffer.allocate(4).putInt(0).array();
 
@@ -207,7 +207,7 @@ public class Blob {
 		    - Utils.SIZE_OF_PAYLOAD_CHECKSUM];
 	    byte[] packetType_byte_array = new byte[] { METADATA_CODE };
 	    byte[] blobMetadataLength_byte_array = ByteBuffer.allocate(4).putInt(this.metadata.length).array();
-	    byte[] keyLength_byte_array = ByteBuffer.allocate(2).putShort((short) this.key.length()).array();
+	    byte[] keyLength_byte_array = ByteBuffer.allocate(2).putShort((short) this.key.getBytes().length).array();
 	    byte[] fragmentOffset_byte_array;
 
 	    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
@@ -234,7 +234,7 @@ public class Blob {
 		byte[] metadataFragment = new byte[maxPayloadSize_copy];
 		System.arraycopy(this.metadata, indexMetadata, metadataFragment, 0, maxPayloadSize_copy);
 		byte[] packet = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER + metadataFragment.length
-			+ this.key.length()];
+			+ this.key.getBytes().length];
 		fragmentOffset_byte_array = ByteBuffer.allocate(4).putInt(indexMetadata).array();
 
 		try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
@@ -267,7 +267,7 @@ public class Blob {
 
 	    packetType_byte_array = new byte[] { DATA_CODE };
 	    byte[] blobPayloadLength_byte_array = ByteBuffer.allocate(4).putInt(this.payload.length).array();
-	    keyLength_byte_array = ByteBuffer.allocate(2).putShort((short) this.key.length()).array();
+	    keyLength_byte_array = ByteBuffer.allocate(2).putShort((short) this.key.getBytes().length).array();
 
 	    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 		// 2. 1 byte, packet type or flags - to be decided
@@ -293,7 +293,7 @@ public class Blob {
 		System.arraycopy(this.payload, indexPayload, payloadFragment, 0, maxPayloadSize_copy);
 
 		byte[] packet = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER + payloadFragment.length
-			+ this.key.length()];
+			+ this.key.getBytes().length];
 		fragmentOffset_byte_array = ByteBuffer.allocate(4).putInt(indexPayload).array();
 
 		try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
