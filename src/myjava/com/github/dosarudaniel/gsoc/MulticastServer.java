@@ -79,7 +79,6 @@ public class MulticastServer {
 			this.inFlight.put(blob.getUuid(), blob);
 			logger.log(Level.INFO, "Update inFlight blob " + blob);
 		    }
-
 		} catch (Exception e) {
 		    logger.log(Level.WARNING, "Exception thrown");
 		    e.printStackTrace();
