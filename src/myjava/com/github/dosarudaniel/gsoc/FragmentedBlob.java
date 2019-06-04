@@ -56,7 +56,8 @@ public class FragmentedBlob {
      * Manual deserialization of a serialisedFragmentedBlob
      * 
      */
-    public FragmentedBlob(byte[] serialisedFragmentedBlob, int packetLength) throws NoSuchAlgorithmException {
+    public FragmentedBlob(byte[] serialisedFragmentedBlob, int packetLength)
+	    throws NoSuchAlgorithmException, IOException {
 
 	// Field 9: Packet Checksum
 	this.packetChecksum = Arrays.copyOfRange(serialisedFragmentedBlob, packetLength - Utils.SIZE_OF_PACKET_CHECKSUM,
@@ -66,10 +67,7 @@ public class FragmentedBlob {
 	if (!Arrays.equals(this.packetChecksum, Utils.calculateChecksum(
 		Arrays.copyOfRange(serialisedFragmentedBlob, 0, packetLength - Utils.SIZE_OF_PACKET_CHECKSUM)))) {
 	    logger.log(Level.SEVERE, "Packet checksum failed!");
-	    // ignore this packet, wait for another one
-	    return;
-	    // Request another packet?
-	    // throw new IOException("Packet checksum failed!");
+	    throw new IOException("Packet checksum failed!");
 	}
 
 	// Field 1: Fragment Offset
