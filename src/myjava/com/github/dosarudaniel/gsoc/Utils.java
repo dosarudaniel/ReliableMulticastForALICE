@@ -207,6 +207,11 @@ public class Utils {
      * @throws IOException
      */
     public static Map<String, String> deserializeMetadata(byte[] metadata) {
+	if (metadata == null) {
+	    // return empty HashMap
+	    return new HashMap<>();
+	}
+
 	byte[] key_length_array;
 	byte[] value_length_array;
 	byte[] key_array;
