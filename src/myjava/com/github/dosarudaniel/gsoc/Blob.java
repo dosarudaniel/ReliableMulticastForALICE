@@ -9,7 +9,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 import java.util.TreeSet;
@@ -293,51 +292,6 @@ public class Blob {
 		Utils.sendFragmentMulticast(packet, targetIp, port);
 		indexPayload = indexPayload + maxPayloadSize;
 	    }
-	}
-    }
-
-    /**
-     * toBytes method - serialize a Blob into a fragmentedBlob with (metadata and
-     * payload)
-     * 
-     *
-     * @param maxPayloadSize - The maximum payload size of the serialized
-     *                       fragmentedBlob
-     * @param targetIp       - Destination multicast IP
-     * @param port           - Socket port number
-     * 
-     * @throws NoSuchAlgorithmException, IOException
-     */
-    // manual serialization
-    public byte[] toBytes() throws IOException {
-	byte[] blobPayloadLength_byte_array = ByteBuffer.allocate(4).putInt(this.payload.length).array();
-	byte[] keyLength_byte_array = ByteBuffer.allocate(2).putShort((short) this.key.length()).array();// putShort(this.key).array();
-
-	try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-	    // 1. 16 bytes, uuid
-	    out.write(Utils.getBytes(this.uuid));
-
-	    // 2. 4 bytes, blob payload Length
-	    out.write(blobPayloadLength_byte_array);
-
-	    // 3. Metadata length
-
-	    // 4. 16 bytes, (payload + metadata) checksum
-	    out.write(this.payloadAndMetadataChecksum);
-
-	    // 5. key length
-	    out.write(keyLength_byte_array);
-
-	    // 6. ? bytes, key
-	    out.write(this.key.getBytes(Charset.forName("UTF-8")));
-
-	    // 7. unknown number of bytes - metadata
-	    out.write(this.metadata);
-
-	    // 8. unknown number of bytes - the real data to be transported
-	    out.write(this.payload);
-
-	    return out.toByteArray();
 	}
     }
 
