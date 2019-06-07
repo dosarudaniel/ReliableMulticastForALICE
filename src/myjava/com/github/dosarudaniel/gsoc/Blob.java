@@ -10,10 +10,9 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.TreeSet;
 import java.util.UUID;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
@@ -21,7 +20,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import myjava.com.github.dosarudaniel.gsoc.Utils.Pair;
-import myjava.com.github.dosarudaniel.gsoc.Utils.PairComparator;
 
 /**
  * Blob class - the structure of the object sent via multicast messages
@@ -44,8 +42,8 @@ public class Blob {
     private byte[] metadata = null;
     private byte[] payload = null;
 
-    private final TreeSet<Utils.Pair> metadataByteRanges = new TreeSet<>(new PairComparator());
-    private final TreeSet<Utils.Pair> payloadByteRanges = new TreeSet<>(new PairComparator());
+    private final ArrayList<Pair> metadataByteRanges = new ArrayList<>();
+    private final ArrayList<Pair> payloadByteRanges = new ArrayList<>();
 
     /**
      * Parameterized constructor - creates a Blob object to be sent that contains a
@@ -324,34 +322,22 @@ public class Blob {
 	    return false;
 	}
 
-	Iterator<Pair> iterator = this.metadataByteRanges.iterator();
-	int index = 0;
-	while (iterator.hasNext()) {
-	    Pair pair = iterator.next();
-	    if (index != pair.first) {
-		return false;
-	    }
-	    index = pair.second;
+	// Check byte ranges size:
+	if (this.payloadByteRanges.size() != 1 || this.payloadByteRanges.size() != 1) {
+	    return false;
 	}
-
-	if (index != this.metadata.length) {
+	// Check byte ranges metadata:
+	if (this.metadataByteRanges.get(0).first != 0
+		|| this.metadataByteRanges.get(0).second != this.metadata.length) {
 	    return false;
 	}
 
-	iterator = this.payloadByteRanges.iterator();
-	index = 0;
-	while (iterator.hasNext()) {
-	    Pair pair = iterator.next();
-	    if (index != pair.first) {
-		return false;
-	    }
-	    index = pair.second;
-	}
-
-	if (index != this.payload.length) {
+	// Check byte ranges payload:
+	if (this.payloadByteRanges.get(0).first != 0 || this.payloadByteRanges.get(0).second != this.payload.length) {
 	    return false;
 	}
 
+	// Verify checksums
 	if (!Arrays.equals(this.payloadChecksum, Utils.calculateChecksum(this.payload))) {
 	    throw new IOException("Payload checksum failed");
 	}
@@ -387,7 +373,39 @@ public class Blob {
 		throw new IOException("payload.length should have size = " + fragmentedBlob.getblobDataLength());
 	    }
 	    System.arraycopy(fragmentedPayload, 0, this.payload, fragmentOffset, fragmentedPayload.length);
-	    this.payloadByteRanges.add(pair);
+
+	    int index = -1;
+	    for (int i = 0; i < this.payloadByteRanges.size(); i++) {
+		if (this.payloadByteRanges.get(i).second == pair.first) {
+		    index = i;
+		    this.payloadByteRanges.set(i, new Pair(this.payloadByteRanges.get(i).first, pair.second));
+		    break;
+		} else if (this.payloadByteRanges.get(i).first == pair.second) {
+		    index = i;
+		    this.payloadByteRanges.set(i, new Pair(pair.first, this.payloadByteRanges.get(i).second));
+		    break;
+		}
+	    }
+
+	    if (index == -1) { // a new element at the end
+		this.payloadByteRanges.add(pair);
+	    } else {
+		// check if element at index i can be merged with another one
+		for (int i = 0; i < this.payloadByteRanges.size() && i != index; i++) {
+		    if (this.payloadByteRanges.get(i).first == this.payloadByteRanges.get(index).second) {
+			this.payloadByteRanges.set(i, new Pair(this.payloadByteRanges.get(index).first,
+				this.payloadByteRanges.get(i).second));
+			this.payloadByteRanges.remove(index);
+			break;
+		    } else if (this.payloadByteRanges.get(i).second == this.payloadByteRanges.get(index).first) {
+			this.payloadByteRanges.set(i, new Pair(this.payloadByteRanges.get(i).first,
+				this.payloadByteRanges.get(index).second));
+			this.payloadByteRanges.remove(index);
+			break;
+		    }
+		}
+	    }
+
 	} else if (fragmentedBlob.getPachetType() == METADATA_CODE) {
 	    if (this.metadata == null) {
 		this.metadata = new byte[fragmentedBlob.getblobDataLength()];
@@ -397,7 +415,38 @@ public class Blob {
 		throw new IOException("metadata.length should have size = " + fragmentedBlob.getblobDataLength());
 	    }
 	    System.arraycopy(fragmentedPayload, 0, this.metadata, fragmentOffset, fragmentedPayload.length);
-	    this.metadataByteRanges.add(pair);
+
+	    int index = -1;
+	    for (int i = 0; i < this.metadataByteRanges.size(); i++) {
+		if (this.metadataByteRanges.get(i).second == pair.first) {
+		    index = i;
+		    this.metadataByteRanges.set(i, new Pair(this.metadataByteRanges.get(i).first, pair.second));
+		    break;
+		} else if (this.metadataByteRanges.get(i).first == pair.second) {
+		    index = i;
+		    this.metadataByteRanges.set(i, new Pair(pair.first, this.metadataByteRanges.get(i).second));
+		    break;
+		}
+	    }
+
+	    if (index == -1) { // a new element at the end
+		this.metadataByteRanges.add(pair);
+	    } else {
+		// check if element at index i can be merged with another one
+		for (int i = 0; i < this.metadataByteRanges.size() && i != index; i++) {
+		    if (this.metadataByteRanges.get(i).first == this.metadataByteRanges.get(index).second) {
+			this.metadataByteRanges.set(i, new Pair(this.metadataByteRanges.get(index).first,
+				this.metadataByteRanges.get(i).second));
+			this.metadataByteRanges.remove(index);
+			break;
+		    } else if (this.metadataByteRanges.get(i).second == this.metadataByteRanges.get(index).first) {
+			this.metadataByteRanges.set(i, new Pair(this.metadataByteRanges.get(i).first,
+				this.metadataByteRanges.get(index).second));
+			this.metadataByteRanges.remove(index);
+			break;
+		    }
+		}
+	    }
 	} else if (fragmentedBlob.getPachetType() == SMALL_BLOB_CODE) {
 	    if (this.metadata == null && this.payload == null) {
 		int metadataLength = fragmentedPayload.length - fragmentedBlob.getblobDataLength();
@@ -417,6 +466,7 @@ public class Blob {
 	} else {
 	    throw new IOException("Packet type not recognized!");
 	}
+
     }
 
     public String getKey() {
