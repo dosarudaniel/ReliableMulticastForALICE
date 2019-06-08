@@ -19,7 +19,7 @@ public class SingletonLogger {
 
 	// Create the log file
 	try {
-	    fh = new FileHandler("/tmp/ALICE_multicast_log.txt");
+	    fh = new FileHandler("/tmp/ALICE_multicast_log.txt", true);
 	} catch (Exception e) {
 	    e.printStackTrace();
 	}
