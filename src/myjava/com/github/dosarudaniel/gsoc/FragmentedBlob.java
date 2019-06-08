@@ -64,14 +64,14 @@ public class FragmentedBlob {
 		Utils.BLOB_PAYLOAD_LENGTH_START_INDEX,
 		Utils.BLOB_PAYLOAD_LENGTH_START_INDEX + Utils.SIZE_OF_BLOB_PAYLOAD_LENGTH);
 	// Get the blob payload length:
-	wrapped = ByteBuffer.wrap(blobDataLength_byte_array);
-	this.blobDataLength = wrapped.getInt();
+	this.blobDataLength = Utils.intFromByteArray(blobDataLength_byte_array);
+
 	// Field 5: Key length
 	byte[] keyLength_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob, Utils.KEY_LENGTH_START_INDEX,
 		Utils.KEY_LENGTH_START_INDEX + Utils.SIZE_OF_KEY_LENGTH);
 	// Get the key length:
-	wrapped = ByteBuffer.wrap(keyLength_byte_array);
-	short keyLength = wrapped.getShort();
+	short keyLength = Utils.shortFromByteArray(keyLength_byte_array);
+
 	// Field 6: Payload checksum
 	this.payloadChecksum = Arrays.copyOfRange(serialisedFragmentedBlob, Utils.PAYLOAD_CHECKSUM_START_INDEX,
 		Utils.PAYLOAD_CHECKSUM_START_INDEX + Utils.SIZE_OF_PAYLOAD_CHECKSUM);
