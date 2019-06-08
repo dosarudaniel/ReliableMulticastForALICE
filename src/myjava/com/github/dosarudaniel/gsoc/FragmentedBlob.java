@@ -1,7 +1,6 @@
 package myjava.com.github.dosarudaniel.gsoc;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -48,8 +47,8 @@ public class FragmentedBlob {
 	byte[] fragmentOffset_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob,
 		Utils.FRAGMENT_OFFSET_START_INDEX, Utils.FRAGMENT_OFFSET_START_INDEX + Utils.SIZE_OF_FRAGMENT_OFFSET);
 	// Get the fragment Offset:
-	ByteBuffer wrapped = ByteBuffer.wrap(fragmentOffset_byte_array);
-	this.fragmentOffset = wrapped.getInt();
+	this.fragmentOffset = Utils.intFromByteArray(fragmentOffset_byte_array);
+
 	// Field 2: Packet type
 	byte[] packetType_byte_array = Arrays.copyOfRange(serialisedFragmentedBlob, Utils.PACKET_TYPE_START_INDEX,
 		Utils.PACKET_TYPE_START_INDEX + Utils.SIZE_OF_PACKET_TYPE);
