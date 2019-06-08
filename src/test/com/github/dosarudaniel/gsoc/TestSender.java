@@ -49,9 +49,9 @@ public class TestSender {
 	// <MAX_PAYLOAD_SIZE>
 	// Ex: java TestSender 230.0.0.0 5000 200 1024
 
-	timer.schedule(
-		new Sender(args[0], Integer.parseInt(args[1]), Integer.parseInt(args[2]), Integer.parseInt(args[3]),
-			Integer.parseInt(args[4]), Integer.parseInt(args[5]), Integer.parseInt(args[6])),
-		0, TIME_INTERVAL_SECONDS * 1000L);
+	Sender sender = new Sender(args[0], Integer.parseInt(args[1]), Integer.parseInt(args[2]),
+		Integer.parseInt(args[3]), Integer.parseInt(args[4]), Integer.parseInt(args[5]),
+		Integer.parseInt(args[6]));
+	sender.work();
     }
 }

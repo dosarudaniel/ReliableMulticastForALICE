@@ -6,14 +6,12 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.nio.charset.Charset;
-import java.util.logging.FileHandler;
-import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class BurstSender {
     public static final String AB = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-    private static Logger logger = Logger.getLogger(BurstSender.class.getCanonicalName());
+
     private String ip_address;
     private int portNumber;
     private int payloadLength;
@@ -23,6 +21,9 @@ public class BurstSender {
     public static boolean counterRunning = false;
 
     private Thread thread = new Thread(new Runnable() {
+	SingletonLogger singletonLogger2 = new SingletonLogger();
+	Logger logger2 = this.singletonLogger2.getLogger();
+
 	@Override
 	public void run() {
 	    int oldNrPacketsSent = 0;
@@ -32,7 +33,7 @@ public class BurstSender {
 		} catch (InterruptedException e) {
 		    e.printStackTrace();
 		}
-		logger.log(Level.INFO, "Sent " + (BurstSender.nrPacketsSent - oldNrPacketsSent)
+		this.logger2.log(Level.INFO, "Sent " + (BurstSender.nrPacketsSent - oldNrPacketsSent)
 			+ " packets per second. \n" + "Total " + BurstSender.nrPacketsSent);
 		oldNrPacketsSent = BurstSender.nrPacketsSent;
 	    }
@@ -40,15 +41,12 @@ public class BurstSender {
     });
 
     public BurstSender(String ip_address, int portnumber, int payloadLength, int rate, int timeToRun)
-	    throws SecurityException, IOException {
+	    throws SecurityException {
 	this.ip_address = ip_address;
 	this.portNumber = portnumber;
 	this.payloadLength = payloadLength;
 	this.rate = rate;
 	this.timeToRun = timeToRun;
-
-	Handler fh = new FileHandler("%t/ALICE_MulticastBurstSender_log");
-	Logger.getLogger(this.getClass().getCanonicalName()).addHandler(fh);
     }
 
     public void work() {
@@ -56,7 +54,7 @@ public class BurstSender {
 
 	byte[] packet = payload.getBytes(Charset.forName(Utils.CHARSET));
 
-	long milis = 1000 / this.rate;
+	long milis = 1_000 / this.rate;
 	int nanos = (1_000_000_000 / this.rate) % 1_000_000;
 
 	try (DatagramSocket socket = new DatagramSocket()) {

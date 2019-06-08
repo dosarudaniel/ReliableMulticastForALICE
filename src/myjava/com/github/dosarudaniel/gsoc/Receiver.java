@@ -24,13 +24,19 @@ import java.util.logging.Logger;
  *
  */
 public class Receiver {
-    private static Logger logger;
+    SingletonLogger singletonLogger = new SingletonLogger();
+    Logger logger = this.singletonLogger.getLogger();
     private final static int BUF_SIZE = 65536;
     private byte[] buf = new byte[BUF_SIZE];
     private String ip_address;
     private int portNumber;
 
+    public static int nrPacketsReceived = 0;
+
     private Thread thread = new Thread(new Runnable() {
+	SingletonLogger singletonLogger2 = new SingletonLogger();
+	Logger logger2 = this.singletonLogger2.getLogger();
+
 	@Override
 	public void run() {
 	    int oldNrPacketsReceived = 0;
@@ -40,14 +46,14 @@ public class Receiver {
 		} catch (InterruptedException e) {
 		    e.printStackTrace();
 		}
-		logger.log(Level.INFO, "Received " + (Receiver.nrPacketsReceived - oldNrPacketsReceived)
-			+ " packets per second. \n" + "Total " + Receiver.nrPacketsReceived);
-		oldNrPacketsReceived = Receiver.nrPacketsReceived;
+		if (Receiver.nrPacketsReceived - oldNrPacketsReceived > 0) {
+		    this.logger2.log(Level.INFO, "Received " + (Receiver.nrPacketsReceived - oldNrPacketsReceived)
+			    + " packets per second. \n" + "Total " + Receiver.nrPacketsReceived);
+		    oldNrPacketsReceived = Receiver.nrPacketsReceived;
+		}
 	    }
 	}
     });
-
-    public static int nrPacketsReceived = 0;
 
     /**
      * Parameterized constructor
@@ -93,7 +99,7 @@ public class Receiver {
 		this.nrPacketsReceived++;
 	    }
 	} catch (Exception e) {
-	    logger.log(Level.SEVERE, "Could not create a MulticastSocket.");
+	    this.logger.log(Level.SEVERE, "Could not create a MulticastSocket.");
 	    e.printStackTrace();
 	}
     }

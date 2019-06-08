@@ -10,7 +10,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class FragmentedBlob {
-    private static Logger logger;
+    SingletonLogger singletonLogger = new SingletonLogger();
+    Logger logger = this.singletonLogger.getLogger();
+
     private int fragmentOffset;
     private byte packetType;
     private UUID uuid;
@@ -38,7 +40,7 @@ public class FragmentedBlob {
 	// Check packet checksum:
 	if (!Arrays.equals(this.packetChecksum, Utils.calculateChecksum(
 		Arrays.copyOfRange(serialisedFragmentedBlob, 0, packetLength - Utils.SIZE_OF_PACKET_CHECKSUM)))) {
-	    logger.log(Level.SEVERE, "Packet checksum failed!");
+	    this.logger.log(Level.SEVERE, "Packet checksum failed!");
 	    throw new IOException("Packet checksum failed!");
 	}
 

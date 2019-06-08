@@ -8,10 +8,8 @@ package myjava.com.github.dosarudaniel.gsoc;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.security.NoSuchAlgorithmException;
-import java.util.TimerTask;
 import java.util.UUID;
-import java.util.logging.FileHandler;
-import java.util.logging.Handler;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -23,8 +21,9 @@ import java.util.logging.Logger;
  * @since 2019-03-07
  *
  */
-public class Sender extends TimerTask {
-    private static Logger logger;
+public class Sender {
+    private SingletonLogger singletonLogger = new SingletonLogger();
+    private Logger logger = this.singletonLogger.getLogger();
 
     private String ip_address;
     private int portNumber;
@@ -48,6 +47,9 @@ public class Sender extends TimerTask {
     public static boolean counterRunning = false;
 
     private Thread thread = new Thread(new Runnable() {
+	private SingletonLogger singletonLogger2 = new SingletonLogger();
+	private Logger logger2 = this.singletonLogger2.getLogger();
+
 	@Override
 	public void run() {
 	    int oldNrPacketsSent = 0;
@@ -57,9 +59,12 @@ public class Sender extends TimerTask {
 		} catch (InterruptedException e) {
 		    e.printStackTrace();
 		}
-//		logger.log(Level.INFO, "Sent " + (Sender.nrPacketsSent - oldNrPacketsSent) + " packets per second. \n"
-//			+ "Total " + Sender.nrPacketsSent);
-		oldNrPacketsSent = Sender.nrPacketsSent;
+		if (Sender.nrPacketsSent - oldNrPacketsSent > 0) {
+		    this.logger2.log(Level.INFO, "Sent " + (Sender.nrPacketsSent - oldNrPacketsSent)
+			    + " packets per second. \n" + "Total " + Sender.nrPacketsSent);
+
+		    oldNrPacketsSent = Sender.nrPacketsSent;
+		}
 	    }
 	}
     });
@@ -82,9 +87,6 @@ public class Sender extends TimerTask {
 	this.keyLength = keyLength;
 	this.metadataLength = metadataLength;
 	this.payloadLength = payloadLength;
-	logger = Logger.getLogger(this.getClass().getCanonicalName());
-	Handler fh = new FileHandler("%t/ALICE_MulticastSender_log");
-	Logger.getLogger(this.getClass().getCanonicalName()).addHandler(fh);
     }
 
     /**
@@ -93,8 +95,8 @@ public class Sender extends TimerTask {
      * payload that was sent.
      *
      */
-    @Override
-    public void run() {
+
+    public void work() {
 	// generate a random length, random content metadata
 	// int randomNumber = ThreadLocalRandom.current().nextInt(MIN_LEN_METADATA,
 	// MAX_LEN_METADATA);

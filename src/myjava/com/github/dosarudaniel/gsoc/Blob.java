@@ -14,8 +14,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.UUID;
-import java.util.logging.FileHandler;
-import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -30,7 +28,9 @@ import myjava.com.github.dosarudaniel.gsoc.Utils.Pair;
  */
 
 public class Blob {
-    private static Logger logger;
+    SingletonLogger singletonLogger = new SingletonLogger();
+    Logger logger = this.singletonLogger.getLogger();
+
     public final static byte METADATA_CODE = 0;
     public final static byte DATA_CODE = 1;
     public final static byte SMALL_BLOB_CODE = 2;
@@ -69,10 +69,6 @@ public class Blob {
 	this.uuid = uuid;
 	this.metadataByteRanges.add(new Pair(0, this.metadata.length));
 	this.payloadByteRanges.add(new Pair(0, this.payload.length));
-
-	logger = Logger.getLogger(this.getClass().getCanonicalName());
-	Handler fh = new FileHandler("%t/ALICE_Blob_log");
-	Logger.getLogger(this.getClass().getCanonicalName()).addHandler(fh);
     }
 
     /**
@@ -99,10 +95,6 @@ public class Blob {
 	this.uuid = uuid;
 	this.metadataByteRanges.add(new Pair(0, this.metadata.length));
 	this.payloadByteRanges.add(new Pair(0, this.payload.length));
-
-	logger = Logger.getLogger(this.getClass().getCanonicalName());
-	Handler fh = new FileHandler("%t/ALICE_Blob_log");
-	Logger.getLogger(this.getClass().getCanonicalName()).addHandler(fh);
     }
 
     /**
@@ -121,9 +113,6 @@ public class Blob {
     public Blob(String key, UUID uuid) throws SecurityException, IOException {
 	this.key = key;
 	this.uuid = uuid;
-	logger = Logger.getLogger(this.getClass().getCanonicalName());
-	Handler fh = new FileHandler("%t/ALICE_MulticastSender_log");
-	Logger.getLogger(this.getClass().getCanonicalName()).addHandler(fh);
     }
 
     /**
