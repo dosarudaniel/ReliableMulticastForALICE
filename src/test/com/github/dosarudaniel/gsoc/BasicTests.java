@@ -1,14 +1,11 @@
 package test.com.github.dosarudaniel.gsoc;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.TreeSet;
 
 import myjava.com.github.dosarudaniel.gsoc.Utils;
-import myjava.com.github.dosarudaniel.gsoc.Utils.Pair;
-import myjava.com.github.dosarudaniel.gsoc.Utils.PairComparator;
 
 public class BasicTests {
 
@@ -34,35 +31,13 @@ public class BasicTests {
 	    System.out.println("\t" + entry.getKey() + " : " + entry.getValue());
 	}
 
-	// Test the TreeSet
-	TreeSet<Pair> treeSet = new TreeSet<>(new PairComparator());
+	int nrInt = 1_234_567_890;
+	System.out.println(Arrays.toString(Utils.intToByteArray(nrInt)));
+	System.out.println(Utils.intFromByteArray(Utils.intToByteArray(nrInt)));
 
-	Pair p1 = new Pair(100, 160);
-	Pair p2 = new Pair(210, 400);
-	Pair p3 = new Pair(0, 100);
-	Pair p4 = new Pair(400, 430);
-	Pair p5 = new Pair(160, 210);
-
-	treeSet.add(p1);
-	System.out.println(treeSet);
-	treeSet.add(p2);
-	System.out.println(treeSet);
-	treeSet.add(p3);
-
-	System.out.println(" ");
-	Iterator<Pair> iterator = treeSet.iterator();
-	while (iterator.hasNext())
-	    System.out.print(iterator.next());
-	System.out.println(" ");
-
-	System.out.println(treeSet);
-	treeSet.add(p4);
-	System.out.println(treeSet);
-	treeSet.add(p5);
-	System.out.println(treeSet);
-
-	byte[] test = new byte[10];
-	System.out.println(test.length);
+	short nrShort = (short) 30_000;
+	System.out.println(Arrays.toString(Utils.shortToByteArray(nrShort)));
+	System.out.println(Utils.shortFromByteArray(Utils.shortToByteArray(nrShort)));
 
     }
 

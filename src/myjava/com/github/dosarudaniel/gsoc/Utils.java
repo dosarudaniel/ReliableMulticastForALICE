@@ -159,6 +159,23 @@ public class Utils {
 	}
     }
 
+    // Java has only signed data types, be aware of negatives values
+    public static final byte[] intToByteArray(int value) {
+	return new byte[] { (byte) (value >>> 24), (byte) (value >>> 16), (byte) (value >>> 8), (byte) value };
+    }
+
+    public static int intFromByteArray(byte[] bytes) {
+	return bytes[0] << 24 | (bytes[1] & 0xFF) << 16 | (bytes[2] & 0xFF) << 8 | (bytes[3] & 0xFF);
+    }
+
+    public static final byte[] shortToByteArray(short value) {
+	return new byte[] { (byte) (value >>> 8), (byte) value };
+    }
+
+    public static short shortFromByteArray(byte[] bytes) {
+	return (short) ((bytes[0] & 0xFF) << 8 | (bytes[1] & 0xFF));
+    }
+
     /**
      * Serializes a Map of metadata <key, value> into byte[]
      *
