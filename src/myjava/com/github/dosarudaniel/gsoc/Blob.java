@@ -157,8 +157,9 @@ public class Blob {
 		    Utils.SIZE_OF_FRAGMENT_OFFSET);
 
 	    // 2. 1 byte, packet type
-	    System.arraycopy(new byte[] { SMALL_BLOB_CODE }, 0, packet, Utils.PACKET_TYPE_START_INDEX,
-		    Utils.SIZE_OF_PACKET_TYPE);
+//	    System.arraycopy(new byte[] { SMALL_BLOB_CODE }, 0, packet, Utils.PACKET_TYPE_START_INDEX,
+//		    Utils.SIZE_OF_PACKET_TYPE);
+	    packet[Utils.PACKET_TYPE_START_INDEX] = SMALL_BLOB_CODE;
 
 	    // 3. 16 bytes, uuid
 	    System.arraycopy(Utils.getBytes(this.uuid), 0, packet, Utils.UUID_START_INDEX, Utils.SIZE_OF_UUID);
@@ -197,20 +198,16 @@ public class Blob {
 	     */
 	    byte[] commonHeader = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER - Utils.SIZE_OF_FRAGMENT_OFFSET
 		    - Utils.SIZE_OF_PAYLOAD_CHECKSUM];
-	    byte[] packetType_byte_array = new byte[] { METADATA_CODE };
-
-	    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-		// 2. 1 byte, packet type or flags - to be decided
-		out.write(packetType_byte_array);
-		// 3. 16 bytes, uuid
-		out.write(Utils.getBytes(this.uuid));
-		// 4. 4 bytes, blob metadata Length
-		out.write(Utils.intToByteArray(this.metadata.length));
-		// 5. 2 bytes, keyLength
-		out.write(Utils.shortToByteArray((short) this.key.getBytes().length));
-
-		commonHeader = out.toByteArray();
-	    }
+	    // 2. 1 byte, packet type or flags
+	    commonHeader[0] = METADATA_CODE;
+	    // 3. 16 bytes, uuid
+	    System.arraycopy(Utils.getBytes(this.uuid), 0, commonHeader, Utils.SIZE_OF_PACKET_TYPE, Utils.SIZE_OF_UUID);
+	    // 4. 4 bytes, blob metadata Length
+	    System.arraycopy(Utils.intToByteArray(this.metadata.length), 0, commonHeader, 
+	    		Utils.SIZE_OF_PACKET_TYPE + Utils.SIZE_OF_UUID, Utils.SIZE_OF_BLOB_PAYLOAD_LENGTH);
+	    // 5. 2 bytes, keyLength
+	    System.arraycopy(Utils.shortToByteArray((short) this.key.getBytes().length), 0, commonHeader, 
+	    		Utils.SIZE_OF_PACKET_TYPE + Utils.SIZE_OF_UUID + Utils.SIZE_OF_BLOB_PAYLOAD_LENGTH, Utils.SIZE_OF_KEY_LENGTH);
 
 	    int indexMetadata = 0;
 
@@ -250,21 +247,17 @@ public class Blob {
 	    /*
 	     * fragment data
 	     */
-	    commonHeader = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER - Utils.SIZE_OF_FRAGMENT_OFFSET
-		    - Utils.SIZE_OF_PAYLOAD_CHECKSUM];
-
-	    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-		// 2. 1 byte, packet type or flags - to be decided
-		out.write(new byte[] { DATA_CODE });
-		// 3. 16 bytes, uuid
-		out.write(Utils.getBytes(this.uuid));
-		// 4. 4 bytes, blob payload Length
-		out.write(Utils.intToByteArray(this.payload.length));
-		// 5. 2 bytes, keyLength
-		out.write(Utils.shortToByteArray((short) this.key.getBytes().length));
-
-		commonHeader = out.toByteArray();
-	    }
+   	    // 2. 1 byte, packet type or flags
+   	    commonHeader[0] = DATA_CODE;
+   	    // No need to copy this, it's already been done for metadata fragments
+//   	    // 3. 16 bytes, uuid
+//   	    System.arraycopy(Utils.getBytes(this.uuid), 0, commonHeader, Utils.SIZE_OF_PACKET_TYPE, Utils.SIZE_OF_UUID);
+   	    // 4. 4 bytes, blob payload Length
+   	    System.arraycopy(Utils.intToByteArray(this.payload.length), 0, commonHeader, 
+   	    		Utils.SIZE_OF_PACKET_TYPE + Utils.SIZE_OF_UUID, Utils.SIZE_OF_BLOB_PAYLOAD_LENGTH);
+//   	    // 5. 2 bytes, keyLength
+//   	    System.arraycopy(Utils.shortToByteArray((short) this.key.getBytes().length), 0, commonHeader, 
+//   	    		Utils.SIZE_OF_PACKET_TYPE + Utils.SIZE_OF_UUID + Utils.SIZE_OF_BLOB_PAYLOAD_LENGTH, Utils.SIZE_OF_KEY_LENGTH);
 
 	    int indexPayload = 0;
 	    while (indexPayload < this.payload.length) {
@@ -415,7 +408,7 @@ public class Blob {
 	    }
 
 	    if (index == -1) { // a new element at the end
-		this.metadataByteRanges.add(pair);
+	    	this.metadataByteRanges.add(pair);
 	    } else {
 		// check if element at index i can be merged with another one
 		for (int i = 0; i < this.metadataByteRanges.size() && i != index; i++) {
