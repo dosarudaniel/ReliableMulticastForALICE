@@ -217,9 +217,7 @@ public class Blob {
 		    maxPayloadSize_copy = this.metadata.length - indexMetadata;
 		}
 
-		byte[] metadataFragment = new byte[maxPayloadSize_copy];
-		System.arraycopy(this.metadata, indexMetadata, metadataFragment, 0, maxPayloadSize_copy);
-		byte[] packet = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER + metadataFragment.length
+		byte[] packet = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER + maxPayloadSize_copy
 			+ this.key.getBytes().length];
 
 		// 1. fragment offset
@@ -235,11 +233,11 @@ public class Blob {
 	    System.arraycopy(this.key.getBytes(), 0, packet, Utils.KEY_START_INDEX,
 	    		this.key.getBytes().length);
 	    // the payload metadata
-	    System.arraycopy(metadataFragment, 0, packet, Utils.KEY_START_INDEX + this.key.getBytes().length,
-	    		metadataFragment.length);
+	    System.arraycopy(this.metadata, indexMetadata, packet, Utils.KEY_START_INDEX + this.key.getBytes().length,
+	    		maxPayloadSize_copy);
 	    // the packet checksum
 	    System.arraycopy(Utils.calculateChecksum(Arrays.copyOfRange(packet, 0, packet.length - Utils.SIZE_OF_PACKET_CHECKSUM)), 
-	    		0, packet, Utils.KEY_START_INDEX + this.key.getBytes().length + metadataFragment.length, Utils.SIZE_OF_PACKET_CHECKSUM);
+	    		0, packet, Utils.KEY_START_INDEX + this.key.getBytes().length + maxPayloadSize_copy, Utils.SIZE_OF_PACKET_CHECKSUM);
 
 		// send the metadata packet
 		Utils.sendFragmentMulticast(packet, targetIp, port);
@@ -269,12 +267,8 @@ public class Blob {
 		    maxPayloadSize_copy = this.payload.length - indexPayload;
 		}
 
-		byte[] payloadFragment = new byte[maxPayloadSize_copy];
-		System.arraycopy(this.payload, indexPayload, payloadFragment, 0, maxPayloadSize_copy);
-
-		byte[] packet = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER + payloadFragment.length
+		byte[] packet = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER + maxPayloadSize_copy
 			+ this.key.getBytes().length];
-
 		
 		// 1. fragment offset
 	    System.arraycopy(Utils.intToByteArray(indexPayload), 0, packet, Utils.FRAGMENT_OFFSET_START_INDEX,
@@ -289,11 +283,11 @@ public class Blob {
 	    System.arraycopy(this.key.getBytes(), 0, packet, Utils.KEY_START_INDEX,
 	    		this.key.getBytes().length);
 	    // the payload metadata
-	    System.arraycopy(payloadFragment, 0, packet, Utils.KEY_START_INDEX + this.key.getBytes().length,
-	    		payloadFragment.length);
+	    System.arraycopy(this.payload, indexPayload, packet, Utils.KEY_START_INDEX + this.key.getBytes().length,
+	    		maxPayloadSize_copy);
 	    // the packet checksum
 	    System.arraycopy(Utils.calculateChecksum(Arrays.copyOfRange(packet, 0, packet.length - Utils.SIZE_OF_PACKET_CHECKSUM)), 
-	    		0, packet, Utils.KEY_START_INDEX + this.key.getBytes().length + payloadFragment.length, Utils.SIZE_OF_PACKET_CHECKSUM);
+	    		0, packet, Utils.KEY_START_INDEX + this.key.getBytes().length + maxPayloadSize_copy, Utils.SIZE_OF_PACKET_CHECKSUM);
 	    
 		// send the payload packet
 		Utils.sendFragmentMulticast(packet, targetIp, port);
