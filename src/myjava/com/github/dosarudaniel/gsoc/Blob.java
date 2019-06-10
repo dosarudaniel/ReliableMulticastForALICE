@@ -222,22 +222,25 @@ public class Blob {
 		byte[] packet = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER + metadataFragment.length
 			+ this.key.getBytes().length];
 
-		try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-		    // fragment offset
-		    out.write(Utils.intToByteArray(indexMetadata));
-		    // Common header: packet type + uuid + blob metadata Length + keyLength
-		    out.write(commonHeader);
-		    // payload checksum
-		    out.write(this.metadataChecksum);
-		    // the key
-		    out.write(this.key.getBytes());
-		    // the payload metadata
-		    out.write(metadataFragment);
-		    // the packet checksum
-		    out.write(Utils.calculateChecksum(out.toByteArray()));
+		// 1. fragment offset
+	    System.arraycopy(Utils.intToByteArray(indexMetadata), 0, packet, Utils.FRAGMENT_OFFSET_START_INDEX,
+		    Utils.SIZE_OF_FRAGMENT_OFFSET);
+	    // Fields 2,3,4,5 from commonHeader:packet type, uuid, blob metadata Length, keyLength
+	    System.arraycopy(commonHeader, 0, packet, Utils.PACKET_TYPE_START_INDEX,
+	    		commonHeader.length);
+	    // payload checksum
+	    System.arraycopy(this.metadataChecksum, 0, packet, Utils.PAYLOAD_CHECKSUM_START_INDEX,
+	    		Utils.SIZE_OF_PAYLOAD_CHECKSUM);
+	    // the key
+	    System.arraycopy(this.key.getBytes(), 0, packet, Utils.KEY_START_INDEX,
+	    		this.key.getBytes().length);
+	    // the payload metadata
+	    System.arraycopy(metadataFragment, 0, packet, Utils.KEY_START_INDEX + this.key.getBytes().length,
+	    		metadataFragment.length);
+	    // the packet checksum
+	    System.arraycopy(Utils.calculateChecksum(Arrays.copyOfRange(packet, 0, packet.length - Utils.SIZE_OF_PACKET_CHECKSUM)), 
+	    		0, packet, Utils.KEY_START_INDEX + this.key.getBytes().length + metadataFragment.length, Utils.SIZE_OF_PACKET_CHECKSUM);
 
-		    packet = out.toByteArray();
-		}
 		// send the metadata packet
 		Utils.sendFragmentMulticast(packet, targetIp, port);
 
