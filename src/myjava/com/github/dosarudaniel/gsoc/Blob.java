@@ -10,6 +10,7 @@ import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -446,7 +447,45 @@ public class Blob {
 	} else {
 	    throw new IOException("Packet type not recognized!");
 	}
+    }
 
+    ArrayList<Pair> getMissingMetadataBlocks() {
+	if (this.metadata == null) {
+	    return null;
+	}
+
+	Collections.sort(this.metadataByteRanges, new Utils.PairComparator());
+
+	ArrayList<Pair> missingBlocks = new ArrayList<>();
+
+	for (int i = 0; i < this.metadataByteRanges.size() - 1; i++) {
+	    if (this.metadataByteRanges.get(i).second != this.metadataByteRanges.get(i + 1).first) {
+		missingBlocks
+			.add(new Pair(this.metadataByteRanges.get(i).second, this.metadataByteRanges.get(i + 1).first));
+	    }
+	}
+
+	return missingBlocks;
+
+    }
+
+    ArrayList<Pair> getMissingPayloadBlocks() {
+	if (this.payload == null) {
+	    return null;
+	}
+
+	Collections.sort(this.payloadByteRanges, new Utils.PairComparator());
+
+	ArrayList<Pair> missingBlocks = new ArrayList<>();
+
+	for (int i = 0; i < this.payloadByteRanges.size() - 1; i++) {
+	    if (this.payloadByteRanges.get(i).second != this.payloadByteRanges.get(i + 1).first) {
+		missingBlocks
+			.add(new Pair(this.payloadByteRanges.get(i).second, this.payloadByteRanges.get(i + 1).first));
+	    }
+	}
+
+	return missingBlocks;
     }
 
     public String getKey() {
