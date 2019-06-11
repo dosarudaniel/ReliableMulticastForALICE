@@ -113,6 +113,11 @@ public class Blob {
 	this.key = key;
 	this.uuid = uuid;
     }
+    
+    // TO DO
+    public void send(int maxPayloadSize, ArrayList<Pair> missingBlocks, String targetIp, int port) {
+    	
+    }
 
     /**
      * Send method - fragments a blob into smaller serialized fragmentedBlobs and
@@ -449,7 +454,7 @@ public class Blob {
 	}
     }
 
-    ArrayList<Pair> getMissingMetadataBlocks() {
+    public ArrayList<Pair> getMissingMetadataBlocks() {
 	if (this.metadata == null) {
 	    return null;
 	}
@@ -469,7 +474,7 @@ public class Blob {
 
     }
 
-    ArrayList<Pair> getMissingPayloadBlocks() {
+    public ArrayList<Pair> getMissingPayloadBlocks() {
 	if (this.payload == null) {
 	    return null;
 	}
