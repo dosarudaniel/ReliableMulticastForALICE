@@ -5,7 +5,6 @@
  */
 package myjava.com.github.dosarudaniel.gsoc;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
@@ -157,8 +156,6 @@ public class Blob {
 		    Utils.SIZE_OF_FRAGMENT_OFFSET);
 
 	    // 2. 1 byte, packet type
-//	    System.arraycopy(new byte[] { SMALL_BLOB_CODE }, 0, packet, Utils.PACKET_TYPE_START_INDEX,
-//		    Utils.SIZE_OF_PACKET_TYPE);
 	    packet[Utils.PACKET_TYPE_START_INDEX] = SMALL_BLOB_CODE;
 
 	    // 3. 16 bytes, uuid
@@ -203,11 +200,12 @@ public class Blob {
 	    // 3. 16 bytes, uuid
 	    System.arraycopy(Utils.getBytes(this.uuid), 0, commonHeader, Utils.SIZE_OF_PACKET_TYPE, Utils.SIZE_OF_UUID);
 	    // 4. 4 bytes, blob metadata Length
-	    System.arraycopy(Utils.intToByteArray(this.metadata.length), 0, commonHeader, 
-	    		Utils.SIZE_OF_PACKET_TYPE + Utils.SIZE_OF_UUID, Utils.SIZE_OF_BLOB_PAYLOAD_LENGTH);
+	    System.arraycopy(Utils.intToByteArray(this.metadata.length), 0, commonHeader,
+		    Utils.SIZE_OF_PACKET_TYPE + Utils.SIZE_OF_UUID, Utils.SIZE_OF_BLOB_PAYLOAD_LENGTH);
 	    // 5. 2 bytes, keyLength
-	    System.arraycopy(Utils.shortToByteArray((short) this.key.getBytes().length), 0, commonHeader, 
-	    		Utils.SIZE_OF_PACKET_TYPE + Utils.SIZE_OF_UUID + Utils.SIZE_OF_BLOB_PAYLOAD_LENGTH, Utils.SIZE_OF_KEY_LENGTH);
+	    System.arraycopy(Utils.shortToByteArray((short) this.key.getBytes().length), 0, commonHeader,
+		    Utils.SIZE_OF_PACKET_TYPE + Utils.SIZE_OF_UUID + Utils.SIZE_OF_BLOB_PAYLOAD_LENGTH,
+		    Utils.SIZE_OF_KEY_LENGTH);
 
 	    int indexMetadata = 0;
 
@@ -221,23 +219,25 @@ public class Blob {
 			+ this.key.getBytes().length];
 
 		// 1. fragment offset
-	    System.arraycopy(Utils.intToByteArray(indexMetadata), 0, packet, Utils.FRAGMENT_OFFSET_START_INDEX,
-		    Utils.SIZE_OF_FRAGMENT_OFFSET);
-	    // Fields 2,3,4,5 from commonHeader:packet type, uuid, blob metadata Length, keyLength
-	    System.arraycopy(commonHeader, 0, packet, Utils.PACKET_TYPE_START_INDEX,
-	    		commonHeader.length);
-	    // payload checksum
-	    System.arraycopy(this.metadataChecksum, 0, packet, Utils.PAYLOAD_CHECKSUM_START_INDEX,
-	    		Utils.SIZE_OF_PAYLOAD_CHECKSUM);
-	    // the key
-	    System.arraycopy(this.key.getBytes(), 0, packet, Utils.KEY_START_INDEX,
-	    		this.key.getBytes().length);
-	    // the payload metadata
-	    System.arraycopy(this.metadata, indexMetadata, packet, Utils.KEY_START_INDEX + this.key.getBytes().length,
-	    		maxPayloadSize_copy);
-	    // the packet checksum
-	    System.arraycopy(Utils.calculateChecksum(Arrays.copyOfRange(packet, 0, packet.length - Utils.SIZE_OF_PACKET_CHECKSUM)), 
-	    		0, packet, Utils.KEY_START_INDEX + this.key.getBytes().length + maxPayloadSize_copy, Utils.SIZE_OF_PACKET_CHECKSUM);
+		System.arraycopy(Utils.intToByteArray(indexMetadata), 0, packet, Utils.FRAGMENT_OFFSET_START_INDEX,
+			Utils.SIZE_OF_FRAGMENT_OFFSET);
+		// Fields 2,3,4,5 from commonHeader:packet type, uuid, blob metadata Length,
+		// keyLength
+		System.arraycopy(commonHeader, 0, packet, Utils.PACKET_TYPE_START_INDEX, commonHeader.length);
+		// payload checksum
+		System.arraycopy(this.metadataChecksum, 0, packet, Utils.PAYLOAD_CHECKSUM_START_INDEX,
+			Utils.SIZE_OF_PAYLOAD_CHECKSUM);
+		// the key
+		System.arraycopy(this.key.getBytes(), 0, packet, Utils.KEY_START_INDEX, this.key.getBytes().length);
+		// the payload metadata
+		System.arraycopy(this.metadata, indexMetadata, packet,
+			Utils.KEY_START_INDEX + this.key.getBytes().length, maxPayloadSize_copy);
+		// the packet checksum
+		System.arraycopy(
+			Utils.calculateChecksum(
+				Arrays.copyOfRange(packet, 0, packet.length - Utils.SIZE_OF_PACKET_CHECKSUM)),
+			0, packet, Utils.KEY_START_INDEX + this.key.getBytes().length + maxPayloadSize_copy,
+			Utils.SIZE_OF_PACKET_CHECKSUM);
 
 		// send the metadata packet
 		Utils.sendFragmentMulticast(packet, targetIp, port);
@@ -248,17 +248,15 @@ public class Blob {
 	    /*
 	     * fragment data
 	     */
-   	    // 2. 1 byte, packet type or flags
-   	    commonHeader[0] = DATA_CODE;
-   	    // No need to copy this, it's already been done for metadata fragments
-//   	    // 3. 16 bytes, uuid
-//   	    System.arraycopy(Utils.getBytes(this.uuid), 0, commonHeader, Utils.SIZE_OF_PACKET_TYPE, Utils.SIZE_OF_UUID);
-   	    // 4. 4 bytes, blob payload Length
-   	    System.arraycopy(Utils.intToByteArray(this.payload.length), 0, commonHeader, 
-   	    		Utils.SIZE_OF_PACKET_TYPE + Utils.SIZE_OF_UUID, Utils.SIZE_OF_BLOB_PAYLOAD_LENGTH);
-//   	    // 5. 2 bytes, keyLength
-//   	    System.arraycopy(Utils.shortToByteArray((short) this.key.getBytes().length), 0, commonHeader, 
-//   	    		Utils.SIZE_OF_PACKET_TYPE + Utils.SIZE_OF_UUID + Utils.SIZE_OF_BLOB_PAYLOAD_LENGTH, Utils.SIZE_OF_KEY_LENGTH);
+	    // 2. 1 byte, packet type or flags
+	    commonHeader[0] = DATA_CODE;
+	    // No need to copy uuid, it's already been done for metadata fragments
+	    // 3. 16 bytes, uuid
+	    // 4. 4 bytes, blob payload Length
+	    System.arraycopy(Utils.intToByteArray(this.payload.length), 0, commonHeader,
+		    Utils.SIZE_OF_PACKET_TYPE + Utils.SIZE_OF_UUID, Utils.SIZE_OF_BLOB_PAYLOAD_LENGTH);
+	    // The is already in the commonHeader
+	    // 5. 2 bytes, keyLength
 
 	    int indexPayload = 0;
 	    while (indexPayload < this.payload.length) {
@@ -269,26 +267,28 @@ public class Blob {
 
 		byte[] packet = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER + maxPayloadSize_copy
 			+ this.key.getBytes().length];
-		
+
 		// 1. fragment offset
-	    System.arraycopy(Utils.intToByteArray(indexPayload), 0, packet, Utils.FRAGMENT_OFFSET_START_INDEX,
-		    Utils.SIZE_OF_FRAGMENT_OFFSET);
-	    // Fields 2,3,4,5 from commonHeader:packet type, uuid, blob metadata Length, keyLength
-	    System.arraycopy(commonHeader, 0, packet, Utils.PACKET_TYPE_START_INDEX,
-	    		commonHeader.length);
-	    // payload checksum
-	    System.arraycopy(this.payloadChecksum, 0, packet, Utils.PAYLOAD_CHECKSUM_START_INDEX,
-	    		Utils.SIZE_OF_PAYLOAD_CHECKSUM);
-	    // the key
-	    System.arraycopy(this.key.getBytes(), 0, packet, Utils.KEY_START_INDEX,
-	    		this.key.getBytes().length);
-	    // the payload metadata
-	    System.arraycopy(this.payload, indexPayload, packet, Utils.KEY_START_INDEX + this.key.getBytes().length,
-	    		maxPayloadSize_copy);
-	    // the packet checksum
-	    System.arraycopy(Utils.calculateChecksum(Arrays.copyOfRange(packet, 0, packet.length - Utils.SIZE_OF_PACKET_CHECKSUM)), 
-	    		0, packet, Utils.KEY_START_INDEX + this.key.getBytes().length + maxPayloadSize_copy, Utils.SIZE_OF_PACKET_CHECKSUM);
-	    
+		System.arraycopy(Utils.intToByteArray(indexPayload), 0, packet, Utils.FRAGMENT_OFFSET_START_INDEX,
+			Utils.SIZE_OF_FRAGMENT_OFFSET);
+		// Fields 2,3,4,5 from commonHeader:packet type, uuid, blob metadata Length,
+		// keyLength
+		System.arraycopy(commonHeader, 0, packet, Utils.PACKET_TYPE_START_INDEX, commonHeader.length);
+		// payload checksum
+		System.arraycopy(this.payloadChecksum, 0, packet, Utils.PAYLOAD_CHECKSUM_START_INDEX,
+			Utils.SIZE_OF_PAYLOAD_CHECKSUM);
+		// the key
+		System.arraycopy(this.key.getBytes(), 0, packet, Utils.KEY_START_INDEX, this.key.getBytes().length);
+		// the payload metadata
+		System.arraycopy(this.payload, indexPayload, packet, Utils.KEY_START_INDEX + this.key.getBytes().length,
+			maxPayloadSize_copy);
+		// the packet checksum
+		System.arraycopy(
+			Utils.calculateChecksum(
+				Arrays.copyOfRange(packet, 0, packet.length - Utils.SIZE_OF_PACKET_CHECKSUM)),
+			0, packet, Utils.KEY_START_INDEX + this.key.getBytes().length + maxPayloadSize_copy,
+			Utils.SIZE_OF_PACKET_CHECKSUM);
+
 		// send the payload packet
 		Utils.sendFragmentMulticast(packet, targetIp, port);
 		indexPayload = indexPayload + maxPayloadSize;
@@ -409,7 +409,7 @@ public class Blob {
 	    }
 
 	    if (index == -1) { // a new element at the end
-	    	this.metadataByteRanges.add(pair);
+		this.metadataByteRanges.add(pair);
 	    } else {
 		// check if element at index i can be merged with another one
 		for (int i = 0; i < this.metadataByteRanges.size() && i != index; i++) {
@@ -440,7 +440,8 @@ public class Blob {
 		this.payloadByteRanges.add(new Pair(0, payloadLength));
 		this.metadataByteRanges.add(new Pair(0, metadataLength));
 	    } else {
-		logger.log(Level.WARNING, "metadata and payload byte arrays should be null for an empty SMALL BLOB");
+		this.logger.log(Level.WARNING,
+			"metadata and payload byte arrays should be null for an empty SMALL BLOB");
 	    }
 	} else {
 	    throw new IOException("Packet type not recognized!");
