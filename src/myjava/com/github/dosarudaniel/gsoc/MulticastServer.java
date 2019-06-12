@@ -5,8 +5,10 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -29,7 +31,7 @@ public class MulticastServer {
     public MulticastServer(String ip_address, int portNumber) throws SecurityException {
 	this.ip_address = ip_address;
 	this.portNumber = portNumber;
-	this.inFlight = new HashMap<>();
+	this.inFlight = new ConcurrentHashMap<>();
 	this.currentCacheContent = new HashMap<>();
     }
 
@@ -56,6 +58,25 @@ public class MulticastServer {
 	    }
 	}
     });
+    
+    private Thread incompleteBlobRecovery = new Thread(new Runnable() {
+		@Override
+		public void run() {
+			
+			for (Map.Entry<UUID, Blob> entry : inFlight.entrySet()) {
+				UUID uuid = entry.getKey();
+				Blob blob = entry.getValue(); 
+//				if (last access time > current time + delta_T) {
+//				     ArrayList<Pair> metadataMissingBlocks = blob.getMissingMetadataBlocks();
+//				     ArrayList<Pair> payloadMissingBlocks =   blob.getMissingPayloadBlocks();
+//				      
+//				     // iterează print *missingBlocks si trimite o cerere get cu byteRange 
+//				 	// asteapta raspunsul cererilor si actualizaza blob
+//				}
+			}			
+		}
+	});
+        
 
     public void work() throws IOException {
 	byte[] buf = new byte[Utils.PACKET_MAX_SIZE];
@@ -111,8 +132,4 @@ public class MulticastServer {
 	    // socket.leaveGroup(group);
 	}
     }
-
-    // Thread incompleteBlobRecovery = new Thread();
-    // daca inFlight contine obiecte care nu au fost atinse de mai mult de X millis
-    // => recovery procedure pentru ele
 }
