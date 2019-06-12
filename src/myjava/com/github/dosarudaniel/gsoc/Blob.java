@@ -114,9 +114,19 @@ public class Blob {
 	this.uuid = uuid;
     }
     
-    // TO DO
-    public void send(int maxPayloadSize, ArrayList<Pair> missingBlocks, String targetIp, int port) {
-    	
+    // TODO
+    public void send(int maxPayloadSize, Pair missingBlock, byte packetType, String targetIp, int port) throws IOException {
+    	if (packetType == METADATA_CODE) {
+    		// fragment [missingBlock.first, missingBlock.second]
+    		// build packet
+    		//  Utils.sendFragmentMulticast(packet, targetIp, port);
+    	} else if (packetType == DATA_CODE) {
+    		// fragment [missingBlock.first, missingBlock.second]
+    		// build packet
+    		//  Utils.sendFragmentMulticast(packet, targetIp, port);
+    	} else {
+    		throw new IOException("Packet type not recognized!");
+    	}
     }
 
     /**
