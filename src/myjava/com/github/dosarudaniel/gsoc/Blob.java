@@ -8,6 +8,7 @@ package myjava.com.github.dosarudaniel.gsoc;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -40,6 +41,7 @@ public class Blob {
     private byte[] metadataChecksum = null;
     private byte[] metadata = null;
     private byte[] payload = null;
+    private Timestamp timestamp;
 
     private final ArrayList<Pair> metadataByteRanges = new ArrayList<>();
     private final ArrayList<Pair> payloadByteRanges = new ArrayList<>();
@@ -655,6 +657,14 @@ public class Blob {
 
     public void setPayload(byte[] payload) {
 	this.payload = payload;
+    }
+
+    public Timestamp getTimestamp() {
+	return timestamp;
+    }
+
+    public void setTimestamp(Timestamp timestamp) {
+	this.timestamp = timestamp;
     }
 
     @Override
