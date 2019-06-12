@@ -4,13 +4,16 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import myjava.com.github.dosarudaniel.gsoc.Utils.Pair;
 
 public class MulticastServer {
     private SingletonLogger singletonLogger = new SingletonLogger();
@@ -18,6 +21,7 @@ public class MulticastServer {
 
     static final int MIN_LEN = 50;
     static final int MAX_LEN = 130;
+    static final int DELTA_T = 1000;
 
     private String ip_address;
     private int portNumber;
@@ -25,7 +29,7 @@ public class MulticastServer {
     public static int nrPacketsReceived = 0;
 
     private Map<UUID, Blob> inFlight; // uuid <-> Blob fragmentat, zona de tranzitie pana la primirea
-				      // completa a tuturor fragmentelor
+    // completa a tuturor fragmentelor
     private Map<String, Blob> currentCacheContent; // Blob-uri complete
 
     public MulticastServer(String ip_address, int portNumber) throws SecurityException {
@@ -35,7 +39,7 @@ public class MulticastServer {
 	this.currentCacheContent = new HashMap<>();
     }
 
-    private Thread thread = new Thread(new Runnable() {
+    private Thread counterThread = new Thread(new Runnable() {
 	private SingletonLogger singletonLogger2 = new SingletonLogger();
 	private Logger logger2 = this.singletonLogger2.getLogger();
 
@@ -58,25 +62,27 @@ public class MulticastServer {
 	    }
 	}
     });
-    
+
     private Thread incompleteBlobRecovery = new Thread(new Runnable() {
-		@Override
-		public void run() {
-			
-			for (Map.Entry<UUID, Blob> entry : inFlight.entrySet()) {
-				UUID uuid = entry.getKey();
-				Blob blob = entry.getValue(); 
-//				if (last access time > current time + delta_T) {
-//				     ArrayList<Pair> metadataMissingBlocks = blob.getMissingMetadataBlocks();
-//				     ArrayList<Pair> payloadMissingBlocks =   blob.getMissingPayloadBlocks();
-//				      
-//				     // iterează print *missingBlocks si trimite o cerere get cu byteRange 
-//				 	// asteapta raspunsul cererilor si actualizaza blob
-//				}
-			}			
+	@Override
+	public void run() {
+
+	    for (Map.Entry<UUID, Blob> entry : inFlight.entrySet()) {
+		UUID uuid = entry.getKey();
+		Blob blob = entry.getValue();
+		Timestamp timestamp = blob.getTimestamp();
+
+		Timestamp currentTimestamp = new Timestamp(System.currentTimeMillis());
+		if (currentTimestamp.getTime() > blob.getTimestamp().getTime() + DELTA_T) {
+		    ArrayList<Pair> metadataMissingBlocks = blob.getMissingMetadataBlocks();
+		    ArrayList<Pair> payloadMissingBlocks = blob.getMissingPayloadBlocks();
+
+		    // Send a GET request with byteRanges from *MissingBlocks
+		    // Wait for answer, update blob
 		}
-	});
-        
+	    }
+	}
+    });
 
     public void work() throws IOException {
 	byte[] buf = new byte[Utils.PACKET_MAX_SIZE];
@@ -85,7 +91,7 @@ public class MulticastServer {
 	try (MulticastSocket socket = new MulticastSocket(this.portNumber)) {
 	    InetAddress group = InetAddress.getByName(this.ip_address);
 	    socket.joinGroup(group);
-	    this.thread.start();
+	    this.counterThread.start();
 	    while (true) {
 		try {
 		    // Receive object
@@ -121,6 +127,9 @@ public class MulticastServer {
 			}
 		    } else {
 			// Update inFlight
+			Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+			// Update Blob timestamp
+			blob.setTimestamp(timestamp);
 			this.inFlight.put(blob.getUuid(), blob);
 			// logger.log(Level.INFO, "Update inFlight blob " + blob);
 		    }
