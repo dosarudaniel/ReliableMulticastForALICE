@@ -113,20 +113,150 @@ public class Blob {
 	this.key = key;
 	this.uuid = uuid;
     }
-    
-    // TODO
-    public void send(int maxPayloadSize, Pair missingBlock, byte packetType, String targetIp, int port) throws IOException {
-    	if (packetType == METADATA_CODE) {
-    		// fragment [missingBlock.first, missingBlock.second]
-    		// build packet
-    		//  Utils.sendFragmentMulticast(packet, targetIp, port);
-    	} else if (packetType == DATA_CODE) {
-    		// fragment [missingBlock.first, missingBlock.second]
-    		// build packet
-    		//  Utils.sendFragmentMulticast(packet, targetIp, port);
-    	} else {
-    		throw new IOException("Packet type not recognized!");
-    	}
+
+    /**
+     * Send method - fragment (if necessary) and send the missingBlock from metadata
+     * or payload
+     *
+     * @param maxPayloadSize - the maximum payload supported by a fragmented packet
+     * @param missingBlock   - the interval to be sent via multicast from metadata
+     *                       or payload
+     * @param packetType     - specify what kind of data is missing so that it
+     *                       should be send: METADATA_CODE or DATA_CODE
+     * @param targetIp       - Destination multicast IP
+     * @param port           - Socket port number
+     * 
+     * @throws NoSuchAlgorithmException, IOException
+     */
+    public void send(int maxPayloadSize, Pair missingBlock, byte packetType, String targetIp, int port)
+	    throws IOException, NoSuchAlgorithmException {
+
+	if (packetType == METADATA_CODE) {
+	    // fragment [missingBlock.first, missingBlock.second]
+	    // build packet
+	    // Utils.sendFragmentMulticast(packet, targetIp, port);
+	    byte[] metadataToSend = new byte[missingBlock.second - missingBlock.first];
+	    System.arraycopy(this.metadata, missingBlock.first, metadataToSend, 0,
+		    missingBlock.second - missingBlock.first);
+	    /*
+	     * fragment metadata
+	     */
+	    byte[] commonHeader = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER - Utils.SIZE_OF_FRAGMENT_OFFSET
+		    - Utils.SIZE_OF_PAYLOAD_CHECKSUM];
+	    // 2. 1 byte, packet type or flags
+	    commonHeader[0] = METADATA_CODE;
+	    // 3. 16 bytes, uuid
+	    System.arraycopy(Utils.getBytes(this.uuid), 0, commonHeader, Utils.SIZE_OF_PACKET_TYPE, Utils.SIZE_OF_UUID);
+	    // 4. 4 bytes, blob metadata Length
+	    System.arraycopy(Utils.intToByteArray(this.metadata.length), 0, commonHeader,
+		    Utils.SIZE_OF_PACKET_TYPE + Utils.SIZE_OF_UUID, Utils.SIZE_OF_BLOB_PAYLOAD_LENGTH);
+	    // 5. 2 bytes, keyLength
+	    System.arraycopy(Utils.shortToByteArray((short) this.key.getBytes().length), 0, commonHeader,
+		    Utils.SIZE_OF_PACKET_TYPE + Utils.SIZE_OF_UUID + Utils.SIZE_OF_BLOB_PAYLOAD_LENGTH,
+		    Utils.SIZE_OF_KEY_LENGTH);
+
+	    int indexMetadata = 0;
+
+	    while (indexMetadata < metadataToSend.length) {
+		int maxPayloadSize_copy = maxPayloadSize;
+		if (maxPayloadSize_copy + indexMetadata > metadataToSend.length) {
+		    maxPayloadSize_copy = metadataToSend.length - indexMetadata;
+		}
+
+		byte[] packet = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER + maxPayloadSize_copy
+			+ this.key.getBytes().length];
+
+		// 1. fragment offset
+		System.arraycopy(Utils.intToByteArray(indexMetadata), 0, packet, Utils.FRAGMENT_OFFSET_START_INDEX,
+			Utils.SIZE_OF_FRAGMENT_OFFSET);
+		// Fields 2,3,4,5 from commonHeader:packet type, uuid, blob metadata Length,
+		// keyLength
+		System.arraycopy(commonHeader, 0, packet, Utils.PACKET_TYPE_START_INDEX, commonHeader.length);
+		// payload checksum
+		System.arraycopy(this.metadataChecksum, 0, packet, Utils.PAYLOAD_CHECKSUM_START_INDEX,
+			Utils.SIZE_OF_PAYLOAD_CHECKSUM);
+		// the key
+		System.arraycopy(this.key.getBytes(), 0, packet, Utils.KEY_START_INDEX, this.key.getBytes().length);
+		// the payload metadata
+		System.arraycopy(metadataToSend, indexMetadata, packet,
+			Utils.KEY_START_INDEX + this.key.getBytes().length, maxPayloadSize_copy);
+		// the packet checksum
+		System.arraycopy(
+			Utils.calculateChecksum(
+				Arrays.copyOfRange(packet, 0, packet.length - Utils.SIZE_OF_PACKET_CHECKSUM)),
+			0, packet, Utils.KEY_START_INDEX + this.key.getBytes().length + maxPayloadSize_copy,
+			Utils.SIZE_OF_PACKET_CHECKSUM);
+
+		// send the metadata packet
+		Utils.sendFragmentMulticast(packet, targetIp, port);
+
+		indexMetadata = indexMetadata + maxPayloadSize;
+	    }
+
+	} else if (packetType == DATA_CODE) {
+	    // fragment [missingBlock.first, missingBlock.second]
+	    // build packet
+	    // Utils.sendFragmentMulticast(packet, targetIp, port);
+	    byte[] payloadToSend = new byte[missingBlock.second - missingBlock.first];
+	    System.arraycopy(this.payload, missingBlock.first, payloadToSend, 0,
+		    missingBlock.second - missingBlock.first);
+	    /*
+	     * fragment metadata
+	     */
+	    byte[] commonHeader = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER - Utils.SIZE_OF_FRAGMENT_OFFSET
+		    - Utils.SIZE_OF_PAYLOAD_CHECKSUM];
+	    // 2. 1 byte, packet type or flags
+	    commonHeader[0] = DATA_CODE;
+	    // 3. 16 bytes, uuid
+	    System.arraycopy(Utils.getBytes(this.uuid), 0, commonHeader, Utils.SIZE_OF_PACKET_TYPE, Utils.SIZE_OF_UUID);
+	    // 4. 4 bytes, blob metadata Length
+	    System.arraycopy(Utils.intToByteArray(this.metadata.length), 0, commonHeader,
+		    Utils.SIZE_OF_PACKET_TYPE + Utils.SIZE_OF_UUID, Utils.SIZE_OF_BLOB_PAYLOAD_LENGTH);
+	    // 5. 2 bytes, keyLength
+	    System.arraycopy(Utils.shortToByteArray((short) this.key.getBytes().length), 0, commonHeader,
+		    Utils.SIZE_OF_PACKET_TYPE + Utils.SIZE_OF_UUID + Utils.SIZE_OF_BLOB_PAYLOAD_LENGTH,
+		    Utils.SIZE_OF_KEY_LENGTH);
+
+	    int indexPayload = 0;
+
+	    while (indexPayload < payloadToSend.length) {
+		int maxPayloadSize_copy = maxPayloadSize;
+		if (maxPayloadSize_copy + indexPayload > payloadToSend.length) {
+		    maxPayloadSize_copy = payloadToSend.length - indexPayload;
+		}
+
+		byte[] packet = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER + maxPayloadSize_copy
+			+ this.key.getBytes().length];
+
+		// 1. fragment offset
+		System.arraycopy(Utils.intToByteArray(indexPayload), 0, packet, Utils.FRAGMENT_OFFSET_START_INDEX,
+			Utils.SIZE_OF_FRAGMENT_OFFSET);
+		// Fields 2,3,4,5 from commonHeader:packet type, uuid, blob metadata Length,
+		// keyLength
+		System.arraycopy(commonHeader, 0, packet, Utils.PACKET_TYPE_START_INDEX, commonHeader.length);
+		// payload checksum
+		System.arraycopy(this.metadataChecksum, 0, packet, Utils.PAYLOAD_CHECKSUM_START_INDEX,
+			Utils.SIZE_OF_PAYLOAD_CHECKSUM);
+		// the key
+		System.arraycopy(this.key.getBytes(), 0, packet, Utils.KEY_START_INDEX, this.key.getBytes().length);
+		// the payload metadata
+		System.arraycopy(payloadToSend, indexPayload, packet,
+			Utils.KEY_START_INDEX + this.key.getBytes().length, maxPayloadSize_copy);
+		// the packet checksum
+		System.arraycopy(
+			Utils.calculateChecksum(
+				Arrays.copyOfRange(packet, 0, packet.length - Utils.SIZE_OF_PACKET_CHECKSUM)),
+			0, packet, Utils.KEY_START_INDEX + this.key.getBytes().length + maxPayloadSize_copy,
+			Utils.SIZE_OF_PACKET_CHECKSUM);
+
+		// send the metadata packet
+		Utils.sendFragmentMulticast(packet, targetIp, port);
+
+		indexPayload = indexPayload + maxPayloadSize;
+	    }
+	} else {
+	    throw new IOException("Packet type not recognized!");
+	}
     }
 
     /**
