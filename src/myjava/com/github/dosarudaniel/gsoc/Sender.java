@@ -8,6 +8,8 @@ package myjava.com.github.dosarudaniel.gsoc;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -22,6 +24,8 @@ import java.util.logging.Logger;
  *
  */
 public class Sender {
+    private Map<String, Blob> blobMap = new HashMap<>();
+
     private SingletonLogger singletonLogger = new SingletonLogger();
     private Logger logger = this.singletonLogger.getLogger();
 
@@ -129,7 +133,9 @@ public class Sender {
 	    try {
 		blob = new Blob(metadata.getBytes(Charset.forName(Utils.CHARSET)),
 			payload.getBytes(Charset.forName(Utils.CHARSET)), key, uuid);
-		blob.send(this.maxPayloadSize, this.ip_address, this.portNumber);
+		// System.out.println(blob);
+		blobMap.put(key, blob);
+		blob.send(this.ip_address, this.portNumber);
 
 	    } catch (NoSuchAlgorithmException | IOException e) {
 		e.printStackTrace();
@@ -147,6 +153,8 @@ public class Sender {
 	    // TODO Auto-generated catch block
 	    e.printStackTrace();
 	}
+
+	// System.out.println(blobMap);
 
     }
 }
