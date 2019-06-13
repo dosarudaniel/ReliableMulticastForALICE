@@ -188,7 +188,6 @@ public class Blob {
 				Arrays.copyOfRange(packet, 0, packet.length - Utils.SIZE_OF_PACKET_CHECKSUM)),
 			0, packet, Utils.KEY_START_INDEX + this.key.getBytes().length + maxPayloadSize_copy,
 			Utils.SIZE_OF_PACKET_CHECKSUM);
-
 		// send the metadata packet
 		Utils.sendFragmentMulticast(packet, targetIp, port);
 
@@ -271,7 +270,12 @@ public class Blob {
      */
     public void send(String targetIp, int port) throws NoSuchAlgorithmException, IOException {
 	String maxPayloadSizeEnvValue = System.getenv("MAX_PAYLOAD_SIZE");
-	int maxPayloadSize = Integer.parseInt(maxPayloadSizeEnvValue);
+	int maxPayloadSize = 1500;
+	try {
+	    maxPayloadSize = Integer.parseInt(maxPayloadSizeEnvValue);
+	} catch (NumberFormatException e) {
+	    this.logger.log(Level.WARNING, "Environment variable MAX_PAYLOAD_SIZE was not set or is not a number.");
+	}
 
 	if (maxPayloadSize > this.payload.length + this.metadata.length) {
 	    // no need to fragment the Blob
@@ -533,8 +537,12 @@ public class Blob {
 	return this.uuid;
     }
 
-    public Map<String, String> getMetadata() {
+    public Map<String, String> getMetadataMap() {
 	return Utils.deserializeMetadata(this.metadata);
+    }
+
+    public byte[] getMetadata() {
+	return this.metadata;
     }
 
     public void setMetadata(byte[] metadata) {
@@ -575,5 +583,47 @@ public class Blob {
 	output += "\n";
 
 	return output;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+
+	// If the object is compared with itself then return true
+	if (o == this) {
+	    return true;
+	}
+
+	/*
+	 * Check if o is an instance of Complex or not "null instanceof [type]" also
+	 * returns false
+	 */
+	if (!(o instanceof Blob)) {
+	    return false;
+	}
+
+	// typecast o to Complex so that we can compare data members
+	Blob blob = (Blob) o;
+
+	// Verify payload
+	if (!this.key.equals(blob.getKey())) {
+	    return false;
+	}
+
+	// Verify uuid
+	if (!this.uuid.equals(blob.getUuid())) {
+	    return false;
+	}
+
+	// Verify payload
+	if (!Arrays.equals(this.payload, blob.getPayload())) {
+	    return false;
+	}
+
+	// Verify metadata
+	if (!Arrays.equals(this.metadata, blob.getMetadata())) {
+	    return false;
+	}
+
+	return true;
     }
 }
