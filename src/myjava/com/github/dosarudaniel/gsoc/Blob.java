@@ -118,7 +118,7 @@ public class Blob {
 
     /**
      * Send method - fragment (if necessary) and send the missingBlock from metadata
-     * or payload
+     * or payload as packetType parameter specifies
      *
      * @param maxPayloadSize - the maximum payload supported by a fragmented packet
      * @param missingBlock   - the interval to be sent via multicast from metadata
@@ -211,8 +211,8 @@ public class Blob {
 	    commonHeader[0] = DATA_CODE;
 	    // 3. 16 bytes, uuid
 	    System.arraycopy(Utils.getBytes(this.uuid), 0, commonHeader, Utils.SIZE_OF_PACKET_TYPE, Utils.SIZE_OF_UUID);
-	    // 4. 4 bytes, blob metadata Length
-	    System.arraycopy(Utils.intToByteArray(this.metadata.length), 0, commonHeader,
+	    // 4. 4 bytes, blob payload Length
+	    System.arraycopy(Utils.intToByteArray(this.payload.length), 0, commonHeader,
 		    Utils.SIZE_OF_PACKET_TYPE + Utils.SIZE_OF_UUID, Utils.SIZE_OF_BLOB_PAYLOAD_LENGTH);
 	    // 5. 2 bytes, keyLength
 	    System.arraycopy(Utils.shortToByteArray((short) this.key.getBytes().length), 0, commonHeader,
@@ -237,7 +237,7 @@ public class Blob {
 		// keyLength
 		System.arraycopy(commonHeader, 0, packet, Utils.PACKET_TYPE_START_INDEX, commonHeader.length);
 		// payload checksum
-		System.arraycopy(this.metadataChecksum, 0, packet, Utils.PAYLOAD_CHECKSUM_START_INDEX,
+		System.arraycopy(this.payloadChecksum, 0, packet, Utils.PAYLOAD_CHECKSUM_START_INDEX,
 			Utils.SIZE_OF_PAYLOAD_CHECKSUM);
 		// the key
 		System.arraycopy(this.key.getBytes(), 0, packet, Utils.KEY_START_INDEX, this.key.getBytes().length);
@@ -267,28 +267,12 @@ public class Blob {
      *
      * @param targetIp - Destination multicast IP
      * @param port     - Socket port number
-     * 
-     * @throws NoSuchAlgorithmException, IOException
+     * @throws IOException, NoSuchAlgorithmException
      */
     public void send(String targetIp, int port) throws NoSuchAlgorithmException, IOException {
-	// TODO: get maxPayloadSize from a file
-	int maxPayloadSize = 1500;
-	send(maxPayloadSize, targetIp, port);
-    }
+	String maxPayloadSizeEnvValue = System.getenv("MAX_PAYLOAD_SIZE");
+	int maxPayloadSize = Integer.parseInt(maxPayloadSizeEnvValue);
 
-    /**
-     * Send method - fragments a blob into smaller serialized fragmentedBlobs and
-     * sends them via UDP multicast
-     * 
-     *
-     * @param maxPayloadSize - The maximum payload size of the serialized
-     *                       fragmentedBlob
-     * @param targetIp       - Destination multicast IP
-     * @param port           - Socket port number
-     * 
-     * @throws NoSuchAlgorithmException, IOException
-     */
-    public void send(int maxPayloadSize, String targetIp, int port) throws NoSuchAlgorithmException, IOException {
 	if (maxPayloadSize > this.payload.length + this.metadata.length) {
 	    // no need to fragment the Blob
 	    byte[] metadataAndPayload = new byte[this.payload.length + this.metadata.length];
@@ -338,112 +322,18 @@ public class Blob {
 	    // send the metadata packet
 	    Utils.sendFragmentMulticast(packet, targetIp, port);
 	} else {
-	    /*
-	     * fragment metadata
-	     */
-	    byte[] commonHeader = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER - Utils.SIZE_OF_FRAGMENT_OFFSET
-		    - Utils.SIZE_OF_PAYLOAD_CHECKSUM];
-	    // 2. 1 byte, packet type or flags
-	    commonHeader[0] = METADATA_CODE;
-	    // 3. 16 bytes, uuid
-	    System.arraycopy(Utils.getBytes(this.uuid), 0, commonHeader, Utils.SIZE_OF_PACKET_TYPE, Utils.SIZE_OF_UUID);
-	    // 4. 4 bytes, blob metadata Length
-	    System.arraycopy(Utils.intToByteArray(this.metadata.length), 0, commonHeader,
-		    Utils.SIZE_OF_PACKET_TYPE + Utils.SIZE_OF_UUID, Utils.SIZE_OF_BLOB_PAYLOAD_LENGTH);
-	    // 5. 2 bytes, keyLength
-	    System.arraycopy(Utils.shortToByteArray((short) this.key.getBytes().length), 0, commonHeader,
-		    Utils.SIZE_OF_PACKET_TYPE + Utils.SIZE_OF_UUID + Utils.SIZE_OF_BLOB_PAYLOAD_LENGTH,
-		    Utils.SIZE_OF_KEY_LENGTH);
-
-	    int indexMetadata = 0;
-
-	    while (indexMetadata < this.metadata.length) {
-		int maxPayloadSize_copy = maxPayloadSize;
-		if (maxPayloadSize_copy + indexMetadata > this.metadata.length) {
-		    maxPayloadSize_copy = this.metadata.length - indexMetadata;
-		}
-
-		byte[] packet = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER + maxPayloadSize_copy
-			+ this.key.getBytes().length];
-
-		// 1. fragment offset
-		System.arraycopy(Utils.intToByteArray(indexMetadata), 0, packet, Utils.FRAGMENT_OFFSET_START_INDEX,
-			Utils.SIZE_OF_FRAGMENT_OFFSET);
-		// Fields 2,3,4,5 from commonHeader:packet type, uuid, blob metadata Length,
-		// keyLength
-		System.arraycopy(commonHeader, 0, packet, Utils.PACKET_TYPE_START_INDEX, commonHeader.length);
-		// payload checksum
-		System.arraycopy(this.metadataChecksum, 0, packet, Utils.PAYLOAD_CHECKSUM_START_INDEX,
-			Utils.SIZE_OF_PAYLOAD_CHECKSUM);
-		// the key
-		System.arraycopy(this.key.getBytes(), 0, packet, Utils.KEY_START_INDEX, this.key.getBytes().length);
-		// the payload metadata
-		System.arraycopy(this.metadata, indexMetadata, packet,
-			Utils.KEY_START_INDEX + this.key.getBytes().length, maxPayloadSize_copy);
-		// the packet checksum
-		System.arraycopy(
-			Utils.calculateChecksum(
-				Arrays.copyOfRange(packet, 0, packet.length - Utils.SIZE_OF_PACKET_CHECKSUM)),
-			0, packet, Utils.KEY_START_INDEX + this.key.getBytes().length + maxPayloadSize_copy,
-			Utils.SIZE_OF_PACKET_CHECKSUM);
-
-		// send the metadata packet
-		Utils.sendFragmentMulticast(packet, targetIp, port);
-
-		indexMetadata = indexMetadata + maxPayloadSize;
-	    }
-
-	    /*
-	     * fragment data
-	     */
-	    // 2. 1 byte, packet type or flags
-	    commonHeader[0] = DATA_CODE;
-	    // No need to copy uuid, it's already been done for metadata fragments
-	    // 3. 16 bytes, uuid
-	    // 4. 4 bytes, blob payload Length
-	    System.arraycopy(Utils.intToByteArray(this.payload.length), 0, commonHeader,
-		    Utils.SIZE_OF_PACKET_TYPE + Utils.SIZE_OF_UUID, Utils.SIZE_OF_BLOB_PAYLOAD_LENGTH);
-	    // The is already in the commonHeader
-	    // 5. 2 bytes, keyLength
-
-	    int indexPayload = 0;
-	    while (indexPayload < this.payload.length) {
-		int maxPayloadSize_copy = maxPayloadSize;
-		if (maxPayloadSize_copy + indexPayload > this.payload.length) {
-		    maxPayloadSize_copy = this.payload.length - indexPayload;
-		}
-
-		byte[] packet = new byte[Utils.SIZE_OF_FRAGMENTED_BLOB_HEADER_AND_TRAILER + maxPayloadSize_copy
-			+ this.key.getBytes().length];
-
-		// 1. fragment offset
-		System.arraycopy(Utils.intToByteArray(indexPayload), 0, packet, Utils.FRAGMENT_OFFSET_START_INDEX,
-			Utils.SIZE_OF_FRAGMENT_OFFSET);
-		// Fields 2,3,4,5 from commonHeader:packet type, uuid, blob metadata Length,
-		// keyLength
-		System.arraycopy(commonHeader, 0, packet, Utils.PACKET_TYPE_START_INDEX, commonHeader.length);
-		// payload checksum
-		System.arraycopy(this.payloadChecksum, 0, packet, Utils.PAYLOAD_CHECKSUM_START_INDEX,
-			Utils.SIZE_OF_PAYLOAD_CHECKSUM);
-		// the key
-		System.arraycopy(this.key.getBytes(), 0, packet, Utils.KEY_START_INDEX, this.key.getBytes().length);
-		// the payload metadata
-		System.arraycopy(this.payload, indexPayload, packet, Utils.KEY_START_INDEX + this.key.getBytes().length,
-			maxPayloadSize_copy);
-		// the packet checksum
-		System.arraycopy(
-			Utils.calculateChecksum(
-				Arrays.copyOfRange(packet, 0, packet.length - Utils.SIZE_OF_PACKET_CHECKSUM)),
-			0, packet, Utils.KEY_START_INDEX + this.key.getBytes().length + maxPayloadSize_copy,
-			Utils.SIZE_OF_PACKET_CHECKSUM);
-
-		// send the payload packet
-		Utils.sendFragmentMulticast(packet, targetIp, port);
-		indexPayload = indexPayload + maxPayloadSize;
-	    }
+	    send(maxPayloadSize, new Pair(0, this.metadata.length), METADATA_CODE, targetIp, port);
+	    send(maxPayloadSize, new Pair(0, this.payload.length), DATA_CODE, targetIp, port);
 	}
     }
 
+    /**
+     * isComplete method - checks if a Blob is completely received
+     *
+     * @return boolean true if the Blob is Complete
+     * 
+     * @throws NoSuchAlgorithmException, IOException
+     */
     public boolean isComplete() throws IOException, NoSuchAlgorithmException {
 	if (this.metadata == null || this.payload == null) {
 	    return false;
