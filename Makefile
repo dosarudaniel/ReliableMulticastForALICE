@@ -34,3 +34,6 @@ clean:
 	rm -rf $(DOC)
 	rm -rf bin/test
 	rm -rf bin/myjava
+	rm -rf build/classes/ch/*
+	rm -rf build/classes/test/*
+	rm -rf build/classes/myjava/*
