@@ -51,10 +51,15 @@ jar -cfe MulticastServer.jar \
     test myjava
 
 
-# package Sender (receiver) in a single JAR
+# package Sender in a single JAR
 jar -cfe Sender.jar \
     test.com.github.dosarudaniel.gsoc.TestSender test/com/github/dosarudaniel/gsoc/TestSender.class \
-    test myjava
+    test myjava ch javax org alien lazyj lia apmon utils
+
+# package BasicTests in a single JAR
+jar -cfe BasicTests.jar \
+    test.com.github.dosarudaniel.gsoc.BasicTests test/com/github/dosarudaniel/gsoc/BasicTests.class \
+    test myjava 
 
 
 
