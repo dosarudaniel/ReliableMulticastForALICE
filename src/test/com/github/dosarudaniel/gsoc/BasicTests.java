@@ -1,10 +1,13 @@
 package test.com.github.dosarudaniel.gsoc;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.DatagramPacket;
+import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
-import java.nio.charset.Charset;
+import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
 
@@ -125,46 +128,30 @@ public class BasicTests {
 
     public static void main(String[] args)
 	    throws IOException, NoSuchAlgorithmException, SecurityException, InterruptedException {
-	try {
-	    Integer.parseInt(System.getenv("MAX_PAYLOAD_SIZE"));
-	} catch (NumberFormatException e) {
-	    System.out.println("Please export MAX_PAYLOAD_SIZE environment variable to 100.");
-	    return;
+
+	// String command = "curl -i
+	// localhost:8080/Task/Detector/1/b4cdfc90-8f43-11e9-a81f-7f0000015566";
+
+	URL url = new URL("http://localhost:8080/Task/Detector/1/b4cdfc90-8f43-11e9-a81f-7f0000015566");
+
+	HttpURLConnection con = (HttpURLConnection) url.openConnection();
+	con.setRequestProperty("Range", "bytes=0-1023");
+	con.setRequestMethod("GET");
+
+	con.setConnectTimeout(5000); // server should be fast
+	con.setReadTimeout(5000);
+
+	int status = con.getResponseCode();
+
+	BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+	String inputLine;
+	StringBuffer content = new StringBuffer();
+	while ((inputLine = in.readLine()) != null) {
+	    content.append(inputLine);
 	}
 
-	ip = "230.0.0.0";
-	port = 5001;
+	System.out.println(content.toString());
 
-	// Preparing data to be send
-	metadata = Utils.randomString(20);
-	payload = Utils.randomString(40);
-	key = Utils.randomString(6);
-	uuid = UUID.randomUUID();
-
-	blobToBeSent = new Blob(metadata.getBytes(Charset.forName(Utils.CHARSET)),
-		payload.getBytes(Charset.forName(Utils.CHARSET)), key, uuid);
-
-	sender.start();
-	receiver.start();
-	receiver.join();
-	sender.join();
-
-	ip = "230.0.0.0";
-	port = 5001;
-
-	// Preparing data to be send
-	metadata = Utils.randomString(50);
-	payload = Utils.randomString(233);
-	key = Utils.randomString(6);
-	uuid = UUID.randomUUID();
-
-	blobToBeSent = new Blob(metadata.getBytes(Charset.forName(Utils.CHARSET)),
-		payload.getBytes(Charset.forName(Utils.CHARSET)), key, uuid);
-
-	sender2.start();
-	receiver2.start();
-	receiver2.join();
-	sender2.join();
-
+	in.close();
     }
 }
