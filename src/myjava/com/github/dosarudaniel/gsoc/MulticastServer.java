@@ -1,9 +1,13 @@
 package myjava.com.github.dosarudaniel.gsoc;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.DatagramPacket;
+import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.net.URL;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -73,11 +77,55 @@ public class MulticastServer {
 		Timestamp timestamp = blob.getTimestamp();
 
 		Timestamp currentTimestamp = new Timestamp(System.currentTimeMillis());
+
 		if (currentTimestamp.getTime() > blob.getTimestamp().getTime() + DELTA_T) {
 		    ArrayList<Pair> metadataMissingBlocks = blob.getMissingMetadataBlocks();
-		    ArrayList<Pair> payloadMissingBlocks = blob.getMissingPayloadBlocks();
 
-		    // Send a GET request with byteRanges from *MissingBlocks
+		    ArrayList<Pair> payloadMissingBlocks = blob.getMissingPayloadBlocks();
+		    if (payloadMissingBlocks == null) {
+			try {
+			    URL url = new URL("http://localhost:8080/Task/Detector/1/" + blob.getUuid().toString());
+			    HttpURLConnection con = (HttpURLConnection) url.openConnection();
+			    con.setRequestMethod("GET");
+
+			    con.setConnectTimeout(5000); // server should be fast (< 5 sec)
+			    con.setReadTimeout(5000);
+
+			    int status = con.getResponseCode();
+
+			    BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+			    String inputLine;
+			    StringBuffer content = new StringBuffer();
+			    while ((inputLine = in.readLine()) != null) {
+				content.append(inputLine);
+			    }
+
+			    System.out.println(content.toString());
+
+			    in.close();
+			} catch (Exception e) {
+			    e.printStackTrace();
+			}
+
+		    } else {
+
+			// con.setRequestProperty("Content-Type", "application/json");Range:
+			// bytes=0-1023
+			// "Range: bytes=0-100,300-400"
+			String ranges = "Range: bytes=";
+			int i = 0;
+			for (i = 0; i < metadataMissingBlocks.size() - 1; i++) {
+			    ranges += metadataMissingBlocks.get(i).first;
+			    ranges += "-";
+			    ranges += metadataMissingBlocks.get(i).second;
+			    ranges += ",";
+			}
+			ranges += metadataMissingBlocks.get(i).first;
+			ranges += "-";
+			ranges += metadataMissingBlocks.get(i).second;
+			// curl -L -i -H ranges localhost:8080/Task/Detector/`date +%s`123
+		    }
+
 		    // Wait for answer, update blob
 		}
 	    }
@@ -113,7 +161,7 @@ public class MulticastServer {
 		    blob.addFragmentedBlob(fragmentedBlob);
 
 		    if (blob.isComplete()) {
-			// System.out.println(blob);
+			System.out.println(blob);
 			nrPacketsReceived++;
 			// Add the complete Blob to the cache
 			this.currentCacheContent.put(blob.getKey(), blob);
