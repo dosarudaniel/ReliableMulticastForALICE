@@ -14,11 +14,20 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.servlet.ServletException;
+
+import org.apache.catalina.LifecycleException;
+import org.apache.catalina.Wrapper;
+
+import ch.alice.o2.ccdb.servlets.Local;
+import ch.alice.o2.ccdb.servlets.LocalBrowse;
+import ch.alice.o2.ccdb.webserver.EmbeddedTomcat;
+
 /**
  * Sender unit which generates and sends new objects at fixed time intervals
  * (10s) and at the same time print the current time and message content on the
  * screen
- * 
+ *
  * @author dosarudaniel@gmail.com
  * @since 2019-03-07
  *
@@ -50,7 +59,40 @@ public class Sender {
     public static int nrPacketsSent = 0;
     public static boolean counterRunning = false;
 
-    private Thread thread = new Thread(new Runnable() {
+    public Thread recoveryThread = new Thread(new Runnable() {
+
+	@Override
+	public void run() {
+	    EmbeddedTomcat tomcat;
+
+	    try {
+		tomcat = new EmbeddedTomcat("localhost");
+	    } catch (final ServletException se) {
+		System.err.println("Cannot create the Tomcat server: " + se.getMessage());
+		return;
+	    }
+
+	    final Wrapper browser = tomcat.addServlet(LocalBrowse.class.getName(), "/browse/*");
+	    browser.addMapping("/latest/*");
+	    tomcat.addServlet(Local.class.getName(), "/*");
+
+	    // Start the server
+	    try {
+		tomcat.start();
+	    } catch (final LifecycleException le) {
+		System.err.println("Cannot start the Tomcat server: " + le.getMessage());
+		return;
+	    }
+
+	    if (tomcat.debugLevel >= 1)
+		System.err.println("Ready to accept HTTP calls on " + tomcat.address + ":" + tomcat.getPort()
+			+ ", file repository base path is: " + Local.basePath);
+
+	    tomcat.blockWaiting();
+	}
+    });
+
+    private Thread counterThread = new Thread(new Runnable() {
 	private SingletonLogger singletonLogger2 = new SingletonLogger();
 	private Logger logger2 = this.singletonLogger2.getLogger();
 
@@ -122,7 +164,8 @@ public class Sender {
 	UUID uuid = UUID.randomUUID();
 	Blob blob = null;
 
-	this.thread.start();
+	this.counterThread.start();
+	this.recoveryThread.start();
 	counterRunning = true;
 	for (int i = 0; i < this.nrOfPacketsToBeSent; i++) {
 
@@ -133,7 +176,7 @@ public class Sender {
 	    try {
 		blob = new Blob(metadata.getBytes(Charset.forName(Utils.CHARSET)),
 			payload.getBytes(Charset.forName(Utils.CHARSET)), key, uuid);
-		// System.out.println(blob);
+		System.out.println(blob);
 		blobMap.put(key, blob);
 		blob.send(this.ip_address, this.portNumber);
 
@@ -148,7 +191,8 @@ public class Sender {
 
 	counterRunning = false;
 	try {
-	    this.thread.join();
+	    this.counterThread.join();
+	    this.recoveryThread.join();
 	} catch (InterruptedException e) {
 	    // TODO Auto-generated catch block
 	    e.printStackTrace();
