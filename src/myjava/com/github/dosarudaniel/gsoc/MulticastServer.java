@@ -112,7 +112,7 @@ public class MulticastServer {
 			// con.setRequestProperty("Content-Type", "application/json");Range:
 			// bytes=0-1023
 			// "Range: bytes=0-100,300-400"
-			String ranges = "Range: bytes=";
+			String ranges = "";
 			int i = 0;
 			for (i = 0; i < metadataMissingBlocks.size() - 1; i++) {
 			    ranges += metadataMissingBlocks.get(i).first;
@@ -123,10 +123,33 @@ public class MulticastServer {
 			ranges += metadataMissingBlocks.get(i).first;
 			ranges += "-";
 			ranges += metadataMissingBlocks.get(i).second;
-			// curl -L -i -H ranges localhost:8080/Task/Detector/`date +%s`123
-		    }
 
-		    // Wait for answer, update blob
+			try {
+			    URL url = new URL("http://localhost:8080/Task/Detector/1/" + blob.getUuid().toString());
+			    HttpURLConnection con = (HttpURLConnection) url.openConnection();
+			    con.setRequestProperty("Range", "bytes=" + ranges);
+			    con.setRequestMethod("GET");
+
+			    con.setConnectTimeout(5000); // server should be fast (< 5 sec)
+			    con.setReadTimeout(5000);
+
+			    int status = con.getResponseCode();
+
+			    BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+			    String inputLine;
+			    StringBuffer content = new StringBuffer();
+			    while ((inputLine = in.readLine()) != null) {
+				content.append(inputLine);
+			    }
+
+			    // Wait for answer, update blob
+			    System.out.println(content.toString());
+
+			    in.close();
+			} catch (Exception e) {
+			    e.printStackTrace();
+			}
+		    }
 		}
 	    }
 	}
