@@ -37,3 +37,5 @@ clean:
 	rm -rf build/classes/ch/*
 	rm -rf build/classes/test/*
 	rm -rf build/classes/myjava/*
+	rm -rf package/*.jar
+	rm -rf package/apache-tomcat*
