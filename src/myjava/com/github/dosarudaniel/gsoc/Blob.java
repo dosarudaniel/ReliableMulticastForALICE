@@ -529,6 +529,14 @@ public class Blob {
 	return missingBlocks;
     }
 
+    public void addByteRange(byte[] data, Pair missingBlock) {
+	if (this.payload == null) {
+	    // getting the entire payload blob
+	    this.payload = new byte[data.length];
+	}
+	System.arraycopy(data, 0, this.payload, missingBlock.first, data.length);
+    }
+
     public String getKey() {
 	return this.key;
     }

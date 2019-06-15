@@ -26,6 +26,8 @@ public class MulticastServer {
     static final int MIN_LEN = 50;
     static final int MAX_LEN = 130;
     static final int DELTA_T = 1000;
+    static final int HTTP_RESPONSE_CODE_OK = 200;
+    static final int HTTP_RESPONSE_CODE_PARTIAL_CONTENT = 206;
 
     private String ip_address;
     private int portNumber;
@@ -79,10 +81,12 @@ public class MulticastServer {
 		Timestamp currentTimestamp = new Timestamp(System.currentTimeMillis());
 
 		if (currentTimestamp.getTime() > blob.getTimestamp().getTime() + DELTA_T) {
-		    ArrayList<Pair> metadataMissingBlocks = blob.getMissingMetadataBlocks();
+		    // ArrayList<Pair> metadataMissingBlocks = blob.getMissingMetadataBlocks();
+		    // TODO: Metadata recovery
 
 		    ArrayList<Pair> payloadMissingBlocks = blob.getMissingPayloadBlocks();
 		    if (payloadMissingBlocks == null) {
+			// Recover the entire Blob
 			try {
 			    URL url = new URL("http://localhost:8080/Task/Detector/1/" + blob.getUuid().toString());
 			    HttpURLConnection con = (HttpURLConnection) url.openConnection();
@@ -92,37 +96,36 @@ public class MulticastServer {
 			    con.setReadTimeout(5000);
 
 			    int status = con.getResponseCode();
+			    if (status == HTTP_RESPONSE_CODE_OK) {
+				BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+				String inputLine;
+				StringBuffer content = new StringBuffer();
+				while ((inputLine = in.readLine()) != null) {
+				    content.append(inputLine);
+				}
+				blob.addByteRange(content.toString().getBytes(),
+					new Pair(0, content.toString().getBytes().length));
 
-			    BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-			    String inputLine;
-			    StringBuffer content = new StringBuffer();
-			    while ((inputLine = in.readLine()) != null) {
-				content.append(inputLine);
+				in.close();
+			    } else {
+				// TODO retry?
 			    }
-
-			    System.out.println(content.toString());
-
-			    in.close();
 			} catch (Exception e) {
 			    e.printStackTrace();
 			}
 
 		    } else {
-
-			// con.setRequestProperty("Content-Type", "application/json");Range:
-			// bytes=0-1023
-			// "Range: bytes=0-100,300-400"
 			String ranges = "";
 			int i = 0;
-			for (i = 0; i < metadataMissingBlocks.size() - 1; i++) {
-			    ranges += metadataMissingBlocks.get(i).first;
+			for (i = 0; i < payloadMissingBlocks.size() - 1; i++) {
+			    ranges += payloadMissingBlocks.get(i).first;
 			    ranges += "-";
-			    ranges += metadataMissingBlocks.get(i).second;
+			    ranges += payloadMissingBlocks.get(i).second;
 			    ranges += ",";
 			}
-			ranges += metadataMissingBlocks.get(i).first;
+			ranges += payloadMissingBlocks.get(i).first;
 			ranges += "-";
-			ranges += metadataMissingBlocks.get(i).second;
+			ranges += payloadMissingBlocks.get(i).second;
 
 			try {
 			    URL url = new URL("http://localhost:8080/Task/Detector/1/" + blob.getUuid().toString());
@@ -134,18 +137,27 @@ public class MulticastServer {
 			    con.setReadTimeout(5000);
 
 			    int status = con.getResponseCode();
+			    if (status == HTTP_RESPONSE_CODE_PARTIAL_CONTENT) {
+				BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+				String inputLine;
+				StringBuffer content = new StringBuffer();
+				while ((inputLine = in.readLine()) != null) {
+				    content.append(inputLine);
+				}
 
-			    BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-			    String inputLine;
-			    StringBuffer content = new StringBuffer();
-			    while ((inputLine = in.readLine()) != null) {
-				content.append(inputLine);
+				// blob.setPayload(System.arraycopy(blob.getPayload(), ));
+				// Parse de response and get only the byte ranges without
+				// "--THIS_STRING_SEPARATES_5f8a3c40-8e7a-11e9-8e66-112233445566"
+
+				// blob.addByteRange(content.toString().getBytes(), new Pair(0,
+				// content.toString().getBytes().length));
+				System.out.println(content.toString());
+
+				in.close();
+			    } else {
+				// TODO: retry?
 			    }
 
-			    // Wait for answer, update blob
-			    System.out.println(content.toString());
-
-			    in.close();
 			} catch (Exception e) {
 			    e.printStackTrace();
 			}
