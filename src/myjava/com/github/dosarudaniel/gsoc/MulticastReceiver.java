@@ -19,7 +19,7 @@ import java.util.logging.Logger;
 
 import myjava.com.github.dosarudaniel.gsoc.Utils.Pair;
 
-public class MulticastServer {
+public class MulticastReceiver {
     private SingletonLogger singletonLogger = new SingletonLogger();
     private Logger logger = this.singletonLogger.getLogger();
 
@@ -38,7 +38,7 @@ public class MulticastServer {
     // completa a tuturor fragmentelor
     private Map<String, Blob> currentCacheContent; // Blob-uri complete
 
-    public MulticastServer(String ip_address, int portNumber) throws SecurityException {
+    public MulticastReceiver(String ip_address, int portNumber) throws SecurityException {
 	this.ip_address = ip_address;
 	this.portNumber = portNumber;
 	this.inFlight = new ConcurrentHashMap<>();
@@ -59,11 +59,11 @@ public class MulticastServer {
 		    e.printStackTrace();
 		}
 
-		if (MulticastServer.nrPacketsReceived - oldNrPacketsReceived > 0) {
+		if (MulticastReceiver.nrPacketsReceived - oldNrPacketsReceived > 0) {
 		    this.logger2.log(Level.INFO,
-			    "Received " + (MulticastServer.nrPacketsReceived - oldNrPacketsReceived)
-				    + " packets per second. \n" + "Total " + MulticastServer.nrPacketsReceived);
-		    oldNrPacketsReceived = MulticastServer.nrPacketsReceived;
+			    "Received " + (MulticastReceiver.nrPacketsReceived - oldNrPacketsReceived)
+				    + " packets per second. \n" + "Total " + MulticastReceiver.nrPacketsReceived);
+		    oldNrPacketsReceived = MulticastReceiver.nrPacketsReceived;
 		}
 	    }
 	}
