@@ -45,9 +45,9 @@ jar -cfe local.jar \
     ch.alice.o2.ccdb.webserver.LocalEmbeddedTomcat ch/alice/o2/ccdb/webserver/LocalEmbeddedTomcat.class \
     ch javax org alien lazyj lia apmon utils
 
-# package MulticastServer (receiver) in a single JAR
-jar -cfe MulticastServer.jar \
-    test.com.github.dosarudaniel.gsoc.TestMulticastServer test/com/github/dosarudaniel/gsoc/TestMulticastServer.class \
+# package MulticastReceiver in a single JAR
+jar -cfe MulticastReceiver.jar \
+    test.com.github.dosarudaniel.gsoc.TestMulticastReceiver test/com/github/dosarudaniel/gsoc/TestMulticastReceiver.class \
     test myjava
 
 
@@ -59,7 +59,7 @@ jar -cfe Sender.jar \
 # package BasicTests in a single JAR
 jar -cfe BasicTests.jar \
     test.com.github.dosarudaniel.gsoc.BasicTests test/com/github/dosarudaniel/gsoc/BasicTests.class \
-    test myjava 
+    test myjava
 
 
 
