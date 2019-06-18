@@ -13,7 +13,7 @@ build:
 
 runSender:
 	$(J) -cp bin test.com.github.dosarudaniel.gsoc.TestSender $(IP) $(PORT_NUMBER)
-	
+
 runBurstSender:
 	$(J) -cp bin test.com.github.dosarudaniel.gsoc.TestBurstSender $(IP) $(PORT_NUMBER)
 
@@ -34,8 +34,10 @@ clean:
 	rm -rf $(DOC)
 	rm -rf bin/test
 	rm -rf bin/myjava
+	rm -rf bin/ch
 	rm -rf build/classes/ch/*
 	rm -rf build/classes/test/*
 	rm -rf build/classes/myjava/*
 	rm -rf package/*.jar
 	rm -rf package/apache-tomcat*
+	rm -rf package/apmon*
