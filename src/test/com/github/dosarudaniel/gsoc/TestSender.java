@@ -5,7 +5,6 @@
 package test.com.github.dosarudaniel.gsoc;
 
 import java.io.IOException;
-import java.util.Timer;
 
 import myjava.com.github.dosarudaniel.gsoc.Sender;
 
@@ -32,8 +31,8 @@ public class TestSender {
 
 	if (args.length != 7) {
 	    String usage = "Usage:\n";
-	    usage += "\tjava -cp bin test.com.github.dosarudaniel.gsoc.TestSender ";
-	    usage += "<IP> <PORT_NUMBER> ";
+	    usage += "\tjava -cp bin " + TestBurstSender.class.getCanonicalName();
+	    usage += "  <IP> <PORT_NUMBER> ";
 	    usage += "<FRAGMENT_MAX_PAYLOAD_SIZE> ";
 	    usage += "<KEY_LENGTH> <METADATA_LENGTH> <PAYLOAD_LENGTH> <NR_OF_PACKETS_TO_BE_SENT>\n\n";
 	    usage += "Example:\n";
@@ -43,11 +42,6 @@ public class TestSender {
 	    System.out.println(usage);
 	    return;
 	}
-
-	Timer timer = new Timer();
-	// java TestSender <IP> <PORT_NUMBER> <NR_OF_PACKETS_TO_BE_SENT>
-	// <MAX_PAYLOAD_SIZE>
-	// Ex: java TestSender 230.0.0.0 5000 200 1024
 
 	Sender sender = new Sender(args[0], Integer.parseInt(args[1]), Integer.parseInt(args[2]),
 		Integer.parseInt(args[3]), Integer.parseInt(args[4]), Integer.parseInt(args[5]),

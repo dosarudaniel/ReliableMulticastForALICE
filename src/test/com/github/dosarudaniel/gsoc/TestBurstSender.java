@@ -30,8 +30,8 @@ public class TestBurstSender {
     public static void main(String[] args) throws NumberFormatException, SecurityException, IOException {
 	if (args.length != 5) {
 	    String usage = args.length + "Usage:\n";
-	    usage += "\tjava -cp bin test.com.github.dosarudaniel.gsoc.TestBurstSender ";
-	    usage += "<IP>  <PORT_NUMBER>  ";
+	    usage += "\tjava -cp bin " + TestBurstSender.class.getCanonicalName();
+	    usage += "  <IP>  <PORT_NUMBER>  ";
 	    usage += "<MAX_PAYLOAD_SIZE>  <RATE>  <TIME_TO_RUN>";
 	    System.out.println(usage);
 	    return;
