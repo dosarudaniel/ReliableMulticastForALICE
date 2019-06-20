@@ -184,7 +184,7 @@ public class Utils {
      * @throws IOException
      */
     public static byte[] serializeMetadata(Map<String, String> metadataMap) throws IOException {
-	byte[] size_array = ByteBuffer.allocate(Integer.BYTES).putInt(metadataMap.size()).array();
+	byte[] size_array = intToByteArray(metadataMap.size());
 	byte[] key_length_array;
 	byte[] value_length_array;
 
@@ -197,8 +197,8 @@ public class Utils {
 		key = pair.getKey();
 		value = pair.getValue();
 
-		key_length_array = ByteBuffer.allocate(Integer.BYTES).putInt(key.getBytes().length).array();
-		value_length_array = ByteBuffer.allocate(Integer.BYTES).putInt(value.length()).array();
+		key_length_array = intToByteArray(key.getBytes().length);
+		value_length_array = intToByteArray(value.length());
 		out.write(key_length_array);
 		out.write(key.getBytes());
 		out.write(value_length_array);
@@ -238,15 +238,13 @@ public class Utils {
 	int index = Integer.BYTES;
 
 	byte[] size_array = Arrays.copyOfRange(metadata, 0, index);
-	ByteBuffer wrapped = ByteBuffer.wrap(size_array);
-	int size = wrapped.getInt();
+	int size = intFromByteArray(size_array);
 	Map<String, String> metadataMap = new HashMap<>();
 
 	for (int i = 0; i < size; i++) {
 	    key_length_array = Arrays.copyOfRange(metadata, index, index + Integer.BYTES);
 	    index += Integer.BYTES;
-	    wrapped = ByteBuffer.wrap(key_length_array);
-	    keyLength = wrapped.getInt();
+	    keyLength = intFromByteArray(key_length_array);
 
 	    key_array = Arrays.copyOfRange(metadata, index, index + keyLength);
 	    index += keyLength;
@@ -254,8 +252,7 @@ public class Utils {
 
 	    value_length_array = Arrays.copyOfRange(metadata, index, index + Integer.BYTES);
 	    index += Integer.BYTES;
-	    wrapped = ByteBuffer.wrap(value_length_array);
-	    valueLength = wrapped.getInt();
+	    valueLength = intFromByteArray(value_length_array);
 
 	    value_array = Arrays.copyOfRange(metadata, index, index + valueLength);
 	    index += valueLength;
