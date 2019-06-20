@@ -270,7 +270,7 @@ public class Blob {
      */
     public void send(String targetIp, int port) throws NoSuchAlgorithmException, IOException {
 	String maxPayloadSizeEnvValue = System.getenv("MAX_PAYLOAD_SIZE");
-	int maxPayloadSize = 1500;
+	int maxPayloadSize = 1200;
 	try {
 	    maxPayloadSize = Integer.parseInt(maxPayloadSizeEnvValue);
 	} catch (NumberFormatException e) {
