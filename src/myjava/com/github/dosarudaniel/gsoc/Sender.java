@@ -143,53 +143,36 @@ public class Sender {
      */
 
     public void work() {
-	// generate a random length, random content metadata
-	// int randomNumber = ThreadLocalRandom.current().nextInt(MIN_LEN_METADATA,
-	// MAX_LEN_METADATA);
+        String metadata, payload, key;
 
-	String metadata = Utils.randomString(this.metadataLength);
+    	UUID uuid = UUID.randomUUID();
+    	Blob blob = null;
 
-	// generate a random length, random content payload
-	// randomNumber = ThreadLocalRandom.current().nextInt(MIN_LEN_DATA,
-	// MAX_LEN_DATA);
-	String payload = Utils.randomString(this.payloadLength);
+    	this.counterThread.start();
+    //	this.recoveryThread.start();
+    	counterRunning = true;
+    	for (int i = 0; i < this.nrOfPacketsToBeSent; i++) {
+            payload = Utils.randomString(this.payloadLength);
+            metadata = Utils.randomString(this.metadataLength);
+            key = Integer.toString(i) + " " + Utils.randomString(this.keyLength);
+            uuid = UUID.randomUUID();
+    	    nrPacketsSent++;
+    	    String payload_with_number = Integer.toString(i) + " " + payload;
+    	    String metadata_with_number = Integer.toString(i) + " " + metadata;
+    	    // logger.log(Level.INFO, "Sending packet nr " + i);
+    	    try {
+    		blob = new Blob(metadata.getBytes(Charset.forName(Utils.CHARSET)),
+    			payload.getBytes(Charset.forName(Utils.CHARSET)), key, uuid);
+    		// System.out.println(blob);
+    		blobMap.put(key, blob);
+    		blob.send(this.ip_address, this.portNumber);
 
-	// generate a random length, random content key
-	// randomNumber = ThreadLocalRandom.current().nextInt(MIN_LEN_KEY, MAX_LEN_KEY);
-	String key = Utils.randomString(this.keyLength);
+    	    } catch (NoSuchAlgorithmException | IOException e) {
+    		          e.printStackTrace();
+    	    }
 
-//	System.out.println("Blob key = " + key);
-//	System.out.println("Blob metadata = " + metadata);
-//	System.out.println("Blob payload = " + payload);
-	UUID uuid = UUID.randomUUID();
-	Blob blob = null;
-
-	this.counterThread.start();
-//	this.recoveryThread.start();
-	counterRunning = true;
-	for (int i = 0; i < this.nrOfPacketsToBeSent; i++) {
-
-	    nrPacketsSent++;
-//	    String payload_with_number = Integer.toString(i) + " " + payload;
-//	    String metadata_with_number = Integer.toString(i) + " " + metadata;
-	    // logger.log(Level.INFO, "Sending packet nr " + i);
-	    try {
-		blob = new Blob(metadata.getBytes(Charset.forName(Utils.CHARSET)),
-			payload.getBytes(Charset.forName(Utils.CHARSET)), key, uuid);
-		//System.out.println(blob);
-		blobMap.put(key, blob);
-		blob.send(this.ip_address, this.portNumber);
-
-	    } catch (NoSuchAlgorithmException | IOException e) {
-		e.printStackTrace();
-	    }
-	    payload = Utils.randomString(this.payloadLength);
-	    metadata = Utils.randomString(this.metadataLength);
-	    key = Utils.randomString(this.keyLength);
-	    uuid = UUID.randomUUID();
-	}
-
-	counterRunning = false;
+    	}
+	    counterRunning = false;
 	try {
 	    this.counterThread.join();
 	  //  this.recoveryThread.join();
