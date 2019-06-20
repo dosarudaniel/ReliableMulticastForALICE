@@ -347,6 +347,7 @@ public class Blob {
 	// Check byte ranges size:
 	if (this.payloadByteRanges.size() != 1 || this.metadataByteRanges.size() != 1) {
 		System.out.println("case 2: " + this.payloadByteRanges.size() + " " + this.metadataByteRanges.size());
+		System.out.println(this.payloadByteRanges);
 	    return false;
 	}
 	// Check byte ranges metadata:
