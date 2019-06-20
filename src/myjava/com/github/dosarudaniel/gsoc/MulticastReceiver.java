@@ -151,7 +151,7 @@ public class MulticastReceiver {
 
 				// blob.addByteRange(content.toString().getBytes(), new Pair(0,
 				// content.toString().getBytes().length));
-				System.out.println(content.toString());
+				// System.out.println(content.toString());
 
 				in.close();
 			    } else {
@@ -196,7 +196,7 @@ public class MulticastReceiver {
 		    blob.addFragmentedBlob(fragmentedBlob);
 
 		    if (blob.isComplete()) {
-			System.out.println(blob);
+			// System.out.println(blob);
 			nrPacketsReceived++;
 			// Add the complete Blob to the cache
 			this.currentCacheContent.put(blob.getKey(), blob);
