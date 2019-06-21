@@ -8,12 +8,14 @@ import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.URL;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -42,7 +44,7 @@ public class MulticastReceiver {
 	this.ip_address = ip_address;
 	this.portNumber = portNumber;
 	this.inFlight = new ConcurrentHashMap<>();
-	this.currentCacheContent = new HashMap<>();
+	this.currentCacheContent = new ConcurrentHashMap<>();
     }
 
     private Thread counterThread = new Thread(new Runnable() {
@@ -167,56 +169,67 @@ public class MulticastReceiver {
 	}
     });
 
-    public void work() throws IOException {
-	byte[] buf = new byte[Utils.PACKET_MAX_SIZE];
+    public void processPacket(byte[] buf, DatagramPacket packet) throws NoSuchAlgorithmException, IOException {
 	Blob blob = null;
+	FragmentedBlob fragmentedBlob = new FragmentedBlob(buf, packet.getLength());
+	if (this.currentCacheContent != null) {
+	    if (this.currentCacheContent.remove(fragmentedBlob.getKey()) != null) {
+		this.logger.log(Level.INFO,
+			"Blob with key " + fragmentedBlob.getKey() + " was removed from the cache.");
+	    }
+	}
+	blob = this.inFlight.get(fragmentedBlob.getUuid());
+	if (blob == null) {
+	    blob = new Blob(fragmentedBlob.getKey(), fragmentedBlob.getUuid());
+	}
+
+	blob.addFragmentedBlob(fragmentedBlob);
+
+	if (blob.isComplete()) {
+	    // System.out.println(blob);
+	    nrPacketsReceived++;
+	    // Add the complete Blob to the cache
+	    this.currentCacheContent.put(blob.getKey(), blob);
+	    this.logger.log(Level.INFO, "Complete blob with key " + blob.getKey() + " was added to the cache.");
+
+	    // Remove the blob from inFlight
+	    if (this.inFlight.remove(blob.getUuid()) == null) {
+		// If you get a SMALL_BLOB this statement will be logged
+		this.logger.log(Level.WARNING, "Complete blob " + blob.getUuid() + " was not added to the inFlight");
+	    }
+	} else {
+	    // Update inFlight
+	    Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+	    // Update Blob timestamp
+	    blob.setTimestamp(timestamp);
+	    this.inFlight.put(blob.getUuid(), blob);
+	    // logger.log(Level.INFO, "Update inFlight blob " + blob);
+	}
+    }
+
+    public void work() throws IOException {
+	final ExecutorService executorService = Executors
+		.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
 	try (MulticastSocket socket = new MulticastSocket(this.portNumber)) {
 	    InetAddress group = InetAddress.getByName(this.ip_address);
 	    socket.joinGroup(group);
 	    this.counterThread.start();
+
 	    while (true) {
 		try {
+		    final byte[] buf = new byte[Utils.PACKET_MAX_SIZE];
 		    // Receive object
-		    DatagramPacket packet = new DatagramPacket(buf, buf.length);
+		    final DatagramPacket packet = new DatagramPacket(buf, buf.length);
 		    socket.receive(packet);
-
-		    FragmentedBlob fragmentedBlob = new FragmentedBlob(buf, packet.getLength());
-		    if (this.currentCacheContent != null) {
-			if (this.currentCacheContent.remove(fragmentedBlob.getKey()) != null) {
-			    this.logger.log(Level.INFO,
-				    "Blob with key " + fragmentedBlob.getKey() + " was removed from the cache.");
+		    executorService.submit(() -> {
+			try {
+			    processPacket(buf, packet);
+			} catch (NoSuchAlgorithmException | IOException e) {
+			    // TODO Auto-generated catch block
+			    e.printStackTrace();
 			}
-		    }
-		    blob = this.inFlight.get(fragmentedBlob.getUuid());
-		    if (blob == null) {
-			blob = new Blob(fragmentedBlob.getKey(), fragmentedBlob.getUuid());
-		    }
-
-		    blob.addFragmentedBlob(fragmentedBlob);
-
-		    if (blob.isComplete()) {
-			// System.out.println(blob);
-			nrPacketsReceived++;
-			// Add the complete Blob to the cache
-			this.currentCacheContent.put(blob.getKey(), blob);
-			this.logger.log(Level.INFO,
-				"Complete blob with key " + blob.getKey() + " was added to the cache.");
-
-			// Remove the blob from inFlight
-			if (this.inFlight.remove(blob.getUuid()) == null) {
-			    // If you get a SMALL_BLOB this statement will be logged
-			    this.logger.log(Level.WARNING,
-				    "Complete blob " + blob.getUuid() + " was not added to the inFlight");
-			}
-		    } else {
-			// Update inFlight
-			Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-			// Update Blob timestamp
-			blob.setTimestamp(timestamp);
-			this.inFlight.put(blob.getUuid(), blob);
-			// logger.log(Level.INFO, "Update inFlight blob " + blob);
-		    }
+		    });
 		} catch (Exception e) {
 		    // logger.log(Level.WARNING, "Exception thrown");
 		    e.printStackTrace();
