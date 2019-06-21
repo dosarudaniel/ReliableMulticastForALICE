@@ -36,14 +36,14 @@ public class MulticastReceiver {
 
     public static int nrPacketsReceived = 0;
 
-    private Map<UUID, Blob> inFlight; // uuid <-> Blob fragmentat, zona de tranzitie pana la primirea
+    private Map<UUID, Blob> inFlight = new ConcurrentHashMap<>();; // uuid <-> Blob fragmentat, zona de tranzitie pana
+								   // la primirea
     // completa a tuturor fragmentelor
     private Map<String, Blob> currentCacheContent; // Blob-uri complete
 
     public MulticastReceiver(String ip_address, int portNumber) throws SecurityException {
 	this.ip_address = ip_address;
 	this.portNumber = portNumber;
-	this.inFlight = new ConcurrentHashMap<>();
 	this.currentCacheContent = new ConcurrentHashMap<>();
     }
 
@@ -170,24 +170,26 @@ public class MulticastReceiver {
     });
 
     public void processPacket(byte[] buf, DatagramPacket packet) throws NoSuchAlgorithmException, IOException {
-
+	Thread t = Thread.currentThread();
 	FragmentedBlob fragmentedBlob = new FragmentedBlob(buf, packet.getLength());
 	if (this.currentCacheContent != null) {
+	    // Possible double remove actions?
 	    if (this.currentCacheContent.remove(fragmentedBlob.getKey()) != null) {
 		this.logger.log(Level.INFO,
 			"Blob with key " + fragmentedBlob.getKey() + " was removed from the cache.");
 	    }
 	}
-	Blob blob = this.inFlight.get(fragmentedBlob.getUuid());
-	if (blob == null) {
-	    blob = new Blob(fragmentedBlob.getKey(), fragmentedBlob.getUuid());
-	}
+
+	Blob blob = this.inFlight.computeIfAbsent(fragmentedBlob.getUuid(),
+		k -> new Blob(fragmentedBlob.getKey(), fragmentedBlob.getUuid()));
 
 	blob.addFragmentedBlob(fragmentedBlob);
 
+	// System.out.println(t.getId() + " " + blob);
 	if (blob.isComplete()) {
-	    // System.out.println(blob);
-	    nrPacketsReceived++;
+	    synchronized (this) {
+		nrPacketsReceived++;
+	    }
 	    // Add the complete Blob to the cache
 	    this.currentCacheContent.put(blob.getKey(), blob);
 	    this.logger.log(Level.INFO, "Complete blob with key " + blob.getKey() + " was added to the cache.");
@@ -205,6 +207,7 @@ public class MulticastReceiver {
 	    this.inFlight.put(blob.getUuid(), blob);
 	    // logger.log(Level.INFO, "Update inFlight blob " + blob);
 	}
+
     }
 
     public void work() throws IOException {
