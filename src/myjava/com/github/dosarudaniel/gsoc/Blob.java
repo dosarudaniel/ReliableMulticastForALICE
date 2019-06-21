@@ -30,6 +30,8 @@ import myjava.com.github.dosarudaniel.gsoc.Utils.Pair;
 public class Blob {
     SingletonLogger singletonLogger = new SingletonLogger();
     Logger logger = this.singletonLogger.getLogger();
+    private final Object lockPayloadRanges = new Object();
+    private final Object lockMetadataRanges = new Object();
 
     public final static byte METADATA_CODE = 0;
     public final static byte DATA_CODE = 1;
@@ -111,7 +113,7 @@ public class Blob {
      * @throws IOException
      * @throws SecurityException
      */
-    public Blob(String key, UUID uuid) throws SecurityException, IOException {
+    public Blob(String key, UUID uuid) {
 	this.key = key;
 	this.uuid = uuid;
     }
@@ -339,43 +341,47 @@ public class Blob {
      * @throws NoSuchAlgorithmException, IOException
      */
     public boolean isComplete() throws IOException, NoSuchAlgorithmException {
-	Thread t = Thread.currentThread();
+	// Thread t = Thread.currentThread();
 	if (this.metadata == null || this.payload == null) {
-	    System.out.println(t.getId() + " case 1");
+	    // System.out.println(t.getId() + " case 1");
 	    return false;
 	}
 
 	// Check byte ranges size:
 	if (this.payloadByteRanges.size() != 1 || this.metadataByteRanges.size() != 1) {
-	    System.out.println(
-		    t.getId() + " case 2: " + this.payloadByteRanges.size() + " " + this.metadataByteRanges.size());
-	    System.out.println(this.payloadByteRanges);
+//	    System.out.println(
+//		    t.getId() + " case 2: " + this.payloadByteRanges.size() + " " + this.metadataByteRanges.size());
+//	    System.out.println(this.payloadByteRanges);
 	    return false;
 	}
 	// Check byte ranges metadata:
 	if (this.metadataByteRanges.get(0).first != 0
 		|| this.metadataByteRanges.get(0).second != this.metadata.length) {
-	    System.out.println(t.getId() + " case 3");
+	    // System.out.println(t.getId() + " case 3");
 	    return false;
 	}
 
 	// Check byte ranges payload:
 	if (this.payloadByteRanges.get(0).first != 0 || this.payloadByteRanges.get(0).second != this.payload.length) {
-	    System.out.println(t.getId() + " case 4");
+
+//	    System.out.println("-----" + t.getId() + " case 4");
+//	    System.out.println(t.getId() + " " + this.getKey());
+//
+//	    System.out.println(t.getId() + " " + this.payloadByteRanges.get(0));
 	    return false;
 	}
 
 	// Verify checksums
 	if (!Arrays.equals(this.payloadChecksum, Utils.calculateChecksum(this.payload))) {
-	    System.out.println(t.getId() + " case 5");
+	    // System.out.println(t.getId() + " case 5");
 	    throw new IOException("Payload checksum failed");
 	}
 
 	if (!Arrays.equals(this.metadataChecksum, Utils.calculateChecksum(this.metadata))) {
-	    System.out.println(t.getId() + " case 6");
+	    // System.out.println(t.getId() + " case 6");
 	    throw new IOException("Metadata checksum failed");
 	}
-	System.out.println(t.getId() + " case 77");
+	// System.out.println(t.getId() + " case 77");
 	return true;
     }
 
@@ -394,13 +400,12 @@ public class Blob {
 	int fragmentOffset = fragmentedBlob.getFragmentOffset();
 	Pair pair = new Pair(fragmentOffset, fragmentOffset + fragmentedPayload.length);
 	Thread t = Thread.currentThread();
-	System.out.println(t.getId() + " Adds " + pair + " to " + fragmentedBlob.getPachetType());
 	if (fragmentedBlob.getPachetType() == DATA_CODE) {
 	    if (this.payload == null) {
-		System.out.println(t.getId() + " Adds the first payload pair " + pair);
 		this.payload = new byte[fragmentedBlob.getblobDataLength()];
 		this.payloadChecksum = fragmentedBlob.getPayloadChecksum();
 	    }
+
 	    if (this.payload.length != fragmentedBlob.getblobDataLength()) { // Another fragment
 		throw new IOException("payload.length should have size = " + fragmentedBlob.getblobDataLength());
 	    }
@@ -422,25 +427,27 @@ public class Blob {
 	    if (index == -1) { // a new element at the end
 		this.payloadByteRanges.add(pair);
 	    } else {
+		Pair indexPair = this.payloadByteRanges.get(index);
 		// check if element at index i can be merged with another one
-		for (int i = 0; i < this.payloadByteRanges.size() && i != index; i++) {
-		    if (this.payloadByteRanges.get(i).first == this.payloadByteRanges.get(index).second) {
-			this.payloadByteRanges.set(i, new Pair(this.payloadByteRanges.get(index).first,
-				this.payloadByteRanges.get(i).second));
-			this.payloadByteRanges.remove(index);
-			break;
-		    } else if (this.payloadByteRanges.get(i).second == this.payloadByteRanges.get(index).first) {
-			this.payloadByteRanges.set(i, new Pair(this.payloadByteRanges.get(i).first,
-				this.payloadByteRanges.get(index).second));
-			this.payloadByteRanges.remove(index);
-			break;
+		for (int i = 0; i < this.payloadByteRanges.size(); i++) {
+		    if (i != index) {
+			if (this.payloadByteRanges.get(i).first == indexPair.second) {
+			    this.payloadByteRanges.set(i,
+				    new Pair(indexPair.first, this.payloadByteRanges.get(i).second));
+			    this.payloadByteRanges.remove(index);
+			    break;
+			} else if (this.payloadByteRanges.get(i).second == indexPair.first) {
+			    this.payloadByteRanges.set(i,
+				    new Pair(this.payloadByteRanges.get(i).first, indexPair.second));
+			    this.payloadByteRanges.remove(index);
+			    break;
+			}
 		    }
 		}
 	    }
 
 	} else if (fragmentedBlob.getPachetType() == METADATA_CODE) {
 	    if (this.metadata == null) {
-		System.out.println(t.getId() + " Adds the first metadata pair " + pair);
 		this.metadata = new byte[fragmentedBlob.getblobDataLength()];
 		this.metadataChecksum = fragmentedBlob.getPayloadChecksum(); // metadata == payload
 	    }
