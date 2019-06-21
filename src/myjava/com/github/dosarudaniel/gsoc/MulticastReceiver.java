@@ -170,7 +170,7 @@ public class MulticastReceiver {
     });
 
     public void processPacket(byte[] buf, DatagramPacket packet) throws NoSuchAlgorithmException, IOException {
-	Blob blob = null;
+
 	FragmentedBlob fragmentedBlob = new FragmentedBlob(buf, packet.getLength());
 	if (this.currentCacheContent != null) {
 	    if (this.currentCacheContent.remove(fragmentedBlob.getKey()) != null) {
@@ -178,7 +178,7 @@ public class MulticastReceiver {
 			"Blob with key " + fragmentedBlob.getKey() + " was removed from the cache.");
 	    }
 	}
-	blob = this.inFlight.get(fragmentedBlob.getUuid());
+	Blob blob = this.inFlight.get(fragmentedBlob.getUuid());
 	if (blob == null) {
 	    blob = new Blob(fragmentedBlob.getKey(), fragmentedBlob.getUuid());
 	}
@@ -226,7 +226,6 @@ public class MulticastReceiver {
 			try {
 			    processPacket(buf, packet);
 			} catch (NoSuchAlgorithmException | IOException e) {
-			    // TODO Auto-generated catch block
 			    e.printStackTrace();
 			}
 		    });

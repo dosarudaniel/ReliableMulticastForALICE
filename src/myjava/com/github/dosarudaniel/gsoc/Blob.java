@@ -339,41 +339,43 @@ public class Blob {
      * @throws NoSuchAlgorithmException, IOException
      */
     public boolean isComplete() throws IOException, NoSuchAlgorithmException {
+	Thread t = Thread.currentThread();
 	if (this.metadata == null || this.payload == null) {
-	    System.out.println("case 1");
+	    System.out.println(t.getId() + " case 1");
 	    return false;
 	}
 
 	// Check byte ranges size:
 	if (this.payloadByteRanges.size() != 1 || this.metadataByteRanges.size() != 1) {
-	    System.out.println("case 2: " + this.payloadByteRanges.size() + " " + this.metadataByteRanges.size());
+	    System.out.println(
+		    t.getId() + " case 2: " + this.payloadByteRanges.size() + " " + this.metadataByteRanges.size());
 	    System.out.println(this.payloadByteRanges);
 	    return false;
 	}
 	// Check byte ranges metadata:
 	if (this.metadataByteRanges.get(0).first != 0
 		|| this.metadataByteRanges.get(0).second != this.metadata.length) {
-	    System.out.println("case 3");
+	    System.out.println(t.getId() + " case 3");
 	    return false;
 	}
 
 	// Check byte ranges payload:
 	if (this.payloadByteRanges.get(0).first != 0 || this.payloadByteRanges.get(0).second != this.payload.length) {
-	    System.out.println("case 4");
+	    System.out.println(t.getId() + " case 4");
 	    return false;
 	}
 
 	// Verify checksums
 	if (!Arrays.equals(this.payloadChecksum, Utils.calculateChecksum(this.payload))) {
-	    System.out.println("case 5");
+	    System.out.println(t.getId() + " case 5");
 	    throw new IOException("Payload checksum failed");
 	}
 
 	if (!Arrays.equals(this.metadataChecksum, Utils.calculateChecksum(this.metadata))) {
-	    System.out.println("case 6");
+	    System.out.println(t.getId() + " case 6");
 	    throw new IOException("Metadata checksum failed");
 	}
-	System.out.println("case 77");
+	System.out.println(t.getId() + " case 77");
 	return true;
     }
 
@@ -391,9 +393,11 @@ public class Blob {
 	byte[] fragmentedPayload = fragmentedBlob.getPayload();
 	int fragmentOffset = fragmentedBlob.getFragmentOffset();
 	Pair pair = new Pair(fragmentOffset, fragmentOffset + fragmentedPayload.length);
-
+	Thread t = Thread.currentThread();
+	System.out.println(t.getId() + " Adds " + pair + " to " + fragmentedBlob.getPachetType());
 	if (fragmentedBlob.getPachetType() == DATA_CODE) {
 	    if (this.payload == null) {
+		System.out.println(t.getId() + " Adds the first payload pair " + pair);
 		this.payload = new byte[fragmentedBlob.getblobDataLength()];
 		this.payloadChecksum = fragmentedBlob.getPayloadChecksum();
 	    }
@@ -436,6 +440,7 @@ public class Blob {
 
 	} else if (fragmentedBlob.getPachetType() == METADATA_CODE) {
 	    if (this.metadata == null) {
+		System.out.println(t.getId() + " Adds the first metadata pair " + pair);
 		this.metadata = new byte[fragmentedBlob.getblobDataLength()];
 		this.metadataChecksum = fragmentedBlob.getPayloadChecksum(); // metadata == payload
 	    }
