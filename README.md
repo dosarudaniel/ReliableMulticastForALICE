@@ -15,11 +15,23 @@ The FragmentedBlob class stores partial content from a Blob: either metadata, ei
 Requirements:  
 #todo  
 
-Compilation:  (Create .jar files)  
+## Compile:  
+(Create .jar files)  
  `cd package`  
  `./package.sh`  
 
-Documentation:    
-  `make doc`    
+Clean: (removes .jar files too)   
+  `make clean`  
 
-Running:  
+Generate documentation:    
+  `make doc`      
+
+## Running     
+* Increase the receiver buffer size:    
+`sudo ./kernel_configuration.sh`  
+#### the receiver:     
+`./runReceiver`  
+
+#### the sender:
+`export MAX_PAYLOAD_SIZE=1400`  
+`./runSender.sh`   
