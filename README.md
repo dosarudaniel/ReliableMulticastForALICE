@@ -12,8 +12,16 @@ A Blob object has two important fields that store useful information: metadata a
 Because a typical Blob size is around 2 MB (which is far more than the maximum payload size of UDP packets - 64KB) I had to use a fragmentation and reassembling mechanism. The FragmentedBlob class stores partial content from a Blob: either metadata, either data, depending on the Packet Type field. This object si serialized using the following structure:
 
 
-
-
+![alt text](https://github.com/dosarudaniel/ReliableMulticastForALICE/blob/master/FragmentedBlobStructure.PNG)
+`FragmentOffset = start index of this fragment payload in the Blob`    
+`PacketType(Flags) = Indicates what kind of payload does this fragment carry`    
+`UUID = Universally Unique IDentifier, also used as ETag in the REST API`    
+`BlobP ayloadLength = the total length of the Blob’s payload or Blob’s metadata `   
+`KeyLength = the length of the key associated with the current Blob `   
+`BlobP ayloadchecksum = the checksum of the payload or metadata`   
+`Key = the key content with size x`    
+`Payload = the Blob’s (partial) metadata or payload with size y`
+    
 Requirements:  
 #todo  
 
