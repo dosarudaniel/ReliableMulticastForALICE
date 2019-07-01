@@ -29,6 +29,9 @@ Generate documentation:
 ## Running     
 Increase the receiver buffer size:    
 `sudo ./kernel_configuration.sh`  
+`cd package`   
+(Compile)   
+   
 * #### the receiver:     
 `./runReceiver`  
 
