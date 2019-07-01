@@ -5,12 +5,11 @@
 
 
 
-This repository contains a pair of Java programs that send and respectively receive multicast messages. The messages are Java objects of the class Blob.
-Blob class contain a random length, random content String (payload) and a separate field for a checksum of this String.
-
-The sender generates and send new objects at fixed time intervals (10s) and at the same time print the current time and message content on the screen.
-
-The receiver instances also print on the screen the current time and the received message.
+A pair of java classes were developed for this project: the Sender and the MulticastReceiver.   
+These entities are using the Blob class to store a complete data object and FragmentedBlob class for a fragmented data object. 
+  
+A Blob object has two important fields that store useful information: metadata and payload.   
+The FragmentedBlob class stores partial content from a Blob: either metadata, either data, depending on the Packet Type field.   
 
 
 Requirements:  
