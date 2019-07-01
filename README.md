@@ -27,11 +27,11 @@ Generate documentation:
   `make doc`      
 
 ## Running     
-* Increase the receiver buffer size:    
+Increase the receiver buffer size:    
 `sudo ./kernel_configuration.sh`  
-#### the receiver:     
+* #### the receiver:     
 `./runReceiver`  
 
-#### the sender:
+*  #### the sender:
 `export MAX_PAYLOAD_SIZE=1400`  
 `./runSender.sh`   
