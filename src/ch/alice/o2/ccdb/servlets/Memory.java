@@ -44,10 +44,10 @@ import sun.security.util.IOUtils;
  */
 @WebServlet("/*")
 @MultipartConfig
-public class Local extends HttpServlet {
+public class Memory extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
-    private static Logger logger = Logger.getLogger(Local.class.getCanonicalName());
+    private static Logger logger = Logger.getLogger(Memory.class.getCanonicalName());
 
     /**
      * The base path of the file repository
@@ -576,7 +576,8 @@ public class Local extends HttpServlet {
     }
 
     private static LocalObjectWithVersion getMatchingObject(final RequestParser parser) {
-	final File fBaseDir = new File(Local.basePath + "/" + parser.path);
+
+	final File fBaseDir = new File(Memory.basePath + "/" + parser.path);
 
 	if (parser.startTime > 0 && parser.uuidConstraint != null) {
 	    // is this the full path to a file? if so then download it
