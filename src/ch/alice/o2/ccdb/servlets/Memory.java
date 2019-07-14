@@ -575,7 +575,7 @@ public class Memory extends HttpServlet {
 	response.sendError(HttpServletResponse.SC_NO_CONTENT);
     }
 
-    private static LocalObjectWithVersion getMatchingObject(final RequestParser parser) {
+    private static MemoryObjectWithVersion getMatchingObject(final RequestParser parser) {
 
 	final File fBaseDir = new File(Memory.basePath + "/" + parser.path);
 
@@ -585,13 +585,13 @@ public class Memory extends HttpServlet {
 	    final File toDownload = new File(fBaseDir, parser.startTime + "/" + parser.uuidConstraint.toString());
 
 	    if (toDownload.exists() && toDownload.isFile())
-		return new LocalObjectWithVersion(parser.startTime, toDownload);
+		return new MemoryObjectWithVersion(parser.startTime, toDownload);
 
 	    // a particular object was requested but it doesn't exist
 	    return null;
 	}
 
-	LocalObjectWithVersion mostRecent = null;
+	MemoryObjectWithVersion mostRecent = null;
 
 	final File[] baseDirListing = fBaseDir.listFiles((f) -> f.isDirectory());
 
@@ -611,7 +611,7 @@ public class Memory extends HttpServlet {
 		    continue;
 
 		for (final File f : intervalFileList) {
-		    final LocalObjectWithVersion owv = new LocalObjectWithVersion(lValidityStart, f);
+		    final MemoryObjectWithVersion owv = new MemoryObjectWithVersion(lValidityStart, f);
 
 		    if (owv.covers(parser.startTime) && (parser.notAfter <= 0 || owv.getCreateTime() <= parser.notAfter)
 			    && owv.matches(parser.flagConstraints))
