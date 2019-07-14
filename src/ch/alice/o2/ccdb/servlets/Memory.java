@@ -149,7 +149,7 @@ public class Memory extends HttpServlet {
 
 	// aici trebuie modificat
 
-	final LocalObjectWithVersion matchingObject = getMatchingObject(parser);
+	final MemoryObjectWithVersion matchingObject = getMatchingObject(parser);
 
 	if (matchingObject == null) {
 	    response.sendError(HttpServletResponse.SC_NOT_FOUND, "No matching objects found");
@@ -189,7 +189,7 @@ public class Memory extends HttpServlet {
 		getURLPrefix(request) + matchingObject.referenceFile.getPath().substring(basePath.length()));
     }
 
-    private static void setHeaders(final LocalObjectWithVersion obj, final HttpServletResponse response) {
+    private static void setHeaders(final MemoryObjectWithVersion obj, final HttpServletResponse response) {
 	response.setDateHeader("Date", System.currentTimeMillis());
 	response.setHeader("Valid-Until", String.valueOf(obj.getEndTime()));
 	response.setHeader("Valid-From", String.valueOf(obj.startTime));
@@ -203,7 +203,7 @@ public class Memory extends HttpServlet {
 	}
     }
 
-    private static void setMD5Header(final LocalObjectWithVersion obj, final HttpServletResponse response) {
+    private static void setMD5Header(final MemoryObjectWithVersion obj, final HttpServletResponse response) {
 	String md5 = obj.getProperty("Content-MD5");
 
 	try {
@@ -217,7 +217,7 @@ public class Memory extends HttpServlet {
 	    response.setHeader("Content-MD5", md5);
     }
 
-    private static void download(final LocalObjectWithVersion obj, final HttpServletRequest request,
+    private static void download(final MemoryObjectWithVersion obj, final HttpServletRequest request,
 	    final HttpServletResponse response) throws IOException {
 	final String range = request.getHeader("Range");
 
@@ -485,7 +485,7 @@ public class Memory extends HttpServlet {
 	    IOUtils.copy(part.getInputStream(), fos);
 	}
 
-	final LocalObjectWithVersion newObject = new LocalObjectWithVersion(parser.startTime, targetFile);
+	final MemoryObjectWithVersion newObject = new MemoryObjectWithVersion(parser.startTime, targetFile);
 
 	for (final Map.Entry<String, String> constraint : parser.flagConstraints.entrySet())
 	    newObject.setProperty(constraint.getKey(), constraint.getValue());
@@ -520,7 +520,7 @@ public class Memory extends HttpServlet {
 	    return;
 	}
 
-	final LocalObjectWithVersion matchingObject = getMatchingObject(parser);
+	final MemoryObjectWithVersion matchingObject = getMatchingObject(parser);
 
 	if (matchingObject == null) {
 	    response.sendError(HttpServletResponse.SC_NOT_FOUND, "No matching objects found");
@@ -557,7 +557,7 @@ public class Memory extends HttpServlet {
 	    return;
 	}
 
-	final LocalObjectWithVersion matchingObject = getMatchingObject(parser);
+	final MemoryObjectWithVersion matchingObject = getMatchingObject(parser);
 
 	if (matchingObject == null) {
 	    response.sendError(HttpServletResponse.SC_NOT_FOUND, "No matching objects found");
@@ -638,7 +638,7 @@ public class Memory extends HttpServlet {
 	if (!parser.ok)
 	    return;
 
-	final LocalObjectWithVersion matchingObject = getMatchingObject(parser);
+	final MemoryObjectWithVersion matchingObject = getMatchingObject(parser);
 
 	if (matchingObject == null) {
 	    response.sendError(HttpServletResponse.SC_NOT_FOUND, "No matching objects found");
