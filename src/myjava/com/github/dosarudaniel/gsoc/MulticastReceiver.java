@@ -39,7 +39,7 @@ public class MulticastReceiver {
     private Map<UUID, Blob> inFlight = new ConcurrentHashMap<>();; // uuid <-> Blob fragmentat, zona de tranzitie pana
 								   // la primirea
     // completa a tuturor fragmentelor
-    private Map<String, Blob> currentCacheContent; // Blob-uri complete
+    public static Map<String, Blob> currentCacheContent; // Blob-uri complete
 
     public MulticastReceiver(String ip_address, int portNumber) throws SecurityException {
 	this.ip_address = ip_address;
