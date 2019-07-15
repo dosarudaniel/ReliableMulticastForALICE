@@ -32,6 +32,7 @@ import javax.servlet.http.Part;
 import ch.alice.o2.ccdb.Options;
 import ch.alice.o2.ccdb.RequestParser;
 import ch.alice.o2.ccdb.UUIDTools;
+import myjava.com.github.dosarudaniel.gsoc.MulticastReceiver;
 import sun.security.util.IOUtils;
 
 /**
@@ -577,15 +578,20 @@ public class Memory extends HttpServlet {
 
     private static MemoryObjectWithVersion getMatchingObject(final RequestParser parser) {
 
-	final File fBaseDir = new File(Memory.basePath + "/" + parser.path);
+	// final File fBaseDir = new File(Memory.basePath + "/" + parser.path);
 
 	if (parser.startTime > 0 && parser.uuidConstraint != null) {
 	    // is this the full path to a file? if so then download it
 
-	    final File toDownload = new File(fBaseDir, parser.startTime + "/" + parser.uuidConstraint.toString());
+	    // final File toDownload = new File(fBaseDir, parser.startTime + "/" +
+	    // parser.uuidConstraint.toString());
 
-	    if (toDownload.exists() && toDownload.isFile())
-		return new MemoryObjectWithVersion(parser.startTime, toDownload);
+	    String key = parser.path;
+
+	    Blob blob = MulticastReceiver.currentCacheContent.get(key); // TODO;
+	    if (blob != null) {
+		return new MemoryObjectWithVersion(parser.startTime, null, blob);
+	    }
 
 	    // a particular object was requested but it doesn't exist
 	    return null;
