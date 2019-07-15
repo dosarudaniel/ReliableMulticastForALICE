@@ -11,5 +11,4 @@ public class MemoryObjectWithVersion extends LocalObjectWithVersion {
 	super(startTime, entry);
 	this.blob = blob;
     }
-
 }
