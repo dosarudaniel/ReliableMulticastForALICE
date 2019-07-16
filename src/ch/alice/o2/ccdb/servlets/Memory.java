@@ -483,7 +483,7 @@ public class Memory extends HttpServlet {
 	    IOUtils.copy(part.getInputStream(), fos);
 	}
 
-	final MemoryObjectWithVersion newObject = new MemoryObjectWithVersion(parser.startTime, targetFile);
+	final MemoryObjectWithVersion newObject = new MemoryObjectWithVersion(parser.startTime, targetFile, null); // TODO
 
 	for (final Map.Entry<String, String> constraint : parser.flagConstraints.entrySet())
 	    newObject.setProperty(constraint.getKey(), constraint.getValue());

@@ -32,7 +32,7 @@ import javax.servlet.http.Part;
 import ch.alice.o2.ccdb.Options;
 import ch.alice.o2.ccdb.RequestParser;
 import ch.alice.o2.ccdb.UUIDTools;
-import sun.security.util.IOUtils;
+import org.apache.tomcat.util.http.fileupload.IOUtils;
 
 /**
  * Prototype implementation of QC repository. This simple implementation is

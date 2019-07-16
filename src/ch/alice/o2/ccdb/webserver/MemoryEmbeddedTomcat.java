@@ -3,6 +3,7 @@ package ch.alice.o2.ccdb.webserver;
 import javax.servlet.ServletException;
 
 import org.apache.catalina.LifecycleException;
+import org.apache.catalina.Wrapper;
 
 import ch.alice.o2.ccdb.servlets.Memory;
 import ch.alice.o2.ccdb.servlets.MemoryBrowse;
