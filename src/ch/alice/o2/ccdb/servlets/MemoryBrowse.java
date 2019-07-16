@@ -23,6 +23,8 @@ import ch.alice.o2.ccdb.servlets.formatters.JSONFormatter;
 import ch.alice.o2.ccdb.servlets.formatters.SQLFormatter;
 import ch.alice.o2.ccdb.servlets.formatters.TextFormatter;
 import ch.alice.o2.ccdb.servlets.formatters.XMLFormatter;
+import myjava.com.github.dosarudaniel.gsoc.Blob;
+import myjava.com.github.dosarudaniel.gsoc.MulticastReceiver;
 
 /**
  * SQL-backed implementation of CCDB. This servlet implements browsing of
@@ -192,10 +194,12 @@ public class MemoryBrowse extends HttpServlet {
 	    if (parser.startTime > 0 && parser.uuidConstraint != null) {
 		// is this the full path to a file? if so then download it
 
-		final File toDownload = new File(fBaseDir, parser.startTime + "/" + parser.uuidConstraint.toString());
+		String key = parser.path;
 
-		if (toDownload.exists() && toDownload.isFile())
-		    return Arrays.asList(new MemoryObjectWithVersion(parser.startTime, toDownload));
+		Blob blob = MulticastReceiver.currentCacheContent.get(key); // TODO;
+		if (blob != null) {
+		    return Arrays.asList(new MemoryObjectWithVersion(parser.startTime, null, blob));
+		}
 
 		// a particular object was requested but it doesn't exist
 		return null;
