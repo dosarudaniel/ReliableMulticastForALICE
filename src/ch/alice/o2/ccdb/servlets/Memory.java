@@ -3,10 +3,8 @@ package ch.alice.o2.ccdb.servlets;
 import static ch.alice.o2.ccdb.servlets.ServletHelper.printUsage;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.net.InetAddress;
@@ -29,12 +27,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 
+import org.apache.tomcat.util.http.fileupload.IOUtils;
+
 import ch.alice.o2.ccdb.Options;
 import ch.alice.o2.ccdb.RequestParser;
 import ch.alice.o2.ccdb.UUIDTools;
 import myjava.com.github.dosarudaniel.gsoc.Blob;
 import myjava.com.github.dosarudaniel.gsoc.MulticastReceiver;
-import sun.security.util.IOUtils;
 
 /**
  * Prototype implementation of QC repository. This simple implementation is
@@ -232,9 +231,8 @@ public class Memory extends HttpServlet {
 	    response.setHeader("Content-Type", obj.getProperty("Content-Type", "application/octet-stream"));
 	    setMD5Header(obj, response);
 
-	    try (InputStream is = new FileInputStream(obj.referenceFile);
-		    OutputStream os = response.getOutputStream()) {
-		IOUtils.copy(is, os);
+	    try (OutputStream os = response.getOutputStream()) {
+		os.write(obj.getBlob().getPayload(), 0, obj.getBlob().getPayload().length);
 	    }
 
 	    return;
@@ -242,10 +240,10 @@ public class Memory extends HttpServlet {
 
 	// a Range request was made, serve only the requested bytes
 
-	final long fileSize = obj.referenceFile.length();
+	final long payloadSize = obj.getBlob().getPayload().length;
 
 	if (!range.startsWith("bytes=")) {
-	    response.setHeader("Content-Range", "bytes */" + fileSize);
+	    response.setHeader("Content-Range", "bytes */" + payloadSize);
 	    response.sendError(HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE);
 	    return;
 	}
@@ -265,8 +263,8 @@ public class Memory extends HttpServlet {
 	    if (idx > 0) {
 		start = Long.parseLong(s.substring(0, idx));
 
-		if (start >= fileSize) {
-		    response.setHeader("Content-Range", "bytes */" + fileSize);
+		if (start >= payloadSize) {
+		    response.setHeader("Content-Range", "bytes */" + payloadSize);
 		    response.sendError(HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE,
 			    "You requested an invalid range, starting beyond the end of the file (" + start + ")");
 		    return;
@@ -275,17 +273,17 @@ public class Memory extends HttpServlet {
 		if (idx < (s.length() - 1)) {
 		    end = Long.parseLong(s.substring(idx + 1));
 
-		    if (end >= fileSize) {
-			response.setHeader("Content-Range", "bytes */" + fileSize);
+		    if (end >= payloadSize) {
+			response.setHeader("Content-Range", "bytes */" + payloadSize);
 			response.sendError(HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE,
 				"You requested bytes beyond what the file contains (" + end + ")");
 			return;
 		    }
 		} else
-		    end = fileSize - 1;
+		    end = payloadSize - 1;
 
 		if (start > end) {
-		    response.setHeader("Content-Range", "bytes */" + fileSize);
+		    response.setHeader("Content-Range", "bytes */" + payloadSize);
 		    response.sendError(HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE,
 			    "The requested range is wrong, the second value (" + end
 				    + ") should be larger than the first (" + start + ")");
@@ -295,35 +293,35 @@ public class Memory extends HttpServlet {
 		// a single negative value means 'last N bytes'
 		start = Long.parseLong(s.substring(idx + 1));
 
-		end = fileSize - 1;
+		end = payloadSize - 1;
 
 		start = end - start + 1;
 
 		if (start < 0) {
-		    response.setHeader("Content-Range", "bytes */" + fileSize);
+		    response.setHeader("Content-Range", "bytes */" + payloadSize);
 		    response.sendError(HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE,
 			    "You requested more last bytes (" + s.substring(idx + 1)
-				    + ") from the end of the file than the file actually has (" + fileSize + ")");
+				    + ") from the end of the file than the file actually has (" + payloadSize + ")");
 		    start = 0;
 		}
 	    } else {
 		start = Long.parseLong(s);
 
-		if (start >= fileSize) {
-		    response.setHeader("Content-Range", "bytes */" + fileSize);
+		if (start >= payloadSize) {
+		    response.setHeader("Content-Range", "bytes */" + payloadSize);
 		    response.sendError(HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE,
 			    "You requested an invalid range, starting beyond the end of the file (" + start + ")");
 		    return;
 		}
 
-		end = fileSize - 1;
+		end = payloadSize - 1;
 	    }
 
 	    requestedRanges.add(new AbstractMap.SimpleEntry<>(Long.valueOf(start), Long.valueOf(end)));
 	}
 
 	if (requestedRanges.size() == 0) {
-	    response.setHeader("Content-Range", "bytes */" + fileSize);
+	    response.setHeader("Content-Range", "bytes */" + payloadSize);
 	    response.sendError(HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE);
 	    return;
 	}
@@ -339,14 +337,13 @@ public class Memory extends HttpServlet {
 	    final long toCopy = last - first + 1;
 
 	    response.setContentLengthLong(toCopy);
-	    response.setHeader("Content-Range", "bytes " + first + "-" + last + "/" + fileSize);
+	    response.setHeader("Content-Range", "bytes " + first + "-" + last + "/" + payloadSize);
 	    response.setHeader("Content-Disposition", "inline;filename=\"" + obj.getOriginalName() + "\"");
 	    response.setHeader("Content-Type", obj.getProperty("Content-Type", "application/octet-stream"));
 
-	    try (RandomAccessFile input = new RandomAccessFile(obj.referenceFile, "r");
-		    OutputStream output = response.getOutputStream()) {
-		input.seek(first);
-		copy(input, output, toCopy);
+	    try (OutputStream os = response.getOutputStream()) {
+		// TODO: Check if cast from long to int would be a problem
+		os.write(obj.getBlob().getPayload(), (int) first, (int) toCopy);
 	    }
 
 	    return;
@@ -375,7 +372,7 @@ public class Memory extends HttpServlet {
 	    subHeader.append("\nContent-Type: ").append(obj.getProperty("Content-Type", "application/octet-stream"))
 		    .append('\n');
 	    subHeader.append("Content-Range: bytes ").append(first).append("-").append(last).append("/")
-		    .append(fileSize).append("\n\n");
+		    .append(payloadSize).append("\n\n");
 
 	    final String sh = subHeader.toString();
 
@@ -390,8 +387,7 @@ public class Memory extends HttpServlet {
 
 	response.setContentLengthLong(contentLength);
 
-	try (RandomAccessFile input = new RandomAccessFile(obj.referenceFile, "r");
-		OutputStream output = response.getOutputStream()) {
+	try (OutputStream os = response.getOutputStream()) {
 	    final Iterator<Map.Entry<Long, Long>> itRange = requestedRanges.iterator();
 	    final Iterator<String> itSubHeader = subHeaders.iterator();
 
@@ -404,14 +400,14 @@ public class Memory extends HttpServlet {
 
 		final long toCopy = last - first + 1;
 
-		output.write(subHeader.getBytes());
+		os.write(subHeader.getBytes());
 
-		input.seek(first);
-		copy(input, output, toCopy);
+		// TODO: Check if cast from long to int would be a problem
+		os.write(obj.getBlob().getPayload(), (int) first, (int) toCopy);
 	    }
-
-	    output.write(documentFooter.getBytes());
+	    os.write(documentFooter.getBytes());
 	}
+
     }
 
     private static void copy(final RandomAccessFile input, final OutputStream output, final long count)
@@ -579,22 +575,21 @@ public class Memory extends HttpServlet {
 
     private static MemoryObjectWithVersion getMatchingObject(final RequestParser parser) {
 
-	if (parser.startTime > 0 && parser.uuidConstraint != null) {
-	    // is this the full path to a file? if so then download it
+	String key = parser.path;
 
-	    // final File toDownload = new File(fBaseDir, parser.startTime + "/" +
-	    // parser.uuidConstraint.toString());
+	Blob blob = MulticastReceiver.currentCacheContent.get(key); // TODO - check if parser.path is the key
 
-	    String key = parser.path;
-
-	    Blob blob = MulticastReceiver.currentCacheContent.get(key); // TODO;
-	    if (blob != null) {
-		return new MemoryObjectWithVersion(parser.startTime, null, blob);
+	if (blob != null) {
+	    if (parser.uuidConstraint != null) {
+		if (blob.getUuid().equals(parser.uuidConstraint)) {
+		    return new MemoryObjectWithVersion(parser.startTime, null, blob);
+		}
 	    }
-
-	    // a particular object was requested but it doesn't exist
-	    return null;
 	}
+
+	// a particular object was requested but it doesn't exist
+	return null;
+
     }
 
     @Override
