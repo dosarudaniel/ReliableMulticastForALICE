@@ -25,6 +25,7 @@ import ch.alice.o2.ccdb.servlets.formatters.TextFormatter;
 import ch.alice.o2.ccdb.servlets.formatters.XMLFormatter;
 import myjava.com.github.dosarudaniel.gsoc.Blob;
 import myjava.com.github.dosarudaniel.gsoc.MulticastReceiver;
+import lazyj.Format;
 
 /**
  * SQL-backed implementation of CCDB. This servlet implements browsing of
@@ -237,7 +238,8 @@ public class MemoryBrowse extends HttpServlet {
 		    continue;
 
 		for (final File f : intervalFileList) {
-		    final MemoryObjectWithVersion owv = new MemoryObjectWithVersion(lValidityStart, f);
+		    Blob blob = MulticastReceiver.currentCacheContent.get("abc"); // TODO:
+		    final MemoryObjectWithVersion owv = new MemoryObjectWithVersion(lValidityStart, null, blob);
 
 		    if ((!parser.startTimeSet || owv.covers(parser.startTime))
 			    && (parser.notAfter <= 0 || owv.getCreateTime() <= parser.notAfter)

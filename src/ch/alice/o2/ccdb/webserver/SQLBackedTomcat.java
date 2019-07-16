@@ -18,40 +18,38 @@ import ch.alice.o2.ccdb.servlets.SQLTruncate;
  */
 public class SQLBackedTomcat {
 
-	/**
-	 * @param args
-	 * @throws ServletException
-	 */
-	public static void main(final String[] args) throws ServletException {
-		EmbeddedTomcat tomcat;
+    /**
+     * @param args
+     * @throws ServletException
+     */
+    public static void main(final String[] args) throws ServletException {
+	EmbeddedTomcat tomcat;
 
-		try {
-			tomcat = new EmbeddedTomcat("*");
-		}
-		catch (final ServletException se) {
-			System.err.println("Cannot create the Tomcat server: " + se.getMessage());
-			return;
-		}
-
-		tomcat.addServlet(SQLDownload.class.getName(), "/download/*");
-		final Wrapper browser = tomcat.addServlet(SQLBrowse.class.getName(), "/browse/*");
-		browser.addMapping("/latest/*");
-		tomcat.addServlet(SQLBacked.class.getName(), "/*");
-
-		tomcat.addServlet(SQLTruncate.class.getName(), "/truncate/*");
-
-		// Start the server
-		try {
-			tomcat.start();
-		}
-		catch (final LifecycleException le) {
-			System.err.println("Cannot start the Tomcat server: " + le.getMessage());
-			return;
-		}
-
-		if (tomcat.debugLevel >= 1)
-			System.err.println("Ready to accept HTTP calls on " + tomcat.address + ":" + tomcat.getPort());
-
-		tomcat.blockWaiting();
+	try {
+	    tomcat = new EmbeddedTomcat("*");
+	} catch (final ServletException se) {
+	    System.err.println("Cannot create the Tomcat server: " + se.getMessage());
+	    return;
 	}
+
+	tomcat.addServlet(SQLDownload.class.getName(), "/download/*");
+	final Wrapper browser = tomcat.addServlet(SQLBrowse.class.getName(), "/browse/*");
+	browser.addMapping("/latest/*");
+	tomcat.addServlet(SQLBacked.class.getName(), "/*");
+
+	tomcat.addServlet(SQLTruncate.class.getName(), "/truncate/*");
+
+	// Start the server
+	try {
+	    tomcat.start();
+	} catch (final LifecycleException le) {
+	    System.err.println("Cannot start the Tomcat server: " + le.getMessage());
+	    return;
+	}
+
+	if (tomcat.debugLevel >= 1)
+	    System.err.println("Ready to accept HTTP calls on " + tomcat.address + ":" + tomcat.getPort());
+
+	tomcat.blockWaiting();
+    }
 }

@@ -59,38 +59,40 @@ public class Sender {
     public static int nrPacketsSent = 0;
     public static boolean counterRunning = false;
 
-  //   public Thread recoveryThread = new Thread(new Runnable() {
-  //
-	// @Override
-	// public void run() {
-	//     EmbeddedTomcat tomcat;
-  //
-	//     try {
-	// 	tomcat = new EmbeddedTomcat("localhost");
-	//     } catch (final ServletException se) {
-	// 	System.err.println("Cannot create the Tomcat server: " + se.getMessage());
-	// 	return;
-	//     }
-  //
-	//     final Wrapper browser = tomcat.addServlet(LocalBrowse.class.getName(), "/browse/*");
-	//     browser.addMapping("/latest/*");
-	//     tomcat.addServlet(Local.class.getName(), "/*");
-  //
-	//     // Start the server
-	//     try {
-	// 	tomcat.start();
-	//     } catch (final LifecycleException le) {
-	// 	System.err.println("Cannot start the Tomcat server: " + le.getMessage());
-	// 	return;
-	//     }
-  //
-	//     if (tomcat.debugLevel >= 1)
-	// 	System.err.println("Ready to accept HTTP calls on " + tomcat.address + ":" + tomcat.getPort()
-	// 		+ ", file repository base path is: " + Local.basePath);
-  //
-	//     tomcat.blockWaiting();
-	// }
-  //   });
+    // public Thread recoveryThread = new Thread(new Runnable() {
+    //
+    // @Override
+    // public void run() {
+    // EmbeddedTomcat tomcat;
+    //
+    // try {
+    // tomcat = new EmbeddedTomcat("localhost");
+    // } catch (final ServletException se) {
+    // System.err.println("Cannot create the Tomcat server: " + se.getMessage());
+    // return;
+    // }
+    //
+    // final Wrapper browser = tomcat.addServlet(LocalBrowse.class.getName(),
+    // "/browse/*");
+    // browser.addMapping("/latest/*");
+    // tomcat.addServlet(Local.class.getName(), "/*");
+    //
+    // // Start the server
+    // try {
+    // tomcat.start();
+    // } catch (final LifecycleException le) {
+    // System.err.println("Cannot start the Tomcat server: " + le.getMessage());
+    // return;
+    // }
+    //
+    // if (tomcat.debugLevel >= 1)
+    // System.err.println("Ready to accept HTTP calls on " + tomcat.address + ":" +
+    // tomcat.getPort()
+    // + ", file repository base path is: " + Local.basePath);
+    //
+    // tomcat.blockWaiting();
+    // }
+    // });
 
     private Thread counterThread = new Thread(new Runnable() {
 	private SingletonLogger singletonLogger2 = new SingletonLogger();
@@ -143,39 +145,39 @@ public class Sender {
      */
 
     public void work() {
-        String metadata, payload, key;
+	String metadata, payload, key;
 
-    	UUID uuid = UUID.randomUUID();
-    	Blob blob = null;
+	UUID uuid = UUID.randomUUID();
+	Blob blob = null;
 
-    	this.counterThread.start();
-    //	this.recoveryThread.start();
-    	counterRunning = true;
-    	for (int i = 0; i < this.nrOfPacketsToBeSent; i++) {
-            payload = Utils.randomString(this.payloadLength);
-            metadata = Utils.randomString(this.metadataLength);
-            key = Integer.toString(i) + " " + Utils.randomString(this.keyLength);
-            uuid = UUID.randomUUID();
-    	    nrPacketsSent++;
-    	    String payload_with_number = Integer.toString(i) + " " + payload;
-    	    String metadata_with_number = Integer.toString(i) + " " + metadata;
-    	    // logger.log(Level.INFO, "Sending packet nr " + i);
-    	    try {
-    		blob = new Blob(metadata.getBytes(Charset.forName(Utils.CHARSET)),
-    			payload.getBytes(Charset.forName(Utils.CHARSET)), key, uuid);
-    		// System.out.println(blob);
-    		blobMap.put(key, blob);
-    		blob.send(this.ip_address, this.portNumber);
+	this.counterThread.start();
+	// this.recoveryThread.start();
+	counterRunning = true;
+	for (int i = 0; i < this.nrOfPacketsToBeSent; i++) {
+	    payload = Utils.randomString(this.payloadLength);
+	    metadata = Utils.randomString(this.metadataLength);
+	    key = Integer.toString(i) + " " + Utils.randomString(this.keyLength);
+	    uuid = UUID.randomUUID();
+	    nrPacketsSent++;
+	    String payload_with_number = Integer.toString(i) + " " + payload;
+	    String metadata_with_number = Integer.toString(i) + " " + metadata;
+	    // logger.log(Level.INFO, "Sending packet nr " + i);
+	    try {
+		blob = new Blob(metadata.getBytes(Charset.forName(Utils.CHARSET)),
+			payload.getBytes(Charset.forName(Utils.CHARSET)), key, uuid);
+		// System.out.println(blob);
+		blobMap.put(key, blob);
+		blob.send(this.ip_address, this.portNumber);
 
-    	    } catch (NoSuchAlgorithmException | IOException e) {
-    		          e.printStackTrace();
-    	    }
+	    } catch (NoSuchAlgorithmException | IOException e) {
+		e.printStackTrace();
+	    }
 
-    	}
-	    counterRunning = false;
+	}
+	counterRunning = false;
 	try {
 	    this.counterThread.join();
-	  //  this.recoveryThread.join();
+	    // this.recoveryThread.join();
 	} catch (InterruptedException e) {
 	    // TODO Auto-generated catch block
 	    e.printStackTrace();
