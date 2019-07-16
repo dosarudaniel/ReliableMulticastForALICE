@@ -32,6 +32,7 @@ import javax.servlet.http.Part;
 import ch.alice.o2.ccdb.Options;
 import ch.alice.o2.ccdb.RequestParser;
 import ch.alice.o2.ccdb.UUIDTools;
+import myjava.com.github.dosarudaniel.gsoc.Blob;
 import myjava.com.github.dosarudaniel.gsoc.MulticastReceiver;
 import sun.security.util.IOUtils;
 
@@ -578,8 +579,6 @@ public class Memory extends HttpServlet {
 
     private static MemoryObjectWithVersion getMatchingObject(final RequestParser parser) {
 
-	// final File fBaseDir = new File(Memory.basePath + "/" + parser.path);
-
 	if (parser.startTime > 0 && parser.uuidConstraint != null) {
 	    // is this the full path to a file? if so then download it
 
@@ -596,41 +595,6 @@ public class Memory extends HttpServlet {
 	    // a particular object was requested but it doesn't exist
 	    return null;
 	}
-
-	MemoryObjectWithVersion mostRecent = null;
-
-	final File[] baseDirListing = fBaseDir.listFiles((f) -> f.isDirectory());
-
-	if (baseDirListing == null)
-	    return null;
-
-	for (final File fInterval : baseDirListing)
-	    try {
-		final long lValidityStart = Long.parseLong(fInterval.getName());
-
-		if (parser.startTimeSet && lValidityStart < parser.startTime)
-		    continue;
-
-		final File[] intervalFileList = fInterval.listFiles((f) -> f.isFile() && !f.getName().contains("."));
-
-		if (intervalFileList == null)
-		    continue;
-
-		for (final File f : intervalFileList) {
-		    final MemoryObjectWithVersion owv = new MemoryObjectWithVersion(lValidityStart, f);
-
-		    if (owv.covers(parser.startTime) && (parser.notAfter <= 0 || owv.getCreateTime() <= parser.notAfter)
-			    && owv.matches(parser.flagConstraints))
-			if (mostRecent == null)
-			    mostRecent = owv;
-			else if (owv.compareTo(mostRecent) < 0)
-			    mostRecent = owv;
-		}
-	    } catch (@SuppressWarnings("unused") final NumberFormatException nfe) {
-		// ignore
-	    }
-
-	return mostRecent;
     }
 
     @Override
