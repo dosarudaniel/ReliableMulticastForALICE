@@ -48,7 +48,7 @@ public class MemoryBrowse extends HttpServlet {
 
 	final RequestParser parser = new RequestParser(request, true);
 
-	final Collection<MemoryObjectWithVersion> matchingObjects = getAllMatchingObjects(parser);
+	final Collection<MemoryObject> matchingObjects = getAllMatchingObjects(parser);
 
 	String sContentType;
 	SQLFormatter formatter = null;
@@ -87,7 +87,7 @@ public class MemoryBrowse extends HttpServlet {
 	    boolean first = true;
 
 	    if (matchingObjects != null)
-		for (final MemoryObjectWithVersion object : matchingObjects) {
+		for (final MemoryObject object : matchingObjects) {
 		    if (first)
 			first = false;
 		    else
@@ -152,7 +152,7 @@ public class MemoryBrowse extends HttpServlet {
      * @param parser
      * @return all matching objects given the parser constraints
      */
-    public static final Collection<MemoryObjectWithVersion> getAllMatchingObjects(final RequestParser parser) {
+    public static final Collection<MemoryObject> getAllMatchingObjects(final RequestParser parser) {
 	if (parser.path == null)
 	    parser.path = "";
 
@@ -198,7 +198,7 @@ public class MemoryBrowse extends HttpServlet {
 
 		Blob blob = MulticastReceiver.currentCacheContent.get(key); // TODO;
 		if (blob != null) {
-		    return Arrays.asList(new MemoryObjectWithVersion(parser.startTime, null, blob));
+		    return Arrays.asList(new MemoryObject(parser.startTime, null, blob));
 		}
 
 		// a particular object was requested but it doesn't exist
@@ -208,16 +208,16 @@ public class MemoryBrowse extends HttpServlet {
 	    matchingPattern = null;
 	}
 
-	final Collection<MemoryObjectWithVersion> ret = new ArrayList<>();
+	final Collection<MemoryObject> ret = new ArrayList<>();
 
 	recursiveMatching(parser, ret, fBaseDir, matchingPattern);
 
 	return ret;
     }
 
-    private static void recursiveMatching(final RequestParser parser, final Collection<MemoryObjectWithVersion> ret,
+    private static void recursiveMatching(final RequestParser parser, final Collection<MemoryObject> ret,
 	    final File fBaseDir, final Pattern matchingPattern) {
-	MemoryObjectWithVersion mostRecent = null;
+	MemoryObject mostRecent = null;
 
 	final File[] baseDirListing = fBaseDir.listFiles((f) -> f.isDirectory());
 
@@ -238,7 +238,7 @@ public class MemoryBrowse extends HttpServlet {
 
 		for (final File f : intervalFileList) {
 		    Blob blob = MulticastReceiver.currentCacheContent.get("abc"); // TODO:
-		    final MemoryObjectWithVersion owv = new MemoryObjectWithVersion(lValidityStart, null, blob);
+		    final MemoryObject owv = new MemoryObject(lValidityStart, null, blob);
 
 		    if ((!parser.startTimeSet || owv.covers(parser.startTime))
 			    && (parser.notAfter <= 0 || owv.getCreateTime() <= parser.notAfter)

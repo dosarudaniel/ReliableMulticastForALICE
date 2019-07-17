@@ -4,7 +4,7 @@ import java.io.File;
 
 import myjava.com.github.dosarudaniel.gsoc.Blob;
 
-public class MemoryObjectWithVersion extends LocalObjectWithVersion {
+public class MemoryObject extends LocalObjectWithVersion {
     private Blob blob;
 
     public Blob getBlob() {
@@ -15,7 +15,7 @@ public class MemoryObjectWithVersion extends LocalObjectWithVersion {
 	this.blob = blob;
     }
 
-    public MemoryObjectWithVersion(long startTime, File entry, Blob blob) {
+    public MemoryObject(long startTime, File entry, Blob blob) {
 	super(startTime, entry);
 	this.blob = blob;
     }
