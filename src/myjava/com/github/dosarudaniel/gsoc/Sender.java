@@ -165,7 +165,7 @@ public class Sender {
 	    try {
 		blob = new Blob(metadata.getBytes(Charset.forName(Utils.CHARSET)),
 			payload.getBytes(Charset.forName(Utils.CHARSET)), key, uuid);
-		// System.out.println(blob);
+		System.out.println(blob);
 		blobMap.put(key, blob);
 		blob.send(this.ip_address, this.portNumber);
 

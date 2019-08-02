@@ -172,6 +172,8 @@ public class MulticastReceiver {
     public void processPacket(byte[] buf, DatagramPacket packet) throws NoSuchAlgorithmException, IOException {
 	Thread t = Thread.currentThread();
 	FragmentedBlob fragmentedBlob = new FragmentedBlob(buf, packet.getLength());
+
+	System.out.println("Fragment payload " + new String(fragmentedBlob.getPayload()));
 	if (this.currentCacheContent != null) {
 	    // Possible double remove actions?
 	    if (this.currentCacheContent.remove(fragmentedBlob.getKey()) != null) {
@@ -211,6 +213,8 @@ public class MulticastReceiver {
     }
 
     public void work() throws IOException {
+
+	System.out.println("Hello, it;s me");
 	final ExecutorService executorService = Executors
 		.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
@@ -225,6 +229,8 @@ public class MulticastReceiver {
 		    // Receive object
 		    final DatagramPacket packet = new DatagramPacket(buf, buf.length);
 		    socket.receive(packet);
+
+		    System.out.println("Received one fragment");
 		    executorService.submit(() -> {
 			try {
 			    processPacket(buf, packet);
