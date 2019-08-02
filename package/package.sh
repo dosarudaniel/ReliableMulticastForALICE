@@ -48,7 +48,7 @@ jar -cfe local.jar \
 # package MulticastReceiver in a single JAR
 jar -cfe MulticastReceiver.jar \
     test.com.github.dosarudaniel.gsoc.TestMulticastReceiver test/com/github/dosarudaniel/gsoc/TestMulticastReceiver.class \
-    test myjava
+    test myjava ch javax org alien lazyj lia apmon utils
 
 
 # package Sender in a single JAR
