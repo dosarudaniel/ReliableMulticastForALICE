@@ -579,18 +579,18 @@ public class Memory extends HttpServlet {
 
 	Blob blob = MulticastReceiver.currentCacheContent.get(key); // TODO - check if parser.path is the key
 
-	if (blob==null)
+	if (blob == null)
 	    return null;
-	
-	if (parser.uuidConstraint!=null && !blob.getUuid().equals(parser.uuidConstraint))
+
+	if (parser.uuidConstraint != null && !blob.getUuid().equals(parser.uuidConstraint))
 	    return null;
-	
-	if (parser.startTimeSet && blob.getTimestamp().getTime()/1000 < parser.startTime)
+
+	if (parser.startTimeSet && blob.getTimestamp().getTime() / 1000 < parser.startTime)
 	    return null;
 
 	if (!blob.getMetadataMap().equals(parser.flagConstraints))
 	    return null;
-	
+
 	return new MemoryObject(parser.startTime, null, blob);
 
     }
