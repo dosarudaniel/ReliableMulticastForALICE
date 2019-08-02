@@ -38,6 +38,7 @@ public class MemoryEmbeddedTomcat {
 	// Start the server
 	try {
 	    tomcat.start();
+
 	} catch (final LifecycleException le) {
 	    System.err.println("Cannot start the Tomcat server: " + le.getMessage());
 	    return;
@@ -47,6 +48,12 @@ public class MemoryEmbeddedTomcat {
 	    System.err.println("Ready to accept HTTP calls on " + tomcat.address + ":" + tomcat.getPort()
 		    + ", file repository base path is: " + Memory.basePath);
 
-	tomcat.blockWaiting();
+//	try {
+//	    // run multicastReceiver
+//	} catch () {
+//	    
+//	} 
+
+	tomcat.blockWaiting(); // inainte de asta run multicastReceiver
     }
 }
