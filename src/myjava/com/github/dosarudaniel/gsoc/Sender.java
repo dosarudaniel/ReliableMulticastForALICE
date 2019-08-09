@@ -156,8 +156,9 @@ public class Sender {
 	for (int i = 0; i < this.nrOfPacketsToBeSent; i++) {
 	    payload = Utils.randomString(this.payloadLength);
 	    metadata = Utils.randomString(this.metadataLength);
-	    key = Integer.toString(i) + " " + Utils.randomString(this.keyLength);
-	    uuid = UUID.randomUUID();
+	    key = "123_hardcoded_key";
+	    // Send the same uuid for testing
+	    uuid = UUID.fromString("38400000-8cf0-11bd-b23e-10b96e4ef00d");
 	    nrPacketsSent++;
 	    String payload_with_number = Integer.toString(i) + " " + payload;
 	    String metadata_with_number = Integer.toString(i) + " " + metadata;
@@ -172,7 +173,6 @@ public class Sender {
 	    } catch (NoSuchAlgorithmException | IOException e) {
 		e.printStackTrace();
 	    }
-
 	}
 	counterRunning = false;
 	try {

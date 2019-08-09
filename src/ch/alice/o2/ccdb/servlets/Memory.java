@@ -149,8 +149,10 @@ public class Memory extends HttpServlet {
 	}
 
 	// aici trebuie modificat
+	System.out.println("doGet:: parser.uuidConstraint = " + parser.uuidConstraint); // parser.uuidConstraint
 
 	final MemoryObject matchingObject = getMatchingObject(parser);
+	System.out.println("matchingObject = " + matchingObject);
 
 	if (matchingObject == null) {
 	    response.sendError(HttpServletResponse.SC_NOT_FOUND, "No matching objects found");
@@ -575,21 +577,34 @@ public class Memory extends HttpServlet {
 
     private static MemoryObject getMatchingObject(final RequestParser parser) {
 
-	String key = parser.path;
+	UUID uuid = parser.uuidConstraint;
+	System.out.println(parser);
+
+	String key = parser.flagConstraints.get("key");
+	System.out.println("key=" + key);
 
 	Blob blob = MulticastReceiver.currentCacheContent.get(key); // TODO - check if parser.path is the key
 
-	if (blob == null)
+	if (blob == null) {
+	    System.out.println("blob == null");
 	    return null;
+	}
 
-	if (parser.uuidConstraint != null && !blob.getUuid().equals(parser.uuidConstraint))
-	    return null;
+	if (parser.uuidConstraint != null && !blob.getUuid().equals(parser.uuidConstraint)) {
 
-	if (parser.startTimeSet && blob.getTimestamp().getTime() / 1000 < parser.startTime)
+	    System.out.println("parser.uuidConstraint != null && !blob.getUuid().equals(parser.uuidConstraint)");
 	    return null;
+	}
 
-	if (!blob.getMetadataMap().equals(parser.flagConstraints))
+	if (parser.startTimeSet && blob.getTimestamp().getTime() / 1000 < parser.startTime) {
+
+	    System.out.println(
+		    parser.startTimeSet + " && " + blob.getTimestamp().getTime() / 1000 + " < " + parser.startTime);
 	    return null;
+	}
+
+//	if (!blob.getMetadataMap().equals(parser.flagConstraints))
+//	    return null;
 
 	return new MemoryObject(parser.startTime, null, blob);
 

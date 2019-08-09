@@ -70,7 +70,7 @@ public class TestMulticastReceiver {
 		    + ", file repository base path is: " + Memory.basePath);
 
 	startMulticastReceiverThread.start();
-
+	System.out.println("started MulticastReceiverThread ");
 	tomcat.blockWaiting(); // inainte de asta run multicastReceiver
 
 	try {

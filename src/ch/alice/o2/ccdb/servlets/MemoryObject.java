@@ -19,4 +19,9 @@ public class MemoryObject extends LocalObjectWithVersion {
 	super(startTime, entry);
 	this.blob = blob;
     }
+
+    @Override
+    public String toString() {
+	return this.blob.toString();
+    }
 }

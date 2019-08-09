@@ -155,9 +155,11 @@ public class RequestParser {
 	    } catch (@SuppressWarnings("unused") final NumberFormatException nfe) {
 		final int idx = token.indexOf('=');
 
-		if (idx >= 0)
+		if (idx >= 0) {
 		    flagConstraints.put(token.substring(0, idx).trim(), token.substring(idx + 1).trim());
-		else
+		    System.out.println("put in flagConstraints = [" + token.substring(0, idx).trim() + " and "
+			    + token.substring(idx + 1).trim() + "]");
+		} else
 		    pathElements.add(token);
 	    }
 	}
@@ -227,6 +229,9 @@ public class RequestParser {
 
 	if (uuidConstraint != null)
 	    sb.append("Requested UUID: ").append(uuidConstraint).append("\n");
+
+	if (flagConstraints != null)
+	    sb.append("flagConstraints: ").append(flagConstraints).append("\n");
 
 	if (cachedValue != null)
 	    sb.append("Cached value: ").append(cachedValue).append("\n");

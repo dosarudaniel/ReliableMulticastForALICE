@@ -193,6 +193,9 @@ public class MulticastReceiver {
 		nrPacketsReceived++;
 	    }
 	    // Add the complete Blob to the cache
+	    Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+	    blob.setTimestamp(timestamp);
+
 	    this.currentCacheContent.put(blob.getKey(), blob);
 	    this.logger.log(Level.INFO, "Complete blob with key " + blob.getKey() + " was added to the cache.");
 
@@ -238,6 +241,13 @@ public class MulticastReceiver {
 			    e.printStackTrace();
 			}
 		    });
+		    if (!currentCacheContent.isEmpty()) {
+			System.out.println("cacheContent: is not empty");
+			System.out.println("cacheContent: " + currentCacheContent);
+		    } else {
+			System.out.println("cacheContent: is empty");
+		    }
+
 		} catch (Exception e) {
 		    // logger.log(Level.WARNING, "Exception thrown");
 		    e.printStackTrace();
