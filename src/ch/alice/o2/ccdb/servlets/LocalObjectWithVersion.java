@@ -70,7 +70,9 @@ public class LocalObjectWithVersion implements Comparable<LocalObjectWithVersion
      */
     public LocalObjectWithVersion(final long startTime, final File entry) {
 	this.startTime = startTime;
-	this.endTime = entry.lastModified();
+	if (entry != null) {
+	    this.endTime = entry.lastModified();
+	}
 	this.referenceFile = entry;
 
 	completeEndTime = Local.hasMillisecondSupport();

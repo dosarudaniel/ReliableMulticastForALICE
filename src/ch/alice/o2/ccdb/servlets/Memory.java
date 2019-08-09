@@ -160,7 +160,7 @@ public class Memory extends HttpServlet {
 	}
 
 	if (parser.cachedValue != null
-		&& matchingObject.referenceFile.getName().equalsIgnoreCase(parser.cachedValue.toString())) {
+		&& matchingObject.getBlob().getUuid().toString().equalsIgnoreCase(parser.cachedValue.toString())) {
 	    response.sendError(HttpServletResponse.SC_NOT_MODIFIED);
 	    return;
 	}
@@ -174,7 +174,7 @@ public class Memory extends HttpServlet {
 	    if (!head)
 		download(matchingObject, request, response);
 	    else {
-		response.setContentLengthLong(matchingObject.referenceFile.length());
+		response.setContentLengthLong(matchingObject.getBlob().getPayload().length);
 		response.setHeader("Content-Disposition",
 			"inline;filename=\"" + matchingObject.getOriginalName() + "\"");
 		response.setHeader("Content-Type",
@@ -188,8 +188,7 @@ public class Memory extends HttpServlet {
 
 	setHeaders(matchingObject, response);
 
-	response.sendRedirect(
-		getURLPrefix(request) + matchingObject.referenceFile.getPath().substring(basePath.length()));
+	response.sendRedirect(getURLPrefix(request) + matchingObject.getBlob().getUuid().toString());
     }
 
     private static void setHeaders(final MemoryObject obj, final HttpServletResponse response) {
@@ -197,7 +196,7 @@ public class Memory extends HttpServlet {
 	response.setHeader("Valid-Until", String.valueOf(obj.getEndTime()));
 	response.setHeader("Valid-From", String.valueOf(obj.startTime));
 	response.setHeader("Created", String.valueOf(obj.getCreateTime()));
-	response.setHeader("ETag", '"' + obj.referenceFile.getName() + '"');
+	response.setHeader("ETag", '"' + obj.getBlob().getUuid().toString() + '"');
 
 	try {
 	    response.setDateHeader("Last-Modified", Long.parseLong(obj.getProperty("Last-Modified")));
