@@ -10,5 +10,6 @@ cd ../../package
 ./runSender.sh
 
 #request the published blob
-curl -i localhost:8080/Task/Detector/1/key=123_hardcoded_key
+curl -i localhost:8080/Task/Detector/1/38400000-8cf0-11bd-b23e-10b96e4ef00d/key=123_hardcoded_key
 
+kill $!
