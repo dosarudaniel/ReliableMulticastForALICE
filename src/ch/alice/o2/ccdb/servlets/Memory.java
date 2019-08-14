@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.net.InetAddress;
+import java.nio.charset.Charset;
+import java.security.NoSuchAlgorithmException;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,6 +36,7 @@ import ch.alice.o2.ccdb.RequestParser;
 import ch.alice.o2.ccdb.UUIDTools;
 import myjava.com.github.dosarudaniel.gsoc.Blob;
 import myjava.com.github.dosarudaniel.gsoc.MulticastReceiver;
+import myjava.com.github.dosarudaniel.gsoc.Utils;
 
 /**
  * Prototype implementation of QC repository. This simple implementation is
@@ -152,7 +155,7 @@ public class Memory extends HttpServlet {
 	System.out.println("doGet:: parser.uuidConstraint = " + parser.uuidConstraint); // parser.uuidConstraint
 
 	final MemoryObject matchingObject = getMatchingObject(parser);
-	System.out.println("matchingObject = " + matchingObject);
+	System.out.println("doGet:: matchingObject = " + matchingObject);
 
 	if (matchingObject == null) {
 	    response.sendError(HttpServletResponse.SC_NOT_FOUND, "No matching objects found");
@@ -171,9 +174,9 @@ public class Memory extends HttpServlet {
 
 	    setHeaders(matchingObject, response);
 
-	    if (!head)
+	    if (!head) {
 		download(matchingObject, request, response);
-	    else {
+	    } else {
 		response.setContentLengthLong(matchingObject.getBlob().getPayload().length);
 		response.setHeader("Content-Disposition",
 			"inline;filename=\"" + matchingObject.getOriginalName() + "\"");
@@ -223,12 +226,10 @@ public class Memory extends HttpServlet {
 	    final HttpServletResponse response) throws IOException {
 	final String range = request.getHeader("Range");
 
-	System.out.println(request.getPathInfo());
-
 	if (range == null || range.trim().isEmpty()) {
 	    response.setHeader("Accept-Ranges", "bytes");
-	    response.setContentLengthLong(obj.referenceFile.length());
-	    response.setHeader("Content-Disposition", "inline;filename=\"" + obj.getOriginalName() + "\"");
+	    response.setContentLengthLong(obj.getBlob().getPayload().length);
+	    response.setHeader("Content-Disposition", "inline;filename=\"" + obj.getBlob().getUuid().toString() + "\"");
 	    response.setHeader("Content-Type", obj.getProperty("Content-Type", "application/octet-stream"));
 	    setMD5Header(obj, response);
 
@@ -453,15 +454,6 @@ public class Memory extends HttpServlet {
 	    return;
 	}
 
-	final File folder = new File(basePath + "/" + parser.path + "/" + parser.startTime);
-
-	if (!folder.exists())
-	    if (!folder.mkdirs()) {
-		response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-			"Cannot create path " + folder.getAbsolutePath());
-		return;
-	    }
-
 	final long newObjectTime = System.currentTimeMillis();
 
 	byte[] remoteAddress = null;
@@ -478,34 +470,47 @@ public class Memory extends HttpServlet {
 
 	final Part part = parts.iterator().next();
 
-	final File targetFile = new File(folder, targetUUID.toString());
+	byte[] metadata = new byte[10];
 
-	try (FileOutputStream fos = new FileOutputStream(targetFile)) {
-	    IOUtils.copy(part.getInputStream(), fos);
+	byte[] payload = new byte[part.getInputStream().available()];
+	part.getInputStream().read(payload);
+
+	String blobKey = "123";
+	Blob newBlob = null;
+	try {
+	    newBlob = new Blob(metadata, payload, blobKey, targetUUID);
+	} catch (NoSuchAlgorithmException | SecurityException e) {
+	    // TODO Auto-generated catch block
+	    e.printStackTrace();
 	}
 
-	final MemoryObject newObject = new MemoryObject(parser.startTime, targetFile, null); // TODO
+	if (newBlob != null) {
+	    MulticastReceiver.currentCacheContent.put(blobKey, newBlob);
+	}
 
-	for (final Map.Entry<String, String> constraint : parser.flagConstraints.entrySet())
-	    newObject.setProperty(constraint.getKey(), constraint.getValue());
+	final MemoryObject newObject = new MemoryObject(parser.startTime, null, newBlob);
 
-	newObject.setProperty("InitialValidityLimit", String.valueOf(parser.endTime));
-	newObject.setProperty("OriginalFileName", part.getSubmittedFileName());
-	newObject.setProperty("Content-Type", part.getContentType());
-	newObject.setProperty("UploadedFrom", request.getRemoteHost());
-	newObject.setProperty("File-Size", String.valueOf(targetFile.length()));
-	newObject.setProperty("Content-MD5", alien.io.IOUtils.getMD5(targetFile));
+//	for (final Map.Entry<String, String> constraint : parser.flagConstraints.entrySet())
+//	    newObject.setProperty(constraint.getKey(), constraint.getValue());
 
-	if (newObject.getProperty("CreateTime") == null)
-	    newObject.setProperty("CreateTime", String.valueOf(newObjectTime));
+//	newObject.setProperty("InitialValidityLimit", String.valueOf(parser.endTime));
+//	newObject.setProperty("OriginalFileName", part.getSubmittedFileName());
+//	newObject.setProperty("Content-Type", part.getContentType());
+//	newObject.setProperty("UploadedFrom", request.getRemoteHost());
+//	newObject.setProperty("Blob-Size", String.valueOf(targetFile.length()));
+//	newObject.setProperty("Content-MD5", alien.io.IOUtils.getMD5(targetFile));
 
-	newObject.setValidityLimit(parser.endTime);
-
-	newObject.saveProperties(request.getRemoteHost());
+//	if (newObject.getProperty("CreateTime") == null)
+//	    newObject.setProperty("CreateTime", String.valueOf(newObjectTime));
+//
+//	newObject.setValidityLimit(parser.endTime);
+////
+//	newObject.saveProperties(request.getRemoteHost());
 
 	setHeaders(newObject, response);
 	response.setHeader("Location",
 		getURLPrefix(request) + "/" + parser.path + "/" + parser.startTime + "/" + targetUUID.toString());
+
 	response.sendError(HttpServletResponse.SC_CREATED);
     }
 
@@ -590,13 +595,11 @@ public class Memory extends HttpServlet {
 	}
 
 	if (parser.uuidConstraint != null && !blob.getUuid().equals(parser.uuidConstraint)) {
-
 	    System.out.println("parser.uuidConstraint != null && !blob.getUuid().equals(parser.uuidConstraint)");
 	    return null;
 	}
 
 	if (parser.startTimeSet && blob.getTimestamp().getTime() / 1000 < parser.startTime) {
-
 	    System.out.println(
 		    parser.startTimeSet + " && " + blob.getTimestamp().getTime() / 1000 + " < " + parser.startTime);
 	    return null;
